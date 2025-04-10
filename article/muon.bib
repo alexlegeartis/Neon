@@ -1,0 +1,52 @@
+ 
+@Misc{2025,
+  month        = feb,
+  note         = {arXiv:2502.16982 [cs]},
+  title        = {Muon is {Scalable} for {LLM} {Training}},
+  year         = {2025},
+  abstract     = {Recently, the Muon optimizer based on matrix orthogonalization has demonstrated strong results in training small-scale language models, but the scalability to larger models has not been proven. We identify two crucial techniques for scaling up Muon: (1) adding weight decay and (2) carefully adjusting the per-parameter update scale. These techniques allow Muon to work out-of-the-box on large-scale training without the need of hyper-parameter tuning. Scaling law experiments indicate that Muon achieves \${\textbackslash}sim{\textbackslash}!2{\textbackslash}times\$ computational efficiency compared to AdamW with compute optimal training. Based on these improvements, we introduce Moonlight, a 3B/16B-parameter Mixture-of-Expert (MoE) model trained with 5.7T tokens using Muon. Our model improves the current Pareto frontier, achieving better performance with much fewer training FLOPs compared to prior models. We open-source our distributed Muon implementation that is memory optimal and communication efficient. We also release the pretrained, instruction-tuned, and intermediate checkpoints to support future research.},
+  collaborator = {Liu, Jingyuan and Su, Jianlin and Yao, Xingcheng and Jiang, Zhejun and Lai, Guokun and Du, Yulun and Qin, Yidao and Xu, Weixin and Lu, Enzhe and Yan, Junjie and Chen, Yanru and Zheng, Huabin and Liu, Yibo and Liu, Shaowei and Yin, Bohong and He, Weiran and Zhu, Han and Wang, Yuzhi and Wang, Jianzhou and Dong, Mengnan and Zhang, Zheng and Kang, Yongsheng and Zhang, Hao and Xu, Xinran and Zhang, Yutao and Wu, Yuxin and Zhou, Xinyu and Yang, Zhilin},
+  doi          = {10.48550/arXiv.2502.16982},
+  file         = {Preprint PDF:2025 - Muon Is Scalable for LLM Training.pdf:PDF:http\://arxiv.org/pdf/2502.16982v1},
+  groups       = {Applications},
+  keywords     = {Computer Science - Machine Learning, Computer Science - Artificial Intelligence, Computer Science - Computation and Language},
+  publisher    = {arXiv},
+  url          = {http://arxiv.org/abs/2502.16982},
+  urldate      = {2025-04-10},
+}
+
+@Misc{bernstein2025deriving,
+  author = {Jeremy Bernstein},
+  title  = {Deriving Muon},
+  year   = {2025},
+  groups = {Basics},
+  url    = {https://jeremybernste.in/writing/deriving-muon},
+}
+
+@Misc{jordan2024muon,
+  author = {Keller Jordan and Yuchen Jin and Vlado Boza and Jiacheng You and Franz Cesista and Laker Newhouse and Jeremy Bernstein},
+  title  = {Muon: An optimizer for hidden layers in neural networks},
+  year   = {2024},
+  groups = {Basics},
+  url    = {https://kellerjordan.github.io/posts/muon/},
+}
+
+@Misc{bernstein2024oldoptimizernewnorm,
+  author        = {Jeremy Bernstein and Laker Newhouse},
+  title         = {Old Optimizer, New Norm: An Anthology},
+  year          = {2024},
+  archiveprefix = {arXiv},
+  eprint        = {2409.20325},
+  groups        = {Norms},
+  primaryclass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2409.20325},
+}
+
+@Comment{jabref-meta: databaseType:bibtex;}
+
+@Comment{jabref-meta: grouping:
+0 AllEntriesGroup:;
+1 StaticGroup:Basics\;0\;1\;\;\;\;;
+1 StaticGroup:Applications\;0\;1\;\;\;\;;
+1 StaticGroup:Norms\;0\;1\;\;\;\;;
+}
