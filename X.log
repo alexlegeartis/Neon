@@ -1,0 +1,27 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.2) (preloaded format=pdflatex 2025.3.4)  11 APR 2025 19:08
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**muon
+(C:\Users\Alex\AppData\Local\Programs\MiKTeX\tex/latex/tools\X.tex
+! Interruption.
+<to be read again> 
+                   \immediate 
+l.1 
+    %%
+? X
+ 
+Here is how much of TeX's memory you used:
+ 8 strings out of 473522
+ 239 string characters out of 5715094
+ 391471 words of memory out of 5000000
+ 23336 multiletter control sequences out of 15000+600000
+ 558837 words of font info for 36 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 4i,0n,0p,11b,6s stack positions out of 10000i,1000n,20000p,200000b,200000s
+No pages of output.
+PDF statistics:
+ 0 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 500000)
+ 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+
