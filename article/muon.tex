@@ -1,0 +1,69 @@
+%% ============================================
+%% ================ Preambule =================
+%% ============================================
+\documentclass[]{scrartcl}
+\usepackage[margin = 0.5in]{geometry}
+
+\usepackage[pdftex,unicode, 
+colorlinks=true,
+linkcolor = blue]{hyperref}	% нумерование страниц, ссылки!!!!ИМЕННО В ТАКОМ ПОРЯДКЕ СО СЛЕДУЮЩИМ ПАКЕТОМ
+%\usepackage[warn]{mathtext}				% Поддержка русского текста в формулах
+\usepackage[T1, T2A]{fontenc}			% Пакет выбора кодировки и шрифтов
+\usepackage[utf8]{inputenc} 			% любая желаемая кодировка
+\usepackage[english]{babel}		% поддержка русского языка
+\usepackage{wrapfig}					% Плавающие картинки
+\usepackage{amssymb, amsmath}			% стилевой пакет для формул
+\usepackage{algorithm}
+\usepackage{algorithmic} 
+
+
+\ifpdf
+\usepackage{cmap} 				% чтобы работал поиск по PDF
+\usepackage[pdftex]{graphicx}
+%\usepackage{pgfplotstable}		% Для вставки таблиц.
+\pdfcompresslevel=9 			% сжимать PDF
+\else
+\usepackage{graphicx}
+\fi
+
+\graphicspath{{./figures/}}
+\usepackage{subcaption}
+%% ============================================
+%% ================ Info =================
+%% ============================================
+\title{Neon: Nuclear Norm to Beat Muon}
+
+\author{
+  Alexey Kravatskiy\\
+  \texttt{kravtskii.aiu@phystech.edu}
+  \and
+  Ivan Kozyrev\\
+  \texttt{kozyrev.i?@phystech.edu}
+  \and
+  Nikolay Kozlov \\
+  \texttt{kozlov.n?@phystech.edu}
+}
+
+%\author{\begin{tabular}{c c}
+%	  	 Alexey Kravatsky & Nikolay Kozlov & Ivan Kozyrev \\
+%		 \texttt{kravatskii.aiu@phystech.edu} & \texttt{kozlov.n?@phystech.edu} & \texttt{kozyrev.i?@phystech.edu}  
+%		\end{tabular}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+In this paper, we develop a new algorithm for optimization of functions of weight matrices, which are typical for training large language models. Changing spectral norm, which was used to derive Muon, to nuclear norm, we pose a new optimization problem for an update matrix, solution of which defines a novel method we name Neon. After providing theoretical guarantees of Neon convergence, we compare performances of Neon, Muon, and Adam on training multilayer perceptron and BERT vectorizer.
+
+
+\end{abstract}
+
+\section{Idea}
+The goal of the project is to make variations on Muon to speed it up. Recently, authors of \cite{bernstein2024oldoptimizernewnorm} have proposed to look at different optimizers as the solution of the optimization problem for an update. This approach can be utilized to derive Muon \cite{jordan2024muon}, a novel algorithm for fast training of neural networks. Instead of using spectral norm in the problem, we use nuclear norm to produce a new problem. Then, we add momentum to update. After finalizing the algorithm, we test it on MLP, and, if results are satisfactory, on transformers (probably something from huggingface). The result will be a fast algorithm, which we will convert into a new optimizer class for PyTorch, as was done with Muon.
+
+\bibliographystyle{unsrt}
+\bibliography{muon}
+
+\end{document}

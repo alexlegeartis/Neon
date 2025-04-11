@@ -1,5 +1,24 @@
  
+@Misc{Ahn2025,
+  author       = {Kwangjun Ahn and Byron Xu},
+  month        = apr,
+  note         = {arXiv:2504.05295 [cs]},
+  title        = {Dion: {A} {Communication}-{Efficient} {Optimizer} for {Large} {Models}},
+  year         = {2025},
+  abstract     = {Training large AI models efficiently requires distributing computation across multiple accelerators, but this often incurs significant communication overhead -- especially during gradient synchronization. We introduce Dion, a communication-efficient optimizer that retains the synchronous semantics of standard distributed training (e.g., DDP, FSDP) while substantially reducing I/O costs. Unlike conventional optimizers that synchronize full gradient matrices, Dion leverages orthonormalized updates with device-local momentum buffers, eliminating the need for full gradient exchange. It further supports an efficient sharding strategy that avoids reconstructing large matrices during training.},
+  annote       = {Comment: technical report; comments welcome!},
+  collaborator = {Ahn, Kwangjun and Xu, Byron},
+  doi          = {10.48550/arXiv.2504.05295},
+  file         = {Preprint PDF:2025a - Dion_ a Communication Efficient Optimizer for Large Models.pdf:PDF:http\://arxiv.org/pdf/2504.05295v1},
+  keywords     = {Computer Science - Machine Learning, Computer Science - Artificial Intelligence, Mathematics - Optimization and Control},
+  publisher    = {arXiv},
+  url          = {http://arxiv.org/abs/2504.05295},
+  urldate      = {2025-04-10},
+}
+
+ 
 @Misc{2025,
+  author       = {Jingyuan Liu and Jianlin Su and Xingcheng Yao and Zhejun Jiang and Guokun Lai and Yulun Du and Yidao Qin and Weixin Xu and Enzhe Lu and Junjie Yan and Yanru Chen and Huabin Zheng and Yibo Liu and Shaowei Liu and Bohong Yin and Weiran He and Han Zhu and Yuzhi Wang and Jianzhou Wang and Mengnan Dong and Zheng Zhang and Yongsheng Kang and Hao Zhang and Xinran Xu and Yutao Zhang and Yuxin Wu and Xinyu Zhou and Zhilin Yang},
   month        = feb,
   note         = {arXiv:2502.16982 [cs]},
   title        = {Muon is {Scalable} for {LLM} {Training}},

@@ -1,0 +1,12 @@
+\begin{thebibliography}{1}
+
+\bibitem{bernstein2024oldoptimizernewnorm}
+Jeremy Bernstein and Laker Newhouse.
+\newblock Old optimizer, new norm: An anthology, 2024.
+
+\bibitem{jordan2024muon}
+Keller Jordan, Yuchen Jin, Vlado Boza, Jiacheng You, Franz Cesista, Laker
+  Newhouse, and Jeremy Bernstein.
+\newblock Muon: An optimizer for hidden layers in neural networks, 2024.
+
+\end{thebibliography}
