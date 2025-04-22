@@ -97,7 +97,7 @@ where $\sigma_1$ is the largest singular value, and $u_1$ and $v_1$ are the corr
 
 Another choice is the $F*$ norm. With this choice, \eqref{eqn:opt_problem_mat} yields 
 \begin{equation}\label{eqn:update_F_star}
-\delta W = UDV^T
+\delta W = \frac{1}{\lambda}UDV^T
 \end{equation} 
 with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$ and $\tau$ is given by:
 \begin{equation}
