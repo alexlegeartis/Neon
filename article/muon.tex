@@ -31,7 +31,7 @@ linkcolor = blue]{hyperref}	% нумерование страниц, ссылк�
 %% ============================================
 %% ================ Info =================
 %% ============================================
-\title{Neon: Nuclear Norm to Beat Muop}
+\title{Neon: Nuclear Norm to Beat Muon}
 
 \author{
   Alexey Kravatskiy\\
@@ -60,11 +60,22 @@ linkcolor = blue]{hyperref}	% нумерование страниц, ссылк�
 \begin{abstract}
 In this paper, we develop a new algorithm for optimization of functions of weight matrices, which are typical for training large language models. Changing spectral norm, which was used to derive Muon, to nuclear norm, we pose a new optimization problem for an update matrix, solution of which defines a novel method we name Neon. After providing theoretical guarantees of Neon convergence, we compare performances of Neon, Muon, and Adam on training multilayer perceptron and BERT vectorizer.
 
-
 \end{abstract}
 
 \section{Idea}
 The goal of the project is to make variations on Muon to speed it up. Recently, authors of \cite{bernstein2024oldoptimizernewnorm} have proposed to look at different optimizers as the solution of the optimization problem for an update. This approach can be utilized to derive Muon \cite{jordan2024muon}, a novel algorithm for fast training of neural networks. Instead of using spectral norm in the problem, we use nuclear norm to produce a new problem. Then, we add momentum to update. After finalizing the algorithm, we test it on MLP, and, if results are satisfactory, on transformers (probably something from huggingface). The result will be a fast algorithm, which we will convert into a new optimizer class for PyTorch, as was done with Muon.
+
+\subsection{Problem}
+
+\section{Outcomes}
+
+\section{Literature review}
+
+\section{Quality metrics}
+
+\section{Preliminary plan}
+
+\section{Prototyping phase report}
 
 \bibliographystyle{unsrt}
 \bibliography{muon}
