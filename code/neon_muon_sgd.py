@@ -285,6 +285,132 @@ class SimplePerceptron(nn.Module):
         x = self.linear2(x)
         return x
 
+class ModerateCIFARModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # First convolutional block
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.pool1 = nn.MaxPool2d(2)
+        
+        # Second convolutional block
+        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(64)
+        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.bn4 = nn.BatchNorm2d(64)
+        self.pool2 = nn.MaxPool2d(2)
+        
+        # Fully connected layers
+        self.fc1 = nn.Linear(64 * 8 * 8, 256)
+        self.bn5 = nn.BatchNorm1d(256)
+        self.fc2 = nn.Linear(256, 10)
+        
+        # Activation and dropout
+        self.activ = nn.GELU()
+        self.dropout = nn.Dropout(0.2)
+        
+    def forward(self, x):
+        # First block
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.activ(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.activ(x)
+        x = self.pool1(x)
+        
+        # Second block
+        x = self.conv3(x)
+        x = self.bn3(x)
+        x = self.activ(x)
+        x = self.conv4(x)
+        x = self.bn4(x)
+        x = self.activ(x)
+        x = self.pool2(x)
+        
+        # Flatten and fully connected
+        x = x.view(x.size(0), -1)
+        x = self.fc1(x)
+        x = self.bn5(x)
+        x = self.activ(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
+        
+        return x
+
+class AdvancedCIFARModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # First convolutional block
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.conv2 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.pool1 = nn.MaxPool2d(2)
+        
+        # Second convolutional block
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(128)
+        self.conv4 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.bn4 = nn.BatchNorm2d(128)
+        self.pool2 = nn.MaxPool2d(2)
+        
+        # Third convolutional block
+        self.conv5 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
+        self.bn5 = nn.BatchNorm2d(256)
+        self.conv6 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
+        self.bn6 = nn.BatchNorm2d(256)
+        self.pool3 = nn.MaxPool2d(2)
+        
+        # Fully connected layers
+        self.fc1 = nn.Linear(256 * 4 * 4, 512)
+        self.bn7 = nn.BatchNorm1d(512)
+        self.fc2 = nn.Linear(512, 10)
+        
+        # Activation and dropout
+        self.activ = nn.GELU()
+        self.dropout = nn.Dropout(0.3)
+        
+    def forward(self, x):
+        # First block
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.activ(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.activ(x)
+        x = self.pool1(x)
+        
+        # Second block
+        x = self.conv3(x)
+        x = self.bn3(x)
+        x = self.activ(x)
+        x = self.conv4(x)
+        x = self.bn4(x)
+        x = self.activ(x)
+        x = self.pool2(x)
+        
+        # Third block
+        x = self.conv5(x)
+        x = self.bn5(x)
+        x = self.activ(x)
+        x = self.conv6(x)
+        x = self.bn6(x)
+        x = self.activ(x)
+        x = self.pool3(x)
+        
+        # Flatten and fully connected
+        x = x.view(x.size(0), -1)
+        x = self.fc1(x)
+        x = self.bn7(x)
+        x = self.activ(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
+        
+        return x
+
 ############################################
 #                Training                  #
 ############################################
@@ -352,14 +478,29 @@ def run_training(model, optimizers, train_loader, test_loader, total_epochs, opt
 
 def create_optimizers(model, optimizer_type, head_lr=0.1, bias_lr=0.053, wd=2e-6*128):
     """Create optimizers for a given model and optimizer type"""
-    linear_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear1' in n]
-    head_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear2' in n]
-    bias_params = [p for n, p in model.named_parameters() if 'bias' in n]
-    
-    param_configs = [
-        dict(params=head_params, lr=head_lr, weight_decay=wd/head_lr),
-        dict(params=bias_params, lr=bias_lr, weight_decay=wd/bias_lr)
-    ]
+    # For SimplePerceptron
+    if isinstance(model, SimplePerceptron):
+        linear_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear1' in n]
+        head_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear2' in n]
+        bias_params = [p for n, p in model.named_parameters() if 'bias' in n]
+        
+        param_configs = [
+            dict(params=head_params, lr=head_lr, weight_decay=wd/head_lr),
+            dict(params=bias_params, lr=bias_lr, weight_decay=wd/bias_lr)
+        ]
+    # For ModerateCIFARModel and AdvancedCIFARModel
+    else:
+        conv_params = [p for n, p in model.named_parameters() if 'conv' in n and 'weight' in n]
+        fc_params = [p for n, p in model.named_parameters() if 'fc' in n and 'weight' in n]
+        bn_params = [p for n, p in model.named_parameters() if 'bn' in n and 'weight' in n]
+        bias_params = [p for n, p in model.named_parameters() if 'bias' in n]
+        
+        param_configs = [
+            dict(params=fc_params, lr=head_lr, weight_decay=wd/head_lr),
+            dict(params=bias_params, lr=bias_lr, weight_decay=wd/bias_lr),
+            dict(params=bn_params, lr=bias_lr, weight_decay=wd/bias_lr)
+        ]
+        linear_params = conv_params
     
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
     
@@ -384,7 +525,7 @@ def create_optimizers(model, optimizer_type, head_lr=0.1, bias_lr=0.053, wd=2e-6
     
     return optimizers
 
-def main():
+def main(model_type='simple'):
     batch_size = 128
     total_epochs = 5
     wd = 2e-6 * batch_size  # weight decay
@@ -401,13 +542,26 @@ def main():
     all_epochs = []
     all_accs = []
     all_times = []
-    optimizer_names = ['SGD', 'Neon', 'Muon', 'AdamW']
+    optimizer_names = ['Neon', 'Muon', 'SGD', 'AdamW']
+
+    # Create model based on type
+    if model_type == 'simple':
+        model_class = SimplePerceptron
+        model_name = 'SimplePerceptron'
+    elif model_type == 'moderate':
+        model_class = ModerateCIFARModel
+        model_name = 'ModerateCIFARModel'
+    elif model_type == 'advanced':
+        model_class = AdvancedCIFARModel
+        model_name = 'AdvancedCIFARModel'
+    else:
+        raise ValueError(f"Unknown model type: {model_type}")
 
     # Train with each optimizer
     for opt_name in optimizer_names:
-        model = SimplePerceptron().to(device)
+        model = model_class().to(device)
         optimizers = create_optimizers(model, opt_name.lower(), head_lr, bias_lr, wd)
-        epochs, accs, times = run_training(model, optimizers, train_loader, test_loader, total_epochs, opt_name)
+        epochs, accs, times = run_training(model, optimizers, train_loader, test_loader, total_epochs, f"{opt_name} ({model_name})")
         all_epochs.append(epochs)
         all_accs.append(accs)
         all_times.append(times)
@@ -422,10 +576,10 @@ def main():
         plt.plot(epochs, accs, colors[i], label=name)
     plt.xlabel('Epoch')
     plt.ylabel('Test Accuracy (%)')
-    plt.title('Test Accuracy vs Epochs')
+    plt.title(f'Test Accuracy vs Epochs ({model_name})')
     plt.legend()
     plt.grid(True)
-    plt.savefig('../figs/mlp24/accuracy_vs_epochs.png')
+    plt.savefig(f'../figs/mlp24/accuracy_vs_epochs_{model_type}.png')
     plt.close()
 
     # Plot accuracy vs time
@@ -434,11 +588,17 @@ def main():
         plt.plot(times, accs, colors[i], label=name)
     plt.xlabel('Time (seconds)')
     plt.ylabel('Test Accuracy (%)')
-    plt.title('Test Accuracy vs Training Time')
+    plt.title(f'Test Accuracy vs Training Time ({model_name})')
     plt.legend()
     plt.grid(True)
-    plt.savefig('../figs/mlp24/accuracy_vs_time.png')
+    plt.savefig(f'../figs/mlp24/accuracy_vs_time_{model_type}.png')
     plt.close()
 
 if __name__ == "__main__":
-    main() 
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model', type=str, default='simple', 
+                      choices=['simple', 'moderate', 'advanced'],
+                      help='Model type to train (simple, moderate, or advanced)')
+    args = parser.parse_args()
+    main(model_type=args.model) 
