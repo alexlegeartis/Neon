@@ -130,7 +130,6 @@ def u1s1v1t_torch(W, num_iter=30, eps=1e-8):
 
 import numpy as np
 def u1s1v1t(W, num_iter=30):
-    """Power iteration using PyTorch operations"""
     v = np.random.randn(W.shape[1])
     v /= np.linalg.norm(v)
     
@@ -398,12 +397,13 @@ def main():
     for opt in optimizers_neon:
         for group in opt.param_groups:
             group["initial_lr"] = group["lr"]
+    '''
     print("Training with Neon:")
     best_acc, training_time = train_model(model, optimizers_neon, train_loader, test_loader, total_epochs)
     print(f"\nResults:")
     print(f"Best Accuracy: {best_acc:.2f}%")
     print(f"Training Time: {training_time:.2f} seconds")
-    
+    '''
     print("Training with Muon")
     best_acc, training_time = train_model(model, optimizers_muon, train_loader, test_loader, total_epochs)
     print(f"\nResults:")
@@ -411,8 +411,4 @@ def main():
     print(f"Training Time: {training_time:.2f} seconds")
 
 if __name__ == "__main__":
-    model = SimplePerceptron().to(device)
-    print(model.named_parameters())
-    for param in model.named_parameters():
-        print(param[0], param[1].shape)
-    # main() 
+    main() 
