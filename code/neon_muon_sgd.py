@@ -89,7 +89,7 @@ class Muon(torch.optim.Optimizer):
 #############################################
 
 #@torch.compile(mode='max-autotune')
-def u1s1v1t_torch(W, num_iter=30, eps=1e-8):
+def u1s1v1t_torch(W, num_iter=20, eps=1e-8):
     """Power iteration using PyTorch operations"""
     # Ensure W is 2D
     if len(W.shape) > 2:
@@ -117,8 +117,8 @@ def u1s1v1t_torch(W, num_iter=30, eps=1e-8):
             return torch.zeros_like(W)
         v /= v_norm
     
-    # Compute first singular value
-    sigma1 = (u.T @ F.linear(v, W)).squeeze()
+    # Compute first singular value - fix transpose warning
+    sigma1 = (u.reshape(1, -1) @ F.linear(v, W)).squeeze()
     
     # Reshape u and v for outer product
     u = u.reshape(-1, 1)  # shape: (m, 1)
@@ -291,53 +291,43 @@ class SimplePerceptron(nn.Module):
 #                Training                  #
 ############################################
 
-#@torch.compile(mode='max-autotune')
-def train_model(model, optimizers, train_loader, test_loader, total_epochs):
+def run_training(model, optimizers, train_loader, test_loader, total_epochs, optimizer_name):
+    """Run training for a given model and optimizers"""
+    print(f"\nTraining with {optimizer_name}:")
     start_time = time.time()
-    best_acc = 0.0
+    epochs = []
+    accs = []
+    times = []
     
     for epoch in range(total_epochs):
-        print(f"Epoch {epoch+1}/{total_epochs}")
         model.train()
         total_loss = 0
         correct = 0
         total = 0
         
         for inputs, labels in train_loader:
-            # Zero gradients for all optimizers
             for opt in optimizers:
                 opt.zero_grad()
             
-            # Forward pass
             outputs = model(inputs)
             loss = F.cross_entropy(outputs, labels)
-            
-            # Backward pass
             loss.backward()
             
-            # Update learning rates
             for opt in optimizers:
                 for group in opt.param_groups:
                     group["lr"] = group["initial_lr"] * (1 - epoch / total_epochs)
-            
-            # Step all optimizers
-            for opt in optimizers:
                 opt.step()
             
-            # Track metrics
             if not torch.isnan(loss):
                 total_loss += loss.item()
             _, predicted = outputs.max(1)
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
         
-        if total_loss > 0:
-            train_acc = 100. * correct / total
-            print(f"Train Loss: {total_loss/len(train_loader):.3f} | Train Acc: {train_acc:.3f}%")
-        else:
-            print("Train Loss: NaN | Skipping accuracy calculation")
+        train_acc = 100. * correct / total
+        print(f"Epoch {epoch+1}/{total_epochs}")
+        print(f"Train Loss: {total_loss/len(train_loader):.3f} | Train Acc: {train_acc:.3f}%")
         
-        # Evaluate
         model.eval()
         correct = 0
         total = 0
@@ -351,12 +341,50 @@ def train_model(model, optimizers, train_loader, test_loader, total_epochs):
         test_acc = 100. * correct / total
         print(f"Test Acc: {test_acc:.3f}%")
         
-        if test_acc > best_acc:
-            best_acc = test_acc
+        epochs.append(epoch + 1)
+        accs.append(test_acc)
+        times.append(time.time() - start_time)  # Time since start of this optimizer's training
+
+    total_time = time.time() - start_time
+    print(f"\n{optimizer_name} Results:")
+    print(f"Best Accuracy: {max(accs):.2f}%")
+    print(f"Training Time: {total_time:.2f} seconds")
     
-    end_time = time.time()
-    training_time = end_time - start_time
-    return best_acc, training_time
+    return epochs, accs, times
+
+def create_optimizers(model, optimizer_type, head_lr=0.1, bias_lr=0.053, wd=2e-6*128):
+    """Create optimizers for a given model and optimizer type"""
+    linear_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear1' in n]
+    head_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear2' in n]
+    bias_params = [p for n, p in model.named_parameters() if 'bias' in n]
+    
+    param_configs = [
+        dict(params=head_params, lr=head_lr, weight_decay=wd/head_lr),
+        dict(params=bias_params, lr=bias_lr, weight_decay=wd/bias_lr)
+    ]
+    
+    optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
+    
+    if optimizer_type == 'neon':
+        optimizer2 = Neon(linear_params, lr=0.24, momentum=0.6, nesterov=True)
+    elif optimizer_type == 'muon':
+        optimizer2 = Muon(linear_params, lr=0.24, momentum=0.6, nesterov=True)
+    elif optimizer_type == 'sgd':
+        optimizer2 = torch.optim.SGD([dict(params=linear_params, lr=0.24, weight_decay=wd/0.24)], 
+                                   momentum=0.85, nesterov=True, fused=True)
+    elif optimizer_type == 'adamw':
+        optimizer2 = torch.optim.AdamW([dict(params=linear_params, lr=0.24, weight_decay=wd/0.24)], 
+                                     betas=(0.9, 0.999), eps=1e-8)
+    else:
+        raise ValueError(f"Unknown optimizer type: {optimizer_type}")
+    
+    optimizers = [optimizer1, optimizer2]
+    
+    for opt in optimizers:
+        for group in opt.param_groups:
+            group["initial_lr"] = group["lr"]
+    
+    return optimizers
 
 def main():
     batch_size = 128
@@ -368,47 +396,51 @@ def main():
     train_loader = CifarLoader('cifar10', train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
     test_loader = CifarLoader('cifar10', train=False, batch_size=batch_size)
 
-    # Train with combined SGD and Muon optimizers
-    print("\nTraining with combined SGD and Muon optimizers...")
-    model = SimplePerceptron().to(device)
-    # model = torch.compile(model, mode='max-autotune')
-    
-    # Configure optimizers similar to neon_light.py
-    linear_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear1' in n]
-    head_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear2' in n]
-    bias_params = [p for n, p in model.named_parameters() if 'bias' in n]
-    
-    param_configs = [
-        dict(params=head_params, lr=head_lr, weight_decay=wd/head_lr),
-        dict(params=bias_params, lr=bias_lr, weight_decay=wd/bias_lr)
-    ]
-    
-    optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
-    optimizer2 = Muon(linear_params, lr=0.24, momentum=0.6, nesterov=True)
-    optimizers_muon = [optimizer1, optimizer2]
+    # Create directory for plots if it doesn't exist
+    os.makedirs('../figs/mlp24', exist_ok=True)
 
-    optimizer1n = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
-    optimizer2n = Neon(linear_params, lr=0.24, momentum=0.6, nesterov=True)
-    optimizers_neon = [optimizer1n, optimizer2n]
+    # Lists to store all results
+    all_epochs = []
+    all_accs = []
+    all_times = []
+    optimizer_names = ['Neon', 'Muon', 'SGD', 'AdamW']
+
+    # Train with each optimizer
+    for opt_name in optimizer_names:
+        model = SimplePerceptron().to(device)
+        optimizers = create_optimizers(model, opt_name.lower(), head_lr, bias_lr, wd)
+        epochs, accs, times = run_training(model, optimizers, train_loader, test_loader, total_epochs, opt_name)
+        all_epochs.append(epochs)
+        all_accs.append(accs)
+        all_times.append(times)
+
+    # Plot and save the results
+    import matplotlib.pyplot as plt
     
-    for opt in optimizers_muon:
-        for group in opt.param_groups:
-            group["initial_lr"] = group["lr"]
-    for opt in optimizers_neon:
-        for group in opt.param_groups:
-            group["initial_lr"] = group["lr"]
-    '''
-    print("Training with Neon:")
-    best_acc, training_time = train_model(model, optimizers_neon, train_loader, test_loader, total_epochs)
-    print(f"\nResults:")
-    print(f"Best Accuracy: {best_acc:.2f}%")
-    print(f"Training Time: {training_time:.2f} seconds")
-    '''
-    print("Training with Muon")
-    best_acc, training_time = train_model(model, optimizers_muon, train_loader, test_loader, total_epochs)
-    print(f"\nResults:")
-    print(f"Best Accuracy: {best_acc:.2f}%")
-    print(f"Training Time: {training_time:.2f} seconds")
+    # Plot accuracy vs epochs
+    plt.figure(figsize=(10, 5))
+    colors = ['b-', 'r-', 'g-', 'y-']
+    for i, (epochs, accs, name) in enumerate(zip(all_epochs, all_accs, optimizer_names)):
+        plt.plot(epochs, accs, colors[i], label=name)
+    plt.xlabel('Epoch')
+    plt.ylabel('Test Accuracy (%)')
+    plt.title('Test Accuracy vs Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('../figs/mlp24/accuracy_vs_epochs.png')
+    plt.close()
+
+    # Plot accuracy vs time
+    plt.figure(figsize=(10, 5))
+    for i, (times, accs, name) in enumerate(zip(all_times, all_accs, optimizer_names)):
+        plt.plot(times, accs, colors[i], label=name)
+    plt.xlabel('Time (seconds)')
+    plt.ylabel('Test Accuracy (%)')
+    plt.title('Test Accuracy vs Training Time')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('../figs/mlp24/accuracy_vs_time.png')
+    plt.close()
 
 if __name__ == "__main__":
     main() 
