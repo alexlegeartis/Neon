@@ -1,0 +1,123 @@
+%% ============================================
+%% ================ Preambule =================
+%% ============================================
+\documentclass[]{scrartcl}
+\usepackage[margin = 0.5in]{geometry}
+
+\usepackage[pdftex,unicode, 
+colorlinks=true,
+linkcolor = blue]{hyperref}	% нумерование страниц, ссылки!!!!ИМЕННО В ТАКОМ ПОРЯДКЕ СО СЛЕДУЮЩИМ ПАКЕТОМ
+%\usepackage[warn]{mathtext}				% Поддержка русского текста в формулах
+\usepackage[T1, T2A]{fontenc}			% Пакет выбора кодировки и шрифтов
+\usepackage[utf8]{inputenc} 			% любая желаемая кодировка
+\usepackage[english]{babel}		% поддержка русского языка
+\usepackage{wrapfig}					% Плавающие картинки
+\usepackage{amssymb, amsmath}			% стилевой пакет для формул
+\usepackage{algorithm}
+\usepackage{algorithmic} 
+
+
+\ifpdf
+\usepackage{cmap} 				% чтобы работал поиск по PDF
+\usepackage[pdftex]{graphicx}
+%\usepackage{pgfplotstable}		% Для вставки таблиц.
+\pdfcompresslevel=9 			% сжимать PDF
+\else
+\usepackage{graphicx}
+\fi
+
+\graphicspath{{./figures/}}
+\usepackage{subcaption}
+
+%custom commands
+\newcommand{\norm}[1]{\Vert{#1}\Vert}
+
+%% ============================================
+%% ================ Info =================
+%% ============================================
+\title{Neon: Nuclear Norm to Beat Muon}
+
+\author{
+  Alexey Kravatskiy\\
+  \texttt{kravtskii.aiu@phystech.edu}
+  \and
+  Ivan Kozyrev\\
+  \texttt{kozyrev.in@phystech.edu}
+  \and
+  Nikolay Kozlov \\
+  \texttt{kozlov.na@phystech.edu}
+  \and
+  Alexander Vinogradov \\
+  \texttt{vinogradov.am@phystech.edu}
+}
+
+%\author{\begin{tabular}{c c}
+%	  	 Alexey Kravatsky & Nikolay Kozlov & Ivan Kozyrev \\
+%		 \texttt{kravatskii.aiu@phystech.edu} & \texttt{kozlov.n?@phystech.edu} & \texttt{kozyrev.i?@phystech.edu}  
+%		\end{tabular}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+In this paper, we develop a new algorithm for optimization of functions of weight matrices, which are typical for training large language models. Changing spectral norm, which was used to derive Muon, to nuclear norm, we pose a new optimization problem for an update matrix, solution of which defines a novel method we name Neon. After providing theoretical guarantees of Neon convergence, we compare performances of Neon, Muon, and Adam on training multilayer perceptron and BERT vectorizer.
+
+\end{abstract}
+
+\section{Idea}
+The goal of the project is to make variations on Muon to speed it up. Recently, authors of \cite{bernstein2024oldoptimizernewnorm} have proposed to look at different optimizers as the solution of the optimization problem for an update. This approach can be utilized to derive Muon \cite{jordan2024muon}, a novel algorithm for fast training of neural networks. Instead of using spectral norm in the problem, we use nuclear norm to produce a new problem. %Then, we add momentum to update. After finalizing the algorithm, we test it on MLP, and, if results are satisfactory, on transformers (probably something from huggingface). The result will be a fast algorithm, which we will convert into a new optimizer class for PyTorch, as was done with Muon.%
+
+\subsection{Problem}
+
+In this subsection, we provide a more detailed description of our idea and formulate it as a mathematical problem. The authors of \cite{bernstein2024oldoptimizernewnorm} suggest obtaining the update step as a solution to the optimization problem:
+\begin{equation}
+    \langle g, \delta w \rangle + \lambda \norm{\delta w}^2 \to \min_{\delta w}\,,
+\end{equation}
+where $w$ is the weight vector, $g$ is a gradient-like vector (e.g., obtained via momentum SGD), and $\norm{\cdot}$ represents a certain norm. Many popular optimizers, such as Adam (with exponential moving average disabled) and vanilla SGD, can be cast within this framework \cite{bernstein2024oldoptimizernewnorm}.
+
+In large language models, most weights are structured as matrices, which offers additional opportunities for optimization. Let $W$ be the weight matrix of a linear layer, and $G$ be a gradient-like matrix. Then, the update step $\delta W$ can be obtained as a solution to the optimization problem:
+\begin{equation}\label{eqn:opt_problem_mat}
+  \langle G, \delta W \rangle + \lambda \norm{\delta W}^2 \to \min_{\delta W}\,,
+\end{equation}
+where $\norm{\cdot}$ denotes a certain matrix norm. By setting this norm to the RMS-to-RMS norm (a scaled version of the spectral norm), we recover the Muon optimizer \cite{bernstein2025deriving, bernstein2024oldoptimizernewnorm} with an update step defined by:
+\begin{equation}
+\delta W = - \frac{1}{\lambda}\sqrt{\frac{n}{m}}UV^T\,,
+\end{equation}
+where $m$ is the input dimension of the layer, $n$ is the output dimension, and $U$ and $V$ are obtained from the singular value decomposition of the gradient matrix $G = U \Sigma V$.
+
+Motivated by the recent achievements of the Muon optimizer (e.g., \cite{liu2025muon}), we consider alternative choices of norms, specifically the kernel norm $\norm{\cdot}_*$ and a custom $F*$ norm, given by $\norm{X}_{F*}^2 = (\norm{X}_F + \norm{X}_*)/2$, where $\norm{\cdot}_F$ denotes the Frobenius norm.
+
+Using the kernel norm in \eqref{eqn:opt_problem_mat} leads to a rank-one update of the weight matrices:
+\begin{equation}\label{eqn:update_star}
+  \delta W = \frac{1}{\lambda} u_1 \sigma_1 v_1^T\,,
+\end{equation}
+where $\sigma_1$ is the largest singular value, and $u_1$ and $v_1$ are the corresponding singular vectors. We expect one iteration of this method to be significantly faster than one iteration of Muon.
+
+Another choice is the $F*$ norm. With this choice, \eqref{eqn:opt_problem_mat} yields 
+\begin{equation}\label{eqn:update_F_star}
+\delta W = \frac{1}{\lambda}UDV^T
+\end{equation} 
+with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$ and $\tau$ is given by:
+\begin{equation}
+    \sum_{i=1}^n [\sigma_i - \tau]_+ = \tau\,.
+\end{equation}
+We anticipate that the method with this update step will perform well with large batch sizes.
+
+In this article we show how one can quickly compute weight updates defined by \eqref{eqn:update_star} and \eqref{eqn:update_F_star}. Then we finilize the methods by adding momentum and test their performance against those of Muon ant training multilayer perceptron and transformer. The results will be fast algorithms, which we will convert into a new optimizer classes for PyTorch, as was done with Muon.
+
+\section{Outcomes}
+
+\section{Literature review}
+
+\section{Quality metrics}
+
+\section{Preliminary plan}
+
+\section{Prototyping phase report}
+
+\bibliographystyle{unsrt}
+\bibliography{muon}
+
+\end{document}
