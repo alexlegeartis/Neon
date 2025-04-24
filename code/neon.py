@@ -407,6 +407,7 @@ def main(run, model):
             step += 1
             if step >= total_train_steps:
                 break
+            print("Step %d/%d" % (step, total_train_steps), end='\r')
         stop_timer()
 
         train_acc = (outputs.detach().argmax(1) == labels).float().mean().item()
