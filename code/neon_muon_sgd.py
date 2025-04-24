@@ -177,9 +177,7 @@ class Neon(torch.optim.Optimizer):
                     continue
                 p.data.mul_(len(p.data)**0.5 / norm)
                 
-                # Reshape gradient to 2D if needed
-                g_reshaped = g.reshape(g.size(0), -1)
-                update = u1s1v1t_torch(g_reshaped).view(g.shape)
+                update = u1s1v1t_torch(g.reshape(len(g), -1)).view(g.shape)
                 p.data.add_(update, alpha=-lr)
 
 #############################################
@@ -366,11 +364,11 @@ def create_optimizers(model, optimizer_type, head_lr=0.1, bias_lr=0.053, wd=2e-6
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
     
     if optimizer_type == 'neon':
-        optimizer2 = Neon(linear_params, lr=0.24, momentum=0.6, nesterov=True)
+        optimizer2 = Neon(linear_params, lr=0.04, momentum=0.6, nesterov=True)
     elif optimizer_type == 'muon':
         optimizer2 = Muon(linear_params, lr=0.24, momentum=0.6, nesterov=True)
     elif optimizer_type == 'sgd':
-        optimizer2 = torch.optim.SGD([dict(params=linear_params, lr=0.24, weight_decay=wd/0.24)], 
+        optimizer2 = torch.optim.SGD([dict(params=linear_params, lr=0.04, weight_decay=wd/0.24)], 
                                    momentum=0.85, nesterov=True, fused=True)
     elif optimizer_type == 'adamw':
         optimizer2 = torch.optim.AdamW([dict(params=linear_params, lr=0.24, weight_decay=wd/0.24)], 
@@ -403,7 +401,7 @@ def main():
     all_epochs = []
     all_accs = []
     all_times = []
-    optimizer_names = ['Neon', 'Muon', 'SGD', 'AdamW']
+    optimizer_names = ['SGD', 'Neon', 'Muon', 'AdamW']
 
     # Train with each optimizer
     for opt_name in optimizer_names:
