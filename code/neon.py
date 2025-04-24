@@ -342,7 +342,7 @@ def evaluate(model, loader, tta_level=0):
 ############################################
 
 def main(run, model):
-    batch_size = 128
+    batch_size = 512
     bias_lr = 0.053
     head_lr = 0.67
     wd = 2e-6 * batch_size
