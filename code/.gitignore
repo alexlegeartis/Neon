@@ -1,0 +1,29 @@
+# CIFAR-10 dataset files
+cifar10/
+*.pt
+*.pth
+*.tar.gz
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db 
