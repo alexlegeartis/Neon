@@ -232,10 +232,10 @@ def train_model(model, optimizers, train_loader, test_loader, total_epochs):
     return best_acc, training_time
 
 def main():
-    batch_size = 128
-    total_epochs = 10
-    wd = 0.1  # weight decay
-    bias_lr = 0.1
+    batch_size = 512
+    total_epochs = 5
+    wd = 2e-6 * batch_size  # weight decay
+    bias_lr = 0.053
     head_lr = 0.1
 
     train_loader = CifarLoader('cifar10', train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
@@ -245,15 +245,17 @@ def main():
     print("\nTraining with Muon optimizer...")
     model_muon = SimplePerceptron().to(device)
     
-    # Configure optimizers similar to neon.py
-    filter_params = [p for p in model_muon.parameters() if len(p.shape) == 4 and p.requires_grad]
-    norm_biases = [p for n, p in model_muon.named_parameters() if 'norm' in n and p.requires_grad]
+    # Configure optimizers for perceptron model
+    # Split parameters into linear layers and biases
+    linear_params = [p for n, p in model_muon.named_parameters() if 'weight' in n]
+    bias_params = [p for n, p in model_muon.named_parameters() if 'bias' in n]
+    
     param_configs = [
         dict(params=[model_muon.linear2.weight], lr=head_lr, weight_decay=wd/head_lr),
-        dict(params=norm_biases, lr=bias_lr, weight_decay=wd/bias_lr)
+        dict(params=bias_params, lr=bias_lr, weight_decay=wd/bias_lr)
     ]
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)
-    optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True)
+    optimizer2 = Muon(linear_params, lr=0.24, momentum=0.6, nesterov=True)
     optimizers_muon = [optimizer1, optimizer2]
     
     for opt in optimizers_muon:
@@ -272,8 +274,8 @@ def main():
     # Configure SGD optimizer with the same parameter groups
     param_configs_sgd = [
         dict(params=[model_sgd.linear2.weight], lr=head_lr, weight_decay=wd/head_lr),
-        dict(params=norm_biases, lr=bias_lr, weight_decay=wd/bias_lr),
-        dict(params=filter_params, lr=0.24, weight_decay=wd/0.24)
+        dict(params=bias_params, lr=bias_lr, weight_decay=wd/bias_lr),
+        dict(params=linear_params, lr=0.24, weight_decay=wd/0.24)
     ]
     optimizer_sgd = torch.optim.SGD(param_configs_sgd, momentum=0.85, nesterov=True)
     
