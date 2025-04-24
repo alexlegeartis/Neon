@@ -182,16 +182,9 @@ class SimplePerceptron(nn.Module):
 #                Training                  #
 ############################################
 
-def main(run, model):
-    batch_size = 128
-    lr = 0.01
-    momentum = 0.9
-    total_epochs = 10
-
-    train_loader = CifarLoader('cifar10', train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
-    test_loader = CifarLoader('cifar10', train=False, batch_size=batch_size)
-
-    optimizer = Muon(model.parameters(), lr=lr, momentum=momentum, nesterov=True)
+def train_model(model, optimizers, train_loader, test_loader, total_epochs):
+    start_time = time.time()
+    best_acc = 0.0
     
     for epoch in range(total_epochs):
         print(f"Epoch {epoch+1}/{total_epochs}")
@@ -201,11 +194,13 @@ def main(run, model):
         total = 0
         
         for inputs, labels in train_loader:
-            optimizer.zero_grad()
+            for opt in optimizers:
+                opt.zero_grad()
             outputs = model(inputs)
             loss = F.cross_entropy(outputs, labels)
             loss.backward()
-            optimizer.step()
+            for opt in optimizers:
+                opt.step()
             
             total_loss += loss.item()
             _, predicted = outputs.max(1)
@@ -229,10 +224,72 @@ def main(run, model):
         test_acc = 100. * correct / total
         print(f"Test Acc: {test_acc:.3f}%")
         
-    return test_acc
+        if test_acc > best_acc:
+            best_acc = test_acc
+    
+    end_time = time.time()
+    training_time = end_time - start_time
+    return best_acc, training_time
+
+def main():
+    batch_size = 128
+    total_epochs = 10
+    wd = 0.1  # weight decay
+    bias_lr = 0.1
+    head_lr = 0.1
+
+    train_loader = CifarLoader('cifar10', train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
+    test_loader = CifarLoader('cifar10', train=False, batch_size=batch_size)
+
+    # Train with Muon optimizer
+    print("\nTraining with Muon optimizer...")
+    model_muon = SimplePerceptron().to(device)
+    
+    # Configure optimizers similar to neon.py
+    filter_params = [p for p in model_muon.parameters() if len(p.shape) == 4 and p.requires_grad]
+    norm_biases = [p for n, p in model_muon.named_parameters() if 'norm' in n and p.requires_grad]
+    param_configs = [
+        dict(params=[model_muon.linear2.weight], lr=head_lr, weight_decay=wd/head_lr),
+        dict(params=norm_biases, lr=bias_lr, weight_decay=wd/bias_lr)
+    ]
+    optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)
+    optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True)
+    optimizers_muon = [optimizer1, optimizer2]
+    
+    for opt in optimizers_muon:
+        for group in opt.param_groups:
+            group["initial_lr"] = group["lr"]
+    
+    muon_acc, muon_time = train_model(model_muon, optimizers_muon, train_loader, test_loader, total_epochs)
+    print(f"\nMuon Results:")
+    print(f"Best Accuracy: {muon_acc:.2f}%")
+    print(f"Training Time: {muon_time:.2f} seconds")
+
+    # Train with SGD optimizer
+    print("\nTraining with SGD optimizer...")
+    model_sgd = SimplePerceptron().to(device)
+    
+    # Configure SGD optimizer with the same parameter groups
+    param_configs_sgd = [
+        dict(params=[model_sgd.linear2.weight], lr=head_lr, weight_decay=wd/head_lr),
+        dict(params=norm_biases, lr=bias_lr, weight_decay=wd/bias_lr),
+        dict(params=filter_params, lr=0.24, weight_decay=wd/0.24)
+    ]
+    optimizer_sgd = torch.optim.SGD(param_configs_sgd, momentum=0.85, nesterov=True)
+    
+    for group in optimizer_sgd.param_groups:
+        group["initial_lr"] = group["lr"]
+    
+    sgd_acc, sgd_time = train_model(model_sgd, [optimizer_sgd], train_loader, test_loader, total_epochs)
+    print(f"\nSGD Results:")
+    print(f"Best Accuracy: {sgd_acc:.2f}%")
+    print(f"Training Time: {sgd_time:.2f} seconds")
+
+    # Print comparison
+    print("\nComparison:")
+    print(f"Accuracy Difference: {muon_acc - sgd_acc:.2f}% (Muon - SGD)")
+    print(f"Time Difference: {muon_time - sgd_time:.2f} seconds (Muon - SGD)")
+    print(f"Speedup: {sgd_time/muon_time:.2f}x")
 
 if __name__ == "__main__":
-    model = SimplePerceptron().to(device)
-    print("Starting training...")
-    final_acc = main(0, model)
-    print(f"Final test accuracy: {final_acc:.2f}%") 
+    main() 
