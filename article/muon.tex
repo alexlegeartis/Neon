@@ -62,14 +62,14 @@ linkcolor = blue]{hyperref}	% нумерование страниц, ссылк�
 \maketitle
 
 \begin{abstract}
-In this paper, we develop a new algorithm for optimization of functions of weight matrices, which are typical for training large language models. Changing spectral norm, which was used to derive Muon, to nuclear norm, we pose a new optimization problem for an update matrix, solution of which defines a novel method we name Neon. After providing theoretical guarantees of Neon convergence, we compare performances of Neon, Muon, and Adam on training multilayer perceptron and BERT vectorizer.
+In this paper, we develop a new algorithm for optimization of functions of weight matrices, which are typical for training large language models. Changing spectral norm, which was used to derive Muon, to nuclear norm, we pose a new optimization problem for an update matrix, solution of which defines a novel algorithm we name Neon. To make it feasible, we use Lanzos algorithm to find a required step. After providing theoretical guarantees of Neon convergence, we compare performances of Neon, Muon, and Adam on training multilayer perceptron, convolutional neural network and NanoGPT.
 
 \end{abstract}
 
 \section{Idea}
 The goal of the project is to make variations on Muon to speed it up. Recently, authors of \cite{bernstein2024oldoptimizernewnorm} have proposed to look at different optimizers as the solution of the optimization problem for an update. This approach can be utilized to derive Muon \cite{jordan2024muon}, a novel algorithm for fast training of neural networks. Instead of using spectral norm in the problem, we use nuclear norm to produce a new problem. %Then, we add momentum to update. After finalizing the algorithm, we test it on MLP, and, if results are satisfactory, on transformers (probably something from huggingface). The result will be a fast algorithm, which we will convert into a new optimizer class for PyTorch, as was done with Muon.%
 
-\subsection{Problem}
+\subsection{Problem (Project description)}
 
 In this subsection, we provide a more detailed description of our idea and formulate it as a mathematical problem. The authors of \cite{bernstein2024oldoptimizernewnorm} suggest obtaining the update step as a solution to the optimization problem:
 \begin{equation}
@@ -108,14 +108,65 @@ We anticipate that the method with this update step will perform well with large
 In this article we show how one can quickly compute weight updates defined by \eqref{eqn:update_star} and \eqref{eqn:update_F_star}. Then we finilize the methods by adding momentum and test their performance against those of Muon ant training multilayer perceptron and transformer. The results will be fast algorithms, which we will convert into a new optimizer classes for PyTorch, as was done with Muon.
 
 \section{Outcomes}
+The main results of the project are expected to be:
+\begin{enumerate}
+    \item Deriving of Neon and argumentation of the numerical methods which will be used in the algorithm
+    \item Code implementation of Neon as PyTorch optimizer class
+    \item Numerical experiments comparing performance of training with Neon, Muon, SVD and Adam on several architectures: MLP, CNN, and NanoGPT.
+    \item Participation in CIFAR-10 challenge with Neon (if the alrothims turns out to be competitive)
+    \item Article describing all the results. If they are satisfactory, we intend to be in time to apply for NeurIPS 2025. It is a challenge, but I think we must give it a try.
+\end{enumerate}
 
 \section{Literature review}
-
+TO-DO.
 \section{Quality metrics}
+\begin{enumerate}
+    \item The derivation is theoretically solid
+    \item The numerical procedure used to compute a step is grounded and has estimated time overhead (say, in FLOPS)
+    \item The code with Neon trains MLP and CNN (and NanoGPT, but it's a bonus) less than 3 times slower than Adam
+    \item Instruction of setting the parameters of the algorithm are presented and justified
+    \item The announced article has full structure (Abstract, Introduction, Theory, Experiments, Conclusion, Appendix)
+    \item If results are positive, it is written with NeurIPS template.
+\end{enumerate}
 
 \section{Preliminary plan}
+\paragraph{Week April 28 - May 4}
+\begin{itemize}
+    \item For Alexey: solve how to tune the algorithms for MLP and CNN, try formulating theory (and an appropriate model of the problem) why Muon and Neon are so successful, and create the drafts of the proofs. Register at NeurIPS site.
+    
+    \item For Ivan: write the theory for an update from the algebra point of view (as for an article)
+    
+    \item For Nikolay: write the theory for computing an update, and implement the method, if required
+    
+    \item For Alexander: reproduce results of Jordan on NanoGPT and ResNet (CIFAR-10), learn to train both models with Neon.
+\end{itemize}
+
+\paragraph{Week May 5 - May 11}
+\begin{itemize}
+    \item For Alexey: finalize the proofs. Verify them via small experiments on MLP and CNN. Write with Alexander Experiments for the article.
+    
+    \item For Ivan: join Nikolay to finalize algebra part of the article. Estimate FLOPS, memory and other overheads (produce O bounds)
+    
+    \item For Nikolay: write a draft of the poster (before May 6), and work with Ivan
+    
+    \item For Alexander: agressively test algorithms, prove that Neon outperforms competitors and prepare the results for the article.
+    
+    \item For everybody: write and edit the article
+    
+    \item May 11: submit an abstract to NeurIPS.
+    
+    \item May 12-14: the article is being polished.
+    
+    \item May 15: the article must be sent.
+\end{itemize}
 
 \section{Prototyping phase report}
+\begin{enumerate}
+    \item Update rule is derived, see idea
+    \item Update rule methods are tested: power iteration vs Lanzos (see playground)
+    \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower)
+    \item Neon, Muon, AdamW and SGD are compared on MLP and CNN (add fig). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
+\end{enumerate}
 
 \bibliographystyle{unsrt}
 \bibliography{muon}
