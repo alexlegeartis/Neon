@@ -120,7 +120,15 @@ The main results of the project are expected to be:
 \section{Literature review}
 Our review focuses mainly on Muon and Shampoo optimizers, since our algorith extends ideas used to derive those. We highlight advantages and disadvantages of those methods, unique effects they introduce, and compare them to Neon. 
 
-In the previous section we described the theory behind weights update step in Muon optimizer, but we have not discussed how to obtain required matrices on practice. The update step is defined by~\eqref{eqn:update_muon}, which requires $UV^T$ with $U$ and $V^T$ from singular value decomposition of gradient-like matrix $G$. Naive solution would be to compute SVD of $G$, and construct required expression. However, developers of Muon optimizer developed a workaround which uses Newton-Shulz iterations~\cite{jordan2024muon}. Newton-Shulz iterations from original article~\cite{jordan2024muon} require $10$ matrix-matrix multiplication to achieve desired accuracy. Asimptotic complexity of such operation is identical to those of SVD and equals $O(nm \min\{m, n\})$ for $m \times n$ matrix, but matrix multiplication on modern GPUs can be performed much more efficiently.
+In the previous section we described the theory behind weights update step in Muon optimizer, but we have not discussed how to obtain required matrices on practice. The update step is defined by~\eqref{eqn:update_muon}, which requires $UV^T$ with $U$ and $V^T$ from singular value decomposition of gradient-like matrix $G$. Naive solution would be to compute SVD of $G$, and construct required expression. However, developers of Muon optimizer came up with a workaround which uses Newton-Shulz iterations~\cite{jordan2024muon}. Newton-Shulz iterations from original article~\cite{jordan2024muon} require $10$ matrix-matrix multiplications to achieve desired accuracy. Asimptotic complexity of such operation is identical to those of SVD and equals $O(mn \min\{m, n\})$ for $m \times n$ matrix, but matrix multiplication on modern GPUs can be performed much more efficiently. 
+
+The performance of Muon on training large language models was tested~\cite{liu2025muon} against those of AdamW. The testing demonstrated excellent performance of Muon~--- it was $\sim 2$ times more efficient in terms of FLOPs required to reach certain loss value. It is even more remarkable, if cost of one iteration is taken into account: Muon requires additional $O(mn \min\{m, n\})$ FLOPs per $m \times n$ matrix, while AdamW needs only $O(mn)$.
+
+Another interesting discovery about Muon optimizer is that it accelerates grokking\cite{tveit2025muonoptimizeracceleratesgrokking}. At the test problem Muon achieved grokking significantly faster then AdamW in terms of passed epochs, mean grokking epoch for Muon was $102.89$, while for AdamW it wes $153.09$. Authors suggest that this may be due to the fact that Muon stimulates broder exploration by orthogonalizing gradient matrix, and thus avoids memorization.
+
+
+
+Recently certain thoretical guarantees for Muon convergence have been derived~\cite{li2025noteconvergencemuon}. In particular, in $L$-smooth convex case it achieves $1/T^{\frac{1}{4}}$  
 
 
 
