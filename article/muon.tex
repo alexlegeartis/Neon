@@ -7,6 +7,7 @@
 \usepackage[pdftex,unicode, 
 colorlinks=true,
 linkcolor = blue]{hyperref}	% нумерование страниц, ссылки!!!!ИМЕННО В ТАКОМ ПОРЯДКЕ СО СЛЕДУЮЩИМ ПАКЕТОМ
+\usepackage{natbib}  % Add natbib for better citation handling
 %\usepackage[warn]{mathtext}				% Поддержка русского текста в формулах
 \usepackage[T1, T2A]{fontenc}			% Пакет выбора кодировки и шрифтов
 \usepackage[utf8]{inputenc} 			% любая желаемая кодировка
@@ -118,7 +119,8 @@ The main results of the project are expected to be:
 \end{enumerate}
 
 \section{Literature review}
-TO-DO.
+TO-DO
+
 \section{Quality metrics}
 \begin{enumerate}
     \item The derivation is theoretically solid
@@ -164,11 +166,32 @@ TO-DO.
 \begin{enumerate}
     \item Update rule is derived, see idea
     \item Update rule methods are tested: power iteration vs Lanzos (see playground)
-    \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower)
-    \item Neon, Muon, AdamW and SGD are compared on MLP and CNN (add fig). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
+    \item Recorded the distribution of singular values of gradients during NanoGPT training (add fig).
+    \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower). Besides, Neon doe not converge (add fig).
+    \item Neon, Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_simple.png}}
+        \caption{MLP: self.linear1 = nn.Linear(32*32*3, 512), self.linear2 = nn.Linear(512, 10), self.activ = nn.GELU()}
+        \label{fig:mlp_epochs}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_moderate.png}}
+        \caption{CNN: 2 convolutional blocks, 2 fully connected layers, activation + dropout}
+        \label{fig:cnn_epochs}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_time_simple.png}}
+        \caption{MLP: wallclock time measurements}
+        \label{fig:mlp_time}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_time_moderate.png}}
+        \caption{CNN: wallclock time measurements}
+        \label{fig:cnn_time}
+    \end{figure}
 \end{enumerate}
 
-\bibliographystyle{unsrt}
-\bibliography{muon.bib}
+\bibliographystyle{plainnat}  % Change to plainnat style
+\bibliography{muon}  % Make sure to include the bibliography
 
 \end{document}
