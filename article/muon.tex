@@ -7,7 +7,6 @@
 \usepackage[pdftex,unicode, 
 colorlinks=true,
 linkcolor = blue]{hyperref}	% нумерование страниц, ссылки!!!!ИМЕННО В ТАКОМ ПОРЯДКЕ СО СЛЕДУЮЩИМ ПАКЕТОМ
-\usepackage{natbib}  % Add natbib for better citation handling
 %\usepackage[warn]{mathtext}				% Поддержка русского текста в формулах
 \usepackage[T1, T2A]{fontenc}			% Пакет выбора кодировки и шрифтов
 \usepackage[utf8]{inputenc} 			% любая желаемая кодировка
@@ -191,7 +190,7 @@ TO-DO
     \end{figure}
 \end{enumerate}
 
-\bibliographystyle{plainnat}  % Change to plainnat style
-\bibliography{muon}  % Make sure to include the bibliography
+\bibliographystyle{unsrt}
+\bibliography{muon.bib}
 
 \end{document}
