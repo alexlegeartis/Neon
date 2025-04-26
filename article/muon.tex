@@ -82,7 +82,7 @@ In large language models, most weights are structured as matrices, which offers 
   \langle G, \delta W \rangle + \lambda \norm{\delta W}^2 \to \min_{\delta W}\,,
 \end{equation}
 where $\norm{\cdot}$ denotes a certain matrix norm. By setting this norm to the RMS-to-RMS norm (a scaled version of the spectral norm), we recover the Muon optimizer \cite{bernstein2025deriving, bernstein2024oldoptimizernewnorm} with an update step defined by:
-\begin{equation}
+\begin{equation}\label{eqn:update_muon}
 \delta W = - \frac{1}{\lambda}\sqrt{\frac{n}{m}}UV^T\,,
 \end{equation}
 where $m$ is the input dimension of the layer, $n$ is the output dimension, and $U$ and $V$ are obtained from the singular value decomposition of the gradient matrix $G = U \Sigma V$.
@@ -118,7 +118,14 @@ The main results of the project are expected to be:
 \end{enumerate}
 
 \section{Literature review}
-TO-DO.
+Our review focuses mainly on Muon and Shampoo optimizers, since our algorith extends ideas used to derive those. We highlight advantages and disadvantages of those methods, unique effects they introduce, and compare them to Neon. 
+
+In the previous section we described the theory behind weights update step in Muon optimizer, but we have not discussed how to obtain required matrices on practice. The update step is defined by~\eqref{eqn:update_muon}, which requires $UV^T$ with $U$ and $V^T$ from singular value decomposition of gradient-like matrix $G$. Naive solution would be to compute SVD of $G$, and construct required expression. However, developers of Muon optimizer developed a workaround which uses Newton-Shulz iterations~\cite{jordan2024muon}. Newton-Shulz iterations from original article~\cite{jordan2024muon} require $10$ matrix-matrix multiplication to achieve desired accuracy. Asimptotic complexity of such operation is identical to those of SVD and equals $O(nm \min\{m, n\})$ for $m \times n$ matrix, but matrix multiplication on modern GPUs can be performed much more efficiently.
+
+
+
+While uniqie advantages and effects introduced by Neon are yet to be discovered, we can already say that our new optimizer introduces additional overhead of $???$ FLOPS per $m \times n$ weight matrix, which is much better then $O(m n \min\{m, n\})$ for Muon optimizer and $O(n^3 + m^3)$ for Shampoo.
+
 \section{Quality metrics}
 \begin{enumerate}
     \item The derivation is theoretically solid
