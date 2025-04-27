@@ -91,13 +91,13 @@ Motivated by the recent achievements of the Muon optimizer (e.g., \cite{liu2025m
 
 Using the kernel norm in \eqref{eqn:opt_problem_mat} leads to a rank-one update of the weight matrices:
 \begin{equation}\label{eqn:update_star}
-  \delta W = \frac{1}{\lambda} u_1 \sigma_1 v_1^T\,,
+  \delta W = -\frac{1}{\lambda} u_1 \sigma_1 v_1^T\,,
 \end{equation}
 where $\sigma_1$ is the largest singular value, and $u_1$ and $v_1$ are the corresponding singular vectors. We expect one iteration of this method to be significantly faster than one iteration of Muon.
 
 Another choice is the $F*$ norm. With this choice, \eqref{eqn:opt_problem_mat} yields 
 \begin{equation}\label{eqn:update_F_star}
-\delta W = \frac{1}{\lambda}UDV^T
+\delta W = -\frac{1}{\lambda}UDV^T
 \end{equation} 
 with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$ and $\tau$ is given by:
 \begin{equation}
