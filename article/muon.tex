@@ -197,24 +197,24 @@ Building on this foundation, hybrid approaches like COSMOS \cite{chen2025cosmosh
     \item Update rule methods are tested: power iteration vs Lanczos (see playground)
     \item Recorded the distribution of singular values of gradients during NanoGPT training (see Firgures ~\ref{fig:svd_all}, \ref{fig:svd_all}).
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/svd_evolution_all.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/svd_evolution_all.png}}
         \caption{Singular values of $50257\times 1280$ layer via 200 iterations}
         \label{fig:svd_all}
     \end{figure}
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/svd_evolution.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/svd_evolution.png}}
         \caption{Singular values of  of $50257\times 1280$ layer for 5-th,45-th, 65-th,175-th and 200-th iteration}
         \label{fig:svd}
     \end{figure} 
     
     \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower). Besides, Neon (rank-1 version) does not converge (see Figures ~\ref{fig:train_loss} \ref{fig:val_loss})
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/loss_train.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/loss_train.png}}
         \caption{Train loss}
         \label{fig:train_loss}
     \end{figure}
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/loss_val.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/loss_val.png}}
         \caption{Validation loss}
         \label{fig:val_loss}
     \end{figure} 
@@ -224,27 +224,45 @@ Building on this foundation, hybrid approaches like COSMOS \cite{chen2025cosmosh
     
     \item Neon (rank-1 version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/accuracy_vs_epochs_simple.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_simple.png}}
         \caption{MLP: self.linear1 = nn.Linear(32*32*3, 512), self.linear2 = nn.Linear(512, 10), self.activ = nn.GELU()}
         \label{fig:mlp_epochs}
     \end{figure}
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/accuracy_vs_epochs_moderate.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_moderate.png}}
         \caption{CNN: 2 convolutional blocks, 2 fully connected layers, activation + dropout}
         \label{fig:cnn_epochs}
     \end{figure}
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/accuracy_vs_time_simple.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_time_simple.png}}
         \caption{MLP: wallclock time measurements}
         \label{fig:mlp_time}
     \end{figure}
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/accuracy_vs_time_moderate.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_time_moderate.png}}
         \caption{CNN: wallclock time measurements}
         \label{fig:cnn_time}
     \end{figure}
-\end{enumerate}\\
+\end{enumerate}
 
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{c|c|c|c}
+    \hline
+    Method                              & rtol        & k & time,s \\
+    \hline 
+    Power Iterations                    & 0.01        & 1 & 7.7\\ 
+    SVDS (thick-restart Lanczos method) & 0.01        & 1 & 0.18\\
+    PCA Low Rank (RSVD)                 & 0.01        & 1 & 1.15\\
+    SVDS (thick-restart Lanczos method) & 0.01        & 10 & 0.47\\
+    PCA Low Rank (RSVD)                 & 0.01        & 10 & 19.4\\
+    SVDS (thick-restart Lanczos method) & 0.01        & 100 & 1.96\\
+    PCA Low Rank (RSVD)                 & 0.01        & 100 & 170\\
+    \end{tabular}
+    \caption{k-rank updated comparison}
+    Comparison of different numerical methods to calculate k-rank update on $5000\times5000$ matrix of real numbers, rtol is an error in Frobenius norm relative to the k-rank approximation of truncated svd. During the research it was noted that rsvd can give good and fast approximation for singular values, but the matrix of approximation is far from the one given by truncated svd, while Lanczos method gives good and fast approximation for a matrix, but not so good approximation for singular values. 
+    \label{tab:my_label}
+\end{table}
 
 
 \bibliographystyle{unsrt}
