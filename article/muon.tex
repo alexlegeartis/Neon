@@ -214,6 +214,25 @@ While the uniqie advantages and effects introduced by Neon are yet to be discove
     \end{figure}
 \end{enumerate}
 
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{c|c|c|c}
+    \hline
+    Method                              & rtol        & k & time,s \\
+    \hline 
+    Power Iterations                    & 0.01        & 1 & 7.7\\ 
+    SVDS (thick-restart Lanczos method) & 0.01        & 1 & 0.18\\
+    PCA Low Rank (RSVD)                 & 0.01        & 1 & 1.15\\
+    SVDS (thick-restart Lanczos method) & 0.01        & 10 & 0.47\\
+    PCA Low Rank (RSVD)                 & 0.01        & 10 & 19.4\\
+    SVDS (thick-restart Lanczos method) & 0.01        & 100 & 1.96\\
+    PCA Low Rank (RSVD)                 & 0.01        & 100 & 170\\
+    \end{tabular}
+    \caption{k-rank updated comparison}
+    Comparison of different numerical methods to calculate k-rank update on $5000\times5000$ matrix of real numbers, rtol is an error in Frobenius norm relative to the k-rank approximation of truncated svd. During the research it was noted that rsvd can give good and fast approximation for singular values, but the matrix of approximation is far from the one given by truncated svd, while Lanczos method gives good and fast approximation for a matrix, but not so good approximation for singular values. 
+    \label{tab:my_label}
+\end{table}
+
 \bibliographystyle{unsrt}
 \bibliography{muon.bib}
 
