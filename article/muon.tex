@@ -105,7 +105,7 @@ with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$ and $\tau$ is giv
 \end{equation}
 We anticipate that the method with this update step will perform well with large batch sizes.
 
-In this article we show how one can quickly compute weight updates defined by \eqref{eqn:update_star} and \eqref{eqn:update_F_star}. Then we finilize the methods by adding momentum and test their performance against those of Muon ant training multilayer perceptron and transformer. The results will be fast algorithms, which we will convert into a new optimizer classes for PyTorch, as was done with Muon.
+In this article we show how one can quickly compute weight updates defined by \eqref{eqn:update_star} or \eqref{eqn:update_F_star} (for now we need more tests to accept one variant or both of them). Then we finilize the method by adding momentum and test their performance against those of Muon at training multilayer perceptron and transformer. The results will be fast algorithm, which we will convert into a new optimizer classes for PyTorch, as was done with Muon.
 
 \section{Outcomes}
 The main results of the project are expected to be:
@@ -113,7 +113,7 @@ The main results of the project are expected to be:
     \item Deriving of Neon and argumentation of the numerical methods which will be used in the algorithm
     \item Code implementation of Neon as PyTorch optimizer class
     \item Numerical experiments comparing performance of training with Neon, Muon, SVD and Adam on several architectures: MLP, CNN, and NanoGPT.
-    \item Participation in CIFAR-10 challenge with Neon (if the alrothims turns out to be competitive)
+    \item Participation in CIFAR-10 challenge with Neon (if the alrothim turns out to be competitive)
     \item Article describing all the results. If they are satisfactory, we intend to be in time to apply for NeurIPS 2025. It is a challenge, but I think we must give it a try.
 \end{enumerate}
 
@@ -142,7 +142,7 @@ Convergence analysis is presented in the original article \cite{gupta2018shampoo
 
 Recent developments in optimization techniques show that utilizing the matrix structure of weights in neural networks can be very beneficial. Optimizers following this path converge faster in terms of iterations or epochs and often even FLOPs, but have a high iteration cost. Neon seeks to decrease the iteration cost while preserving fast convergence.
 
-While the uniqie advantages and effects introduced by Neon are yet to be discovered, we can already say that our new optimizer introduces additional overhead of $???$[Depends on variant of Neon we choose] FLOPS per $m \times n$ weight matrix, which is much better then $O(m n \min\{m, n\})$ for Muon optimizer and $O(n^3 + m^3)$ for Shampoo. 
+While the uniqie advantages and effects introduced by Neon are yet to be discovered, we can already say that our new optimizer introduces additional overhead of $O(mn)$ FLOPS on average per $m \times n$ weight matrix, which is much better then $O(m n \min\{m, n\})$ for Muon optimizer and $O(n^3 + m^3)$ for Shampoo. 
 
 \section{Quality metrics}
 \begin{enumerate}
@@ -190,8 +190,8 @@ While the uniqie advantages and effects introduced by Neon are yet to be discove
     \item Update rule is derived, see idea
     \item Update rule methods are tested: power iteration vs Lanzos (see playground)
     \item Recorded the distribution of singular values of gradients during NanoGPT training (add fig).
-    \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower). Besides, Neon doe not converge (add fig).
-    \item Neon, Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
+    \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower). Besides, Neon (rank-1 version) does not converge (add fig).
+    \item Neon (rank-1 version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
     \begin{figure}[h!]
         \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_simple.png}}
         \caption{MLP: self.linear1 = nn.Linear(32*32*3, 512), self.linear2 = nn.Linear(512, 10), self.activ = nn.GELU()}
