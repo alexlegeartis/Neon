@@ -144,6 +144,12 @@ Recent developments in optimization techniques show that utilizing the matrix st
 
 While the uniqie advantages and effects introduced by Neon are yet to be discovered, we can already say that our new optimizer introduces additional overhead of $O(mn)$ FLOPS on average per $m \times n$ weight matrix, which is much better then $O(m n \min\{m, n\})$ for Muon optimizer and $O(n^3 + m^3)$ for Shampoo. 
 
+\subsection{Optimization Strategies for Efficient Large Language Model Training}
+The unprecedented scale of modern Large Language Models (LLMs) has pushed traditional optimizers like AdamW \cite{Loshchilov2017FixingWD} to their limits in terms of computational efficiency and convergence speed \cite{liu2025muon,chen2025cosmoshybridadaptive}. This challenge has catalyzed research into more sophisticated optimization approaches that can maintain or improve performance while reducing training costs.
+
+The Muon optimizer  has emerged as a promising alternative based on matrix orthogonalization principles. Scaling Muon to billion-parameter LLMs required two key adaptations: the integration of L2 weight decay for stability and the implementation of per-parameter update scaling to handle diverse parameter distributions efficiently . Empirical evaluations demonstrate that Muon can match or exceed AdamW's model quality while requiring only about 52 of the training FLOPs. The successful training of the Moonlight model series, including a 16B-parameter Mixture-of-Experts model, validates Muon's practicality for production-scale applications \cite{liu2025muon}.
+
+Building on this foundation, hybrid approaches like COSMOS \cite{chen2025cosmoshybridadaptive} further enhance efficiency by combining optimization techniques based on gradient structure. COSMOS applies computationally intensive updates to a low-dimensional "leading eigensubspace" while using memory-efficient methods like Muon for the remaining parameters. This approach maintains convergence benefits while substantially reducing memory requirements. For distributed training environments, optimizers like Dion \cite{ahn2025dioncommunicationefficientoptimizerlarge} specifically target communication efficiency by minimizing data exchange between workers through distributed orthonormalization techniques.
 \section{Quality metrics}
 \begin{enumerate}
     \item The derivation is theoretically solid
@@ -157,13 +163,13 @@ While the uniqie advantages and effects introduced by Neon are yet to be discove
 \section{Preliminary plan}
 \paragraph{Week April 28 - May 4}
 \begin{itemize}
-    \item For Alexey: solve how to tune the algorithms for MLP and CNN, try formulating theory (and an appropriate model of the problem) why Muon and Neon are so successful, and create the drafts of the proofs. Register at NeurIPS site. Test version 2 of Neon (with $F*$ norm)
+    \item For Alexey: solve how to tune the algorithms for MLP and CNN, try formulating theory (and an appropriate model of the problem) why Muon and Neon are so successful, and create the drafts of the proofs. Register at NeurIPS site.
     
     \item For Ivan: write the theory for an update from the algebra point of view (as for an article)
     
     \item For Nikolay: write the theory for computing an update, and implement the method, if required
     
-    \item For Alexander: reproduce results of Jordan on NanoGPT and ResNet (CIFAR-10), learn to train both models with Neon. Test version 2 of Neon (with $F*$ norm)
+    \item For Alexander: reproduce results of Jordan on NanoGPT and ResNet (CIFAR-10), learn to train both models with Neon.
 \end{itemize}
 
 \paragraph{Week May 5 - May 11}
@@ -189,9 +195,34 @@ While the uniqie advantages and effects introduced by Neon are yet to be discove
 \begin{enumerate}
     \item Update rule is derived, see idea
     \item Update rule methods are tested: power iteration vs Lanczos (see playground)
-    \item Recorded the distribution of singular values of gradients during NanoGPT training (add fig).
-    \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower). Besides, Neon (kernel norm version) does not converge (add fig).
-    \item Neon (kernel norm version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
+    \item Recorded the distribution of singular values of gradients during NanoGPT training (see Firgures ~\ref{fig:svd_all}, \ref{fig:svd_all}).
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/svd_evolution_all.png}}
+        \caption{Singular values of random 100 parameters via 200 iterations}
+        \label{fig:svd_all}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/svd_evolution.png}}
+        \caption{Singular values of random 100 parameters for 5-th,45-th, 65-th,175-th and 200-th iteration}
+        \label{fig:svd}
+    \end{figure} 
+    
+    \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower). Besides, Neon (rank-1 version) does not converge (see Figures ~\ref{fig:train_loss} \ref{fig:val_loss})
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/loss_train.png}}
+        \caption{Train loss}
+        \label{fig:train_loss}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/loss_val.png}}
+        \caption{Validation loss}
+        \label{fig:val_loss}
+    \end{figure} 
+
+
+    The pictures show the best results achieved so far. The experiments were conducted with two 4090 24GB GPUs for nanotgpt-large on the tiny stories dataset
+    
+    \item Neon (rank-1 version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
     \begin{figure}[h!]
         \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_simple.png}}
         \caption{MLP: self.linear1 = nn.Linear(32*32*3, 512), self.linear2 = nn.Linear(512, 10), self.activ = nn.GELU()}
@@ -212,7 +243,9 @@ While the uniqie advantages and effects introduced by Neon are yet to be discove
         \caption{CNN: wallclock time measurements}
         \label{fig:cnn_time}
     \end{figure}
-\end{enumerate}
+\end{enumerate}\\
+
+
 
 \bibliographystyle{unsrt}
 \bibliography{muon.bib}
