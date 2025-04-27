@@ -82,7 +82,7 @@ In large language models, most weights are structured as matrices, which offers 
   \langle G, \delta W \rangle + \lambda \norm{\delta W}^2 \to \min_{\delta W}\,,
 \end{equation}
 where $\norm{\cdot}$ denotes a certain matrix norm. By setting this norm to the RMS-to-RMS norm (a scaled version of the spectral norm), we recover the Muon optimizer \cite{bernstein2025deriving, bernstein2024oldoptimizernewnorm} with an update step defined by:
-\begin{equation}
+\begin{equation}\label{eqn:update_muon}
 \delta W = - \frac{1}{\lambda}\sqrt{\frac{n}{m}}UV^T\,,
 \end{equation}
 where $m$ is the input dimension of the layer, $n$ is the output dimension, and $U$ and $V$ are obtained from the singular value decomposition of the gradient matrix $G = U \Sigma V$.
@@ -118,7 +118,31 @@ The main results of the project are expected to be:
 \end{enumerate}
 
 \section{Literature review}
-TO-DO
+Our review primarily focuses on the Muon and Shampoo optimizers, as our algorithm extends the ideas used to derive these methods. We highlight the advantages and disadvantages of these approaches, the unique effects they introduce, and compare them to Neon.
+
+\subsection{Muon optimizer}
+
+In the previous section, we described the theoretical foundation behind the weight update step in the Muon optimizer, but we did not discuss how to obtain the required matrices in practice. The update step is defined by \eqref{eqn:update_muon}, which requires $UV^T$ with $U$ and $V^T$ from the singular value decomposition of the gradient-like matrix $G$. A naive solution would involve computing the SVD of $G$ and constructing the required expression. However, the developers of the Muon optimizer introduced a workaround using Newton-Schulz iterations \cite{jordan2024muon}. The Newton-Schulz iterations from the original article \cite{jordan2024muon} require 10 matrix-matrix multiplications to achieve the desired accuracy. The asymptotic complexity of such an operation is identical to that of SVD and equals $O(mn \min\{m, n\})$ for an $m \times n$ matrix. Nevertheless, matrix multiplication on modern GPUs can be performed much more efficiently.
+
+The performance of Muon in training large language models was tested \cite{liu2025muon} against AdamW. The testing demonstrated excellent performance by Muon, which was approximately 2 times more efficient in terms of FLOPs required to reach a certain loss value. This is even more remarkable when considering the cost of one iteration: Muon requires an additional $O(mn \min\{m, n\})$ FLOPs per $m \times n$ matrix, while AdamW needs only $O(mn)$.
+
+Another interesting discovery about the Muon optimizer is that it accelerates grokking \cite{tveit2025muonoptimizeracceleratesgrokking}. In the test problem, Muon achieved grokking significantly faster than AdamW in terms of passed epochs, with a mean grokking epoch of 102.89 for Muon and 153.09 for AdamW. The authors suggest that this may be due to the fact that Muon stimulates broader exploration by orthogonalizing the gradient matrix, thus avoiding memorization.
+
+Recently, theoretical guarantees for Muon convergence have been derived \cite{li2025noteconvergencemuon}. In particular, in the $L$-smooth convex case, it achieves $O(1/T^{\frac{1}{2}})$ (with full gradient) and $O(1/T^{\frac{1}{4}})$ (with stochastic gradient) bounds on the Frobenius norm of the gradient or the mathematical expectation of the gradient norm, respectively, where $T$ is the number of iterations.
+
+\subsection{Shampoo optimizer}
+
+Another optimizer that exploits the matrix (and even tensor) structure of weights in neural networks is the Shampoo optimizer. We avoid a detailed description of this method here and refer the reader to the original article \cite{gupta2018shampoopreconditionedstochastictensor}, but we outline the key properties of Shampoo and its relation to the Muon optimizer.
+
+The Shampoo optimizer uses left and right preconditioning for the gradient-like matrix, leveling its spectrum. The preconditioners are computed from the exponentially averaged gradients, and their computation requires $O(n^3 + m^3)$ per $m \times n$ matrix. This exponential averaging is a key feature that provides several distinct interpretations for the preconditioners. They can be viewed as an approximation of the Gauss-Newton component of the Hessian or the first step of the power iteration algorithm for computing the optimal Kronecker product approximation \cite{morwani2025a}. With exponential averaging turned off, the update step of Shampoo can be simplified and becomes identical to that of Muon \cite{jordan2024muon}.
+
+Convergence analysis is presented in the original article \cite{gupta2018shampoopreconditionedstochastictensor}. Shampoo achieves $O(1/T^{\frac{1}{2}})$ convergence for the loss function value in the $L$-smooth convex case.
+
+\subsection{Synthesis and Neon's position}
+
+Recent developments in optimization techniques show that utilizing the matrix structure of weights in neural networks can be very beneficial. Optimizers following this path converge faster in terms of iterations or epochs and often even FLOPs, but have a high iteration cost. Neon seeks to decrease the iteration cost while preserving fast convergence.
+
+While the uniqie advantages and effects introduced by Neon are yet to be discovered, we can already say that our new optimizer introduces additional overhead of $???$[Depends on variant of Neon we choose] FLOPS per $m \times n$ weight matrix, which is much better then $O(m n \min\{m, n\})$ for Muon optimizer and $O(n^3 + m^3)$ for Shampoo. 
 
 \section{Quality metrics}
 \begin{enumerate}
