@@ -136,7 +136,7 @@ Another optimizer that exploits the matrix (and even tensor) structure of weight
 
 The Shampoo optimizer uses left and right preconditioning for the gradient-like matrix, leveling its spectrum. The preconditioners are computed from the exponentially averaged gradients, and their computation requires $O(n^3 + m^3)$ per $m \times n$ matrix. This exponential averaging is a key feature that provides several distinct interpretations for the preconditioners. They can be viewed as an approximation of the Gauss-Newton component of the Hessian or the first step of the power iteration algorithm for computing the optimal Kronecker product approximation \cite{morwani2025a}. With exponential averaging turned off, the update step of Shampoo can be simplified and becomes identical to that of Muon \cite{jordan2024muon}.
 
-Convergence analysis is presented in the original article \cite{gupta2018shampoopreconditionedstochastictensor}. Shampoo achieves $O(1/T^{\frac{1}{2}})$ convergence for the loss function value in the $L$-smooth convex case.
+Convergence analysis is presented in the original article \cite{gupta2018shampoopreconditionedstochastictensor}. Shampoo achieves $O(1/T^{\frac{1}{2}})$ convergence for the loss function value in the $L$-smooth convex case, where $T$ is the number of iterations.
 
 \subsection{Synthesis and Neon's position}
 
