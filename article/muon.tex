@@ -62,7 +62,7 @@ linkcolor = blue]{hyperref}	% нумерование страниц, ссылк�
 \maketitle
 
 \begin{abstract}
-In this paper, we develop a new algorithm for optimization of functions of weight matrices, which are typical for training large language models. Changing spectral norm, which was used to derive Muon, to nuclear norm, we pose a new optimization problem for an update matrix, solution of which defines a novel algorithm we name Neon. To make it feasible, we use Lanzos algorithm to find a required step. After providing theoretical guarantees of Neon convergence, we compare performances of Neon, Muon, and Adam on training multilayer perceptron, convolutional neural network and NanoGPT.
+In this paper, we develop a new algorithm for optimization of functions of weight matrices, which are typical for training large language models. Changing spectral norm, which was used to derive Muon, to nuclear norm, we pose a new optimization problem for an update matrix, solution of which defines a novel algorithm we name Neon. To make it feasible, we use Lanczos algorithm to find a required step. After providing theoretical guarantees of Neon convergence, we compare performances of Neon, Muon, and Adam on training multilayer perceptron, convolutional neural network and NanoGPT.
 
 \end{abstract}
 
@@ -188,7 +188,7 @@ While the uniqie advantages and effects introduced by Neon are yet to be discove
 \section{Prototyping phase report}
 \begin{enumerate}
     \item Update rule is derived, see idea
-    \item Update rule methods are tested: power iteration vs Lanzos (see playground)
+    \item Update rule methods are tested: power iteration vs Lanczos (see playground)
     \item Recorded the distribution of singular values of gradients during NanoGPT training (add fig).
     \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower). Besides, Neon (rank-1 version) does not converge (add fig).
     \item Neon (rank-1 version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
