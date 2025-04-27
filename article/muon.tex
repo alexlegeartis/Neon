@@ -157,13 +157,13 @@ While the uniqie advantages and effects introduced by Neon are yet to be discove
 \section{Preliminary plan}
 \paragraph{Week April 28 - May 4}
 \begin{itemize}
-    \item For Alexey: solve how to tune the algorithms for MLP and CNN, try formulating theory (and an appropriate model of the problem) why Muon and Neon are so successful, and create the drafts of the proofs. Register at NeurIPS site.
+    \item For Alexey: solve how to tune the algorithms for MLP and CNN, try formulating theory (and an appropriate model of the problem) why Muon and Neon are so successful, and create the drafts of the proofs. Register at NeurIPS site. Test version 2 of Neon (with $F*$ norm)
     
     \item For Ivan: write the theory for an update from the algebra point of view (as for an article)
     
     \item For Nikolay: write the theory for computing an update, and implement the method, if required
     
-    \item For Alexander: reproduce results of Jordan on NanoGPT and ResNet (CIFAR-10), learn to train both models with Neon.
+    \item For Alexander: reproduce results of Jordan on NanoGPT and ResNet (CIFAR-10), learn to train both models with Neon. Test version 2 of Neon (with $F*$ norm)
 \end{itemize}
 
 \paragraph{Week May 5 - May 11}
@@ -190,8 +190,8 @@ While the uniqie advantages and effects introduced by Neon are yet to be discove
     \item Update rule is derived, see idea
     \item Update rule methods are tested: power iteration vs Lanczos (see playground)
     \item Recorded the distribution of singular values of gradients during NanoGPT training (add fig).
-    \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower). Besides, Neon (rank-1 version) does not converge (add fig).
-    \item Neon (rank-1 version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
+    \item NanoGPT is tested on Muon and Adam (add fig). The results are strange, because the methods do not converge at the expected rate (Muon is slower). Besides, Neon (kernel norm version) does not converge (add fig).
+    \item Neon (kernel norm version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
     \begin{figure}[h!]
         \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_simple.png}}
         \caption{MLP: self.linear1 = nn.Linear(32*32*3, 512), self.linear2 = nn.Linear(512, 10), self.activ = nn.GELU()}
