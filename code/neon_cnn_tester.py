@@ -3,8 +3,8 @@ neon_muon_sgd.py
 Combines SGD and Muon optimizers for training a simple perceptron model
 Based on the approach from neon_light.py
 """
-from os import putenv
-putenv("HSA_OVERRIDE_GFX_VERSION", "9.0.0")
+# from os import putenv
+# putenv("HSA_OVERRIDE_GFX_VERSION", "9.0.0")
 
 import os
 import sys
@@ -15,170 +15,22 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
 from math import ceil
+import argparse
+import matplotlib.pyplot as plt
+from pathlib import Path
+
+from config import (
+    device, CIFAR_MEAN, CIFAR_STD, TRAIN_CONFIG, AUG_CONFIG,
+    PLOT_CONFIG, OPTIMIZER_CONFIGS
+)
+from models import SimplePerceptron, ModerateCIFARModel, AdvancedCIFARModel
+from optimizers import Muon, Neon
 
 # Enable ROCm backend and compilation
-torch.backends.cudnn.benchmark = True
-torch.backends.cudnn.enabled = True
-
-# Set device
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-#############################################
-#               Muon optimizer              #
-#############################################
-
-#@torch.compile(mode='max-autotune')
-def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
-    """Simplified Newton-Schulz iteration for whitening"""
-    assert len(G.shape) == 2
-    a, b, c = (3.4445, -4.7750, 2.0315)
-    X = G.bfloat16()
-    # Add numerical stability
-    norm = X.norm() + eps
-    if norm < eps:
-        return torch.zeros_like(X)
-    X /= norm
-    if G.size(0) > G.size(1):
-        X = X.T
-    for _ in range(steps):
-        A = X @ X.T
-        B = b * A + c * A @ A
-        X = a * X + B @ X
-    if G.size(0) > G.size(1):
-        X = X.T
-    return X
-
-class Muon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
-        if lr < 0.0:
-            raise ValueError(f"Invalid learning rate: {lr}")
-        if momentum < 0.0:
-            raise ValueError(f"Invalid momentum value: {momentum}")
-        if nesterov and momentum <= 0:
-            raise ValueError("Nesterov momentum requires a momentum")
-        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
-        super().__init__(params, defaults)
-
-    def step(self):
-        for group in self.param_groups:
-            lr = group['lr']
-            momentum = group['momentum']
-            for p in group['params']:
-                g = p.grad
-                if g is None:
-                    continue
-                state = self.state[p]
-
-                if 'momentum_buffer' not in state.keys():
-                    state['momentum_buffer'] = torch.zeros_like(g)
-                buf = state['momentum_buffer']
-                buf.mul_(momentum).add_(g)
-                g = g.add(buf, alpha=momentum) if group['nesterov'] else buf
-
-                # Add numerical stability
-                norm = p.data.norm()
-                if norm < 1e-8:
-                    continue
-                p.data.mul_(len(p.data)**0.5 / norm)
-                
-                update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                p.data.add_(update, alpha=-lr)
-
-#############################################
-#               Neon optimizer              #
-#############################################
-
-#@torch.compile(mode='max-autotune')
-def u1s1v1t_torch(W, num_iter=20, eps=1e-8):
-    """Power iteration using PyTorch operations"""
-    # Ensure W is 2D
-    if len(W.shape) > 2:
-        W = W.reshape(W.size(0), -1)
-    
-    # Initialize v with correct shape
-    v = torch.randn(W.size(1), device=W.device, dtype=W.dtype)
-    v_norm = v.norm()
-    if v_norm < eps:
-        return torch.zeros_like(W)
-    v /= v_norm
-    
-    for _ in range(num_iter):
-        # Matrix-vector multiplication
-        u = F.linear(v, W)
-        u_norm = u.norm()
-        if u_norm < eps:
-            return torch.zeros_like(W)
-        u /= u_norm
-        
-        # Transpose matrix-vector multiplication
-        v = F.linear(u, W.T)
-        v_norm = v.norm()
-        if v_norm < eps:
-            return torch.zeros_like(W)
-        v /= v_norm
-    
-    # Compute first singular value - fix transpose warning
-    sigma1 = (u.reshape(1, -1) @ F.linear(v, W)).squeeze()
-    
-    # Reshape u and v for outer product
-    u = u.reshape(-1, 1)  # shape: (m, 1)
-    v = v.reshape(-1, 1)  # shape: (n, 1)
-    
-    # Return scaled outer product
-    return sigma1 * (u @ v.T)
+# torch.backends.cudnn.benchmark = True
+# torch.backends.cudnn.enabled = True
 
 
-import numpy as np
-def u1s1v1t(W, num_iter=30):
-    v = np.random.randn(W.shape[1])
-    v /= np.linalg.norm(v)
-    
-    for _ in range(num_iter):
-        u = W @ v
-        u /= np.linalg.norm(u)
-        v = W.T @ u
-        v /= np.linalg.norm(v)
-    sigma1 = (u.T @ W @ v)
-    u = u.reshape(-1, 1)         # shape: (5, 1)
-    v = v.reshape(-1, 1)         # shape: (3, 1)
-    return sigma1 * u @ v.T
-
-
-class Neon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
-        if lr < 0.0:
-            raise ValueError(f"Invalid learning rate: {lr}")
-        if momentum < 0.0:
-            raise ValueError(f"Invalid momentum value: {momentum}")
-        if nesterov and momentum <= 0:
-            raise ValueError("Nesterov momentum requires a momentum")
-        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
-        super().__init__(params, defaults)
-
-    def step(self):
-        for group in self.param_groups:
-            lr = group['lr']
-            momentum = group['momentum']
-            for p in group['params']:
-                g = p.grad
-                if g is None:
-                    continue
-                state = self.state[p]
-
-                if 'momentum_buffer' not in state.keys():
-                    state['momentum_buffer'] = torch.zeros_like(g)
-                buf = state['momentum_buffer']
-                buf.mul_(momentum).add_(g)
-                g = g.add(buf, alpha=momentum) if group['nesterov'] else buf
-
-                # Add numerical stability
-                norm = p.data.norm()
-                if norm < 1e-8:
-                    continue
-                p.data.mul_(len(p.data)**0.5 / norm)
-                
-                update = u1s1v1t_torch(g.reshape(len(g), -1)).view(g.shape)
-                p.data.add_(update, alpha=-lr)
 
 #############################################
 #                DataLoader                 #
@@ -248,356 +100,262 @@ class CifarLoader:
             pad = self.aug.get('translate', 0)
             if pad > 0:
                 self.proc_images['pad'] = F.pad(images, (pad,)*4, 'reflect')
-
-        if self.aug.get('translate', 0) > 0:
-            images = batch_crop(self.proc_images['pad'], self.images.shape[-2])
-        elif self.aug.get('flip', False):
-            images = self.proc_images['flip']
-        else:
-            images = self.proc_images['norm']
-        if self.aug.get('flip', False):
-            if self.epoch % 2 == 1:
-                images = images.flip(-1)
-
         self.epoch += 1
+        indices = torch.randperm(len(self.images)) if self.shuffle else torch.arange(len(self.images))
+        for i in range(0, len(self.images) - self.batch_size + 1 if self.drop_last else len(self.images), self.batch_size):
+            idx = indices[i:i+self.batch_size]
+            images = self.proc_images['norm'][idx]
+            if self.aug.get('flip', False):
+                images = batch_flip_lr(images)
+            if self.aug.get('translate', 0) > 0:
+                images = batch_crop(self.proc_images['pad'][idx], 32)
+            yield images.to(device), self.labels[idx].to(device)
 
-        indices = (torch.randperm if self.shuffle else torch.arange)(len(images), device='cpu')
-        for i in range(len(self)):
-            idxs = indices[i*self.batch_size:(i+1)*self.batch_size]
-            yield (images[idxs].to(device), self.labels[idxs].to(device))
-
-#############################################
-#            Network Definition             #
-#############################################
-
-class SimplePerceptron(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.flatten = nn.Flatten()
-        self.linear1 = nn.Linear(32*32*3, 512)
-        self.linear2 = nn.Linear(512, 10)
-        self.activ = nn.GELU()
-        
-    def forward(self, x):
-        x = self.flatten(x)
-        x = self.linear1(x)
-        x = self.activ(x)
-        x = self.linear2(x)
-        return x
-
-class ModerateCIFARModel(nn.Module):
-    def __init__(self):
-        super().__init__()
-        # First convolutional block
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm2d(32)
-        self.conv2 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.pool1 = nn.MaxPool2d(2)
-        
-        # Second convolutional block
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm2d(64)
-        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
-        self.bn4 = nn.BatchNorm2d(64)
-        self.pool2 = nn.MaxPool2d(2)
-        
-        # Fully connected layers
-        self.fc1 = nn.Linear(64 * 8 * 8, 256)
-        self.bn5 = nn.BatchNorm1d(256)
-        self.fc2 = nn.Linear(256, 10)
-        
-        # Activation and dropout
-        self.activ = nn.GELU()
-        self.dropout = nn.Dropout(0.2)
-        
-    def forward(self, x):
-        # First block
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.activ(x)
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.activ(x)
-        x = self.pool1(x)
-        
-        # Second block
-        x = self.conv3(x)
-        x = self.bn3(x)
-        x = self.activ(x)
-        x = self.conv4(x)
-        x = self.bn4(x)
-        x = self.activ(x)
-        x = self.pool2(x)
-        
-        # Flatten and fully connected
-        x = x.view(x.size(0), -1)
-        x = self.fc1(x)
-        x = self.bn5(x)
-        x = self.activ(x)
-        x = self.dropout(x)
-        x = self.fc2(x)
-        
-        return x
-
-class AdvancedCIFARModel(nn.Module):
-    def __init__(self):
-        super().__init__()
-        # First convolutional block
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.conv2 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(64)
-        self.pool1 = nn.MaxPool2d(2)
-        
-        # Second convolutional block
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm2d(128)
-        self.conv4 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.bn4 = nn.BatchNorm2d(128)
-        self.pool2 = nn.MaxPool2d(2)
-        
-        # Third convolutional block
-        self.conv5 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
-        self.bn5 = nn.BatchNorm2d(256)
-        self.conv6 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
-        self.bn6 = nn.BatchNorm2d(256)
-        self.pool3 = nn.MaxPool2d(2)
-        
-        # Fully connected layers
-        self.fc1 = nn.Linear(256 * 4 * 4, 512)
-        self.bn7 = nn.BatchNorm1d(512)
-        self.fc2 = nn.Linear(512, 10)
-        
-        # Activation and dropout
-        self.activ = nn.GELU()
-        self.dropout = nn.Dropout(0.3)
-        
-    def forward(self, x):
-        # First block
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.activ(x)
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.activ(x)
-        x = self.pool1(x)
-        
-        # Second block
-        x = self.conv3(x)
-        x = self.bn3(x)
-        x = self.activ(x)
-        x = self.conv4(x)
-        x = self.bn4(x)
-        x = self.activ(x)
-        x = self.pool2(x)
-        
-        # Third block
-        x = self.conv5(x)
-        x = self.bn5(x)
-        x = self.activ(x)
-        x = self.conv6(x)
-        x = self.bn6(x)
-        x = self.activ(x)
-        x = self.pool3(x)
-        
-        # Flatten and fully connected
-        x = x.view(x.size(0), -1)
-        x = self.fc1(x)
-        x = self.bn7(x)
-        x = self.activ(x)
-        x = self.dropout(x)
-        x = self.fc2(x)
-        
-        return x
 
 ############################################
 #                Training                  #
 ############################################
 
-def run_training(model, optimizers, train_loader, test_loader, total_epochs, optimizer_name):
-    """Run training for a given model and optimizers"""
-    print(f"\nTraining with {optimizer_name}:")
-    start_time = time.time()
-    epochs = []
-    accs = []
-    times = []
+def create_optimizer(model, optimizer_type, **kwargs):
+    """Create optimizers for each layer of the model.
+    For Neon optimizer, each layer gets a different tau parameter.
+    For other optimizers, all layers use the same configuration."""
+    optimizers = []
     
-    for epoch in range(total_epochs):
-        model.train()
-        total_loss = 0
-        correct = 0
-        total = 0
-        
-        for inputs, labels in train_loader:
-            for opt in optimizers:
-                opt.zero_grad()
-            
-            outputs = model(inputs)
-            loss = F.cross_entropy(outputs, labels)
-            loss.backward()
-            
-            for opt in optimizers:
-                for group in opt.param_groups:
-                    group["lr"] = group["initial_lr"] * (1 - epoch / total_epochs)
-                opt.step()
-            
-            if not torch.isnan(loss):
-                total_loss += loss.item()
-            _, predicted = outputs.max(1)
-            total += labels.size(0)
-            correct += predicted.eq(labels).sum().item()
-        
-        train_acc = 100. * correct / total
-        print(f"Epoch {epoch+1}/{total_epochs}")
-        print(f"Train Loss: {total_loss/len(train_loader):.3f} | Train Acc: {train_acc:.3f}%")
-        
-        model.eval()
-        correct = 0
-        total = 0
-        with torch.no_grad():
-            for inputs, labels in test_loader:
-                outputs = model(inputs)
-                _, predicted = outputs.max(1)
-                total += labels.size(0)
-                correct += predicted.eq(labels).sum().item()
-        
-        test_acc = 100. * correct / total
-        print(f"Test Acc: {test_acc:.3f}%")
-        
-        epochs.append(epoch + 1)
-        accs.append(test_acc)
-        times.append(time.time() - start_time)  # Time since start of this optimizer's training
-
-    total_time = time.time() - start_time
-    print(f"\n{optimizer_name} Results:")
-    print(f"Best Accuracy: {max(accs):.2f}%")
-    print(f"Training Time: {total_time:.2f} seconds")
+    # Get all layers that have parameters
+    layers = []
+    for name, module in model.named_modules():
+        if list(module.parameters()):
+            layers.append((name, module))
     
-    return epochs, accs, times
-
-def create_optimizers(model, optimizer_type, head_lr=0.1, bias_lr=0.053, wd=2e-6*128):
-    """Create optimizers for a given model and optimizer type"""
-    # For SimplePerceptron
-    if isinstance(model, SimplePerceptron):
-        linear_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear1' in n]
-        head_params = [p for n, p in model.named_parameters() if 'weight' in n and 'linear2' in n]
-        bias_params = [p for n, p in model.named_parameters() if 'bias' in n]
-        
-        param_configs = [
-            dict(params=head_params, lr=head_lr, weight_decay=wd/head_lr),
-            dict(params=bias_params, lr=bias_lr, weight_decay=wd/bias_lr)
-        ]
-    # For ModerateCIFARModel and AdvancedCIFARModel
-    else:
-        conv_params = [p for n, p in model.named_parameters() if 'conv' in n and 'weight' in n]
-        fc_params = [p for n, p in model.named_parameters() if 'fc' in n and 'weight' in n]
-        bn_params = [p for n, p in model.named_parameters() if 'bn' in n and 'weight' in n]
-        bias_params = [p for n, p in model.named_parameters() if 'bias' in n]
-        
-        param_configs = [
-            dict(params=fc_params, lr=head_lr, weight_decay=wd/head_lr),
-            dict(params=bias_params, lr=bias_lr, weight_decay=wd/bias_lr),
-            dict(params=bn_params, lr=bias_lr, weight_decay=wd/bias_lr)
-        ]
-        linear_params = conv_params
-    
-    optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
-    
-    if optimizer_type == 'neon':
-        optimizer2 = Neon(linear_params, lr=0.04, momentum=0.6, nesterov=True)
-    elif optimizer_type == 'muon':
-        optimizer2 = Muon(linear_params, lr=0.24, momentum=0.6, nesterov=True)
-    elif optimizer_type == 'sgd':
-        optimizer2 = torch.optim.SGD([dict(params=linear_params, lr=0.04, weight_decay=wd/0.24)], 
-                                   momentum=0.85, nesterov=True, fused=True)
-    elif optimizer_type == 'adamw':
-        optimizer2 = torch.optim.AdamW([dict(params=linear_params, lr=0.24, weight_decay=wd/0.24)], 
-                                     betas=(0.9, 0.999), eps=1e-8)
-    else:
-        raise ValueError(f"Unknown optimizer type: {optimizer_type}")
-    
-    optimizers = [optimizer1, optimizer2]
-    
-    for opt in optimizers:
-        for group in opt.param_groups:
-            group["initial_lr"] = group["lr"]
+    for name, layer in layers:
+        if optimizer_type == 'neon':
+            # For Neon, create a new optimizer with random tau for each layer
+            import random
+            tau = random.uniform(0.01, 1)  # Random tau between 0.1 and 1.0
+            layer_kwargs = kwargs.copy()
+            layer_kwargs['tau'] = tau
+            optimizers.append(Neon(layer.parameters(), **layer_kwargs))
+        elif optimizer_type == 'muon':
+            optimizers.append(Muon(layer.parameters(), **kwargs))
+        elif optimizer_type == 'sgd':
+            optimizers.append(torch.optim.SGD(layer.parameters(), **kwargs))
+        else:
+            raise ValueError(f"Unknown optimizer type: {optimizer_type}")
     
     return optimizers
 
-def main(model_type='simple'):
-    batch_size = 128
-    total_epochs = 5
-    wd = 2e-6 * batch_size  # weight decay
-    bias_lr = 0.053
-    head_lr = 0.1
+def run_training(model, optimizers, train_loader, test_loader, total_epochs, optimizer_label):
+    model = model.to(device)
+    criterion = torch.nn.CrossEntropyLoss()
+    
+    # Initialize lists to store metrics
+    train_losses = []
+    train_accs = []
+    test_losses = []
+    test_accs = []
+    times = []
+    start_time = time.time()
+    
+    for epoch in range(total_epochs):
+        model.train()
+        train_loss = 0
+        train_correct = 0
+        train_total = 0
+        
+        for inputs, targets in train_loader:
+            # Zero gradients for all optimizers
+            for optimizer in optimizers:
+                optimizer.zero_grad()
+            
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+            loss.backward()
+            
+            # Step all optimizers
+            for optimizer in optimizers:
+                optimizer.step()
+            
+            train_loss += loss.item()
+            _, predicted = outputs.max(1)
+            train_total += targets.size(0)
+            train_correct += predicted.eq(targets).sum().item()
+        
+        train_acc = 100. * train_correct / train_total
+        train_losses.append(train_loss/len(train_loader))
+        train_accs.append(train_acc)
+        
+        # Test
+        model.eval()
+        test_loss = 0
+        test_correct = 0
+        test_total = 0
+        
+        with torch.no_grad():
+            for inputs, targets in test_loader:
+                outputs = model(inputs)
+                loss = criterion(outputs, targets)
+                
+                test_loss += loss.item()
+                _, predicted = outputs.max(1)
+                test_total += targets.size(0)
+                test_correct += predicted.eq(targets).sum().item()
+        
+        test_acc = 100. * test_correct / test_total
+        test_losses.append(test_loss/len(test_loader))
+        test_accs.append(test_acc)
+        times.append(time.time() - start_time)
+        
+        print(f'Epoch: {epoch+1}/{total_epochs} | '
+              f'Train Loss: {train_losses[-1]:.3f} | '
+              f'Train Acc: {train_acc:.2f}% | '
+              f'Test Loss: {test_losses[-1]:.3f} | '
+              f'Test Acc: {test_acc:.2f}% | '
+              f'Optimizer: {optimizer_label}')
+    
+    return {
+        'train_losses': train_losses,
+        'train_accs': train_accs,
+        'test_losses': test_losses,
+        'test_accs': test_accs,
+        'times': times
+    }
 
-    train_loader = CifarLoader('cifar10', train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
-    test_loader = CifarLoader('cifar10', train=False, batch_size=batch_size)
-
-    # Create directory for plots if it doesn't exist
-    os.makedirs('../figs/mlp24', exist_ok=True)
-
-    # Lists to store all results
-    all_epochs = []
-    all_accs = []
-    all_times = []
-    optimizer_names = ['Neon', 'Muon', 'SGD', 'AdamW']
-
-    # Create model based on type
-    if model_type == 'simple':
-        model_class = SimplePerceptron
-        model_name = 'SimplePerceptron'
-    elif model_type == 'moderate':
-        model_class = ModerateCIFARModel
-        model_name = 'ModerateCIFARModel'
-    elif model_type == 'advanced':
-        model_class = AdvancedCIFARModel
-        model_name = 'AdvancedCIFARModel'
-    else:
-        raise ValueError(f"Unknown model type: {model_type}")
-
-    # Train with each optimizer
-    for opt_name in optimizer_names:
-        model = model_class().to(device)
-        optimizers = create_optimizers(model, opt_name.lower(), head_lr, bias_lr, wd)
-        epochs, accs, times = run_training(model, optimizers, train_loader, test_loader, total_epochs, f"{opt_name} ({model_name})")
-        all_epochs.append(epochs)
-        all_accs.append(accs)
-        all_times.append(times)
-
-    # Plot and save the results
-    import matplotlib.pyplot as plt
+def plot_results(results, model_name):
+    # Create directory for plots
+    save_dir = Path(PLOT_CONFIG['save_dir'])
+    save_dir.mkdir(exist_ok=True)
+    
+    # Default colors for different optimizer types
+    default_colors = {
+        'neon': 'b-',
+        'muon': 'r-',
+        'sgd': 'g-'
+    }
     
     # Plot accuracy vs epochs
-    plt.figure(figsize=(10, 5))
-    colors = ['b-', 'r-', 'g-', 'y-']
-    for i, (epochs, accs, name) in enumerate(zip(all_epochs, all_accs, optimizer_names)):
-        plt.plot(epochs, accs, colors[i], label=name)
+    plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
+    for opt_key, result in results.items():
+        opt_config = OPTIMIZER_CONFIGS[opt_key]
+        color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
+        plt.plot(range(1, len(result['test_accs']) + 1), result['test_accs'],
+                color, label=opt_config['label'])
     plt.xlabel('Epoch')
     plt.ylabel('Test Accuracy (%)')
     plt.title(f'Test Accuracy vs Epochs ({model_name})')
     plt.legend()
     plt.grid(True)
-    plt.savefig(f'../figs/mlp24/accuracy_vs_epochs_{model_type}.png')
+    plt.savefig(save_dir / f'accuracy_vs_epochs_{model_name.lower()}.png')
     plt.close()
-
+    
     # Plot accuracy vs time
-    plt.figure(figsize=(10, 5))
-    for i, (times, accs, name) in enumerate(zip(all_times, all_accs, optimizer_names)):
-        plt.plot(times, accs, colors[i], label=name)
+    plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
+    for opt_key, result in results.items():
+        opt_config = OPTIMIZER_CONFIGS[opt_key]
+        color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
+        plt.plot(result['times'], result['test_accs'],
+                color, label=opt_config['label'])
     plt.xlabel('Time (seconds)')
     plt.ylabel('Test Accuracy (%)')
     plt.title(f'Test Accuracy vs Training Time ({model_name})')
     plt.legend()
     plt.grid(True)
-    plt.savefig(f'../figs/mlp24/accuracy_vs_time_{model_type}.png')
+    plt.savefig(save_dir / f'accuracy_vs_time_{model_name.lower()}.png')
+    plt.close()
+    
+    # Plot training loss vs epochs
+    plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
+    for opt_key, result in results.items():
+        opt_config = OPTIMIZER_CONFIGS[opt_key]
+        color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
+        plt.plot(range(1, len(result['train_losses']) + 1), result['train_losses'],
+                color, label=opt_config['label'])
+    plt.xlabel('Epoch')
+    plt.ylabel('Training Loss')
+    plt.title(f'Training Loss vs Epochs ({model_name})')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(save_dir / f'loss_vs_epochs_{model_name.lower()}.png')
+    plt.close()
+    
+    # Plot training loss vs time
+    plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
+    for opt_key, result in results.items():
+        opt_config = OPTIMIZER_CONFIGS[opt_key]
+        color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
+        plt.plot(result['times'], result['train_losses'],
+                color, label=opt_config['label'])
+    plt.xlabel('Time (seconds)')
+    plt.ylabel('Training Loss')
+    plt.title(f'Training Loss vs Training Time ({model_name})')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(save_dir / f'loss_vs_time_{model_name.lower()}.png')
     plt.close()
 
+def main(model_type='simple'):
+    # Create data loaders
+    train_loader = CifarLoader(
+        'data',
+        train=True,
+        batch_size=TRAIN_CONFIG['batch_size'],
+        aug=AUG_CONFIG
+    )
+    test_loader = CifarLoader(
+        'data',
+        train=False,
+        batch_size=TRAIN_CONFIG['batch_size']
+    )
+    
+    # Create initial model
+    if model_type == 'simple':
+        model = SimplePerceptron()
+    elif model_type == 'moderate':
+        model = ModerateCIFARModel()
+    elif model_type == 'advanced':
+        model = AdvancedCIFARModel()
+    else:
+        raise ValueError(f"Unknown model type: {model_type}")
+    
+    # Train with each optimizer
+    results = {}
+    for opt_key in TRAIN_CONFIG['optimizers']:
+        opt_config = OPTIMIZER_CONFIGS[opt_key]
+        print(f"\nTraining with {opt_config['label']}:")
+        
+        # Create a new model instance and copy the initial state
+        if model_type == 'simple':
+            current_model = SimplePerceptron()
+        elif model_type == 'moderate':
+            current_model = ModerateCIFARModel()
+        else:
+            current_model = AdvancedCIFARModel()
+        
+        # Copy the initial state from the original model
+        current_model.load_state_dict(model.state_dict())
+        
+        # Create optimizers for each layer
+        optimizers = create_optimizer(current_model, opt_config['type'], **{
+            k: v for k, v in opt_config.items() 
+            if k not in ['type', 'label', 'num_epochs']
+        })
+        
+        # Train model
+        results[opt_key] = run_training(
+            current_model,
+            optimizers,
+            train_loader,
+            test_loader,
+            opt_config['num_epochs'],
+            opt_config['label']
+        )
+    
+    # Plot results
+    plot_results(results, model.__class__.__name__)
+
 if __name__ == "__main__":
-    import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='simple', 
+    parser.add_argument('--model', type=str, default='moderate', 
                       choices=['simple', 'moderate', 'advanced'],
                       help='Model type to train (simple, moderate, or advanced)')
     args = parser.parse_args()
