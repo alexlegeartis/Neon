@@ -1,21 +1,6 @@
-"""
-neon_muon_sgd.py
-Combines SGD and Muon optimizers for training a simple perceptron model
-Based on the approach from neon_light.py
-"""
-# from os import putenv
-# putenv("HSA_OVERRIDE_GFX_VERSION", "9.0.0")
-
-import os
-import sys
 import time
 import torch
 from torch import nn
-import torch.nn.functional as F
-import torchvision
-import torchvision.transforms as T
-from math import ceil
-import argparse
 import matplotlib.pyplot as plt
 from pathlib import Path
 
@@ -23,8 +8,9 @@ from config import (
     device, CIFAR_MEAN, CIFAR_STD, TRAIN_CONFIG, AUG_CONFIG,
     PLOT_CONFIG, OPTIMIZER_CONFIGS
 )
-from models import SimplePerceptron, ModerateCIFARModel, AdvancedCIFARModel
+from models import SimplePerceptron, ModerateCIFARModel, AdvancedCIFARModel, CifarNet, ComplexMLP
 from optimizers import Muon, Neon
+from cifar_loader import CifarLoader
 
 # Enable ROCm backend and compilation
 # torch.backends.cudnn.benchmark = True
@@ -32,95 +18,28 @@ from optimizers import Muon, Neon
 
 
 
-#############################################
-#                DataLoader                 #
-#############################################
-
-CIFAR_MEAN = torch.tensor((0.4914, 0.4822, 0.4465), device=device)
-CIFAR_STD = torch.tensor((0.2470, 0.2435, 0.2616), device=device)
-
-#@torch.compile(mode='max-autotune')
-def batch_flip_lr(inputs):
-    flip_mask = (torch.rand(len(inputs), device=inputs.device) < 0.5).view(-1, 1, 1, 1)
-    return torch.where(flip_mask, inputs.flip(-1), inputs)
-
-#@torch.compile(mode='max-autotune')
-def batch_crop(images, crop_size):
-    r = (images.size(-1) - crop_size)//2
-    shifts = torch.randint(-r, r+1, size=(len(images), 2), device=images.device)
-    images_out = torch.empty((len(images), 3, crop_size, crop_size), device=images.device, dtype=images.dtype)
-    if r <= 2:
-        for sy in range(-r, r+1):
-            for sx in range(-r, r+1):
-                mask = (shifts[:, 0] == sy) & (shifts[:, 1] == sx)
-                images_out[mask] = images[mask, :, r+sy:r+sy+crop_size, r+sx:r+sx+crop_size]
-    else:
-        images_tmp = torch.empty((len(images), 3, crop_size, crop_size+2*r), device=images.device, dtype=images.dtype)
-        for s in range(-r, r+1):
-            mask = (shifts[:, 0] == s)
-            images_tmp[mask] = images[mask, :, r+s:r+s+crop_size, :]
-        for s in range(-r, r+1):
-            mask = (shifts[:, 1] == s)
-            images_out[mask] = images_tmp[mask, :, :, r+s:r+s+crop_size]
-    return images_out
-
-class CifarLoader:
-    def __init__(self, path, train=True, batch_size=500, aug=None):
-        data_path = os.path.join(path, 'train.pt' if train else 'test.pt')
-        if not os.path.exists(data_path):
-            dset = torchvision.datasets.CIFAR10(path, download=True, train=train)
-            images = torch.tensor(dset.data)
-            labels = torch.tensor(dset.targets)
-            torch.save({'images': images, 'labels': labels, 'classes': dset.classes}, data_path)
-
-        data = torch.load(data_path, map_location='cpu')
-        self.images, self.labels, self.classes = data['images'], data['labels'], data['classes']
-        self.images = (self.images.float() / 255).permute(0, 3, 1, 2).to(memory_format=torch.channels_last)
-
-        self.normalize = T.Normalize(CIFAR_MEAN.cpu(), CIFAR_STD.cpu())
-        self.proc_images = {}
-        self.epoch = 0
-
-        self.aug = aug or {}
-        for k in self.aug.keys():
-            assert k in ['flip', 'translate'], 'Unrecognized key: %s' % k
-
-        self.batch_size = batch_size
-        self.drop_last = train
-        self.shuffle = train
-
-    def __len__(self):
-        return len(self.images)//self.batch_size if self.drop_last else ceil(len(self.images)/self.batch_size)
-
-    def __iter__(self):
-        if self.epoch == 0:
-            images = self.proc_images['norm'] = self.normalize(self.images)
-            if self.aug.get('flip', False):
-                images = self.proc_images['flip'] = batch_flip_lr(images)
-            pad = self.aug.get('translate', 0)
-            if pad > 0:
-                self.proc_images['pad'] = F.pad(images, (pad,)*4, 'reflect')
-        self.epoch += 1
-        indices = torch.randperm(len(self.images)) if self.shuffle else torch.arange(len(self.images))
-        for i in range(0, len(self.images) - self.batch_size + 1 if self.drop_last else len(self.images), self.batch_size):
-            idx = indices[i:i+self.batch_size]
-            images = self.proc_images['norm'][idx]
-            if self.aug.get('flip', False):
-                images = batch_flip_lr(images)
-            if self.aug.get('translate', 0) > 0:
-                images = batch_crop(self.proc_images['pad'][idx], 32)
-            yield images.to(device), self.labels[idx].to(device)
-
 
 ############################################
 #                Training                  #
 ############################################
 
-def create_optimizer(model, optimizer_type, **kwargs):
-    """Create optimizers for each layer of the model.
+def lr_lambda(current_step, total_steps):
+    # total_steps = num_epochs * len(train_loader)
+    warmup_steps = int(0.1 * total_steps)
+    cooldown_steps = int(0.1 * total_steps)
+    if current_step < warmup_steps:
+        return current_step / warmup_steps  # Linear warmup
+    elif current_step > total_steps - cooldown_steps:
+        return max(0.0, (total_steps - current_step) / cooldown_steps)  # Linear cooldown
+    else:
+        return 1.0  # Constant base_lr
+
+def create_optimizer(model, total_steps, optimizer_type, **kwargs):
+    """Create optimizers and schedulers for each layer of the model.
     For Neon optimizer, each layer gets a different tau parameter.
     For other optimizers, all layers use the same configuration."""
     optimizers = []
+    schedulers = []
     
     # Get all layers that have parameters
     layers = []
@@ -135,17 +54,41 @@ def create_optimizer(model, optimizer_type, **kwargs):
             tau = random.uniform(0.01, 1)  # Random tau between 0.1 and 1.0
             layer_kwargs = kwargs.copy()
             layer_kwargs['tau'] = tau
-            optimizers.append(Neon(layer.parameters(), **layer_kwargs))
+            optimizer = Neon(layer.parameters(), **layer_kwargs)
+            # Create scheduler for Neon
+            scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: lr_lambda(t, total_steps))
+            '''
+            scheduler = torch.optim.lr_scheduler.StepLR(
+                optimizer,
+                step_size=kwargs.get('lr_double_after_epoch', 3),
+                gamma=2.0  # Double the learning rate
+            )'''
         elif optimizer_type == 'muon':
-            optimizers.append(Muon(layer.parameters(), **kwargs))
+            optimizer = Muon(layer.parameters(), **kwargs)
+            # Create scheduler for Muon
+            scheduler = torch.optim.lr_scheduler.StepLR(
+                optimizer,
+                step_size=5,  # Adjust every 5 epochs
+                gamma=0.5  # Halve the learning rate
+            )
         elif optimizer_type == 'sgd':
-            optimizers.append(torch.optim.SGD(layer.parameters(), **kwargs))
+            optimizer = torch.optim.SGD(layer.parameters(), **kwargs)
+            # Create scheduler for SGD
+            scheduler = torch.optim.lr_scheduler.StepLR(
+                optimizer,
+                step_size=5,  # Adjust every 5 epochs
+                gamma=0.5  # Halve the learning rate
+            )
         else:
             raise ValueError(f"Unknown optimizer type: {optimizer_type}")
+        
+        optimizers.append(optimizer)
+        schedulers.append(scheduler)
     
-    return optimizers
+    return optimizers, schedulers
 
-def run_training(model, optimizers, train_loader, test_loader, total_epochs, optimizer_label):
+def run_training(model, optimizers, schedulers, train_loader, test_loader, total_epochs, 
+                optimizer_label, optimizer_type, opt_key):
     model = model.to(device)
     criterion = torch.nn.CrossEntropyLoss()
     
@@ -157,7 +100,7 @@ def run_training(model, optimizers, train_loader, test_loader, total_epochs, opt
     times = []
     start_time = time.time()
     
-    for epoch in range(total_epochs):
+    for epoch in range(total_epochs + 1):
         model.train()
         train_loss = 0
         train_correct = 0
@@ -173,13 +116,19 @@ def run_training(model, optimizers, train_loader, test_loader, total_epochs, opt
             loss.backward()
             
             # Step all optimizers
-            for optimizer in optimizers:
-                optimizer.step()
-            
-            train_loss += loss.item()
-            _, predicted = outputs.max(1)
-            train_total += targets.size(0)
-            train_correct += predicted.eq(targets).sum().item()
+            if epoch > 0:  # we want to measure the situation before everything
+                for optimizer in optimizers:
+                    optimizer.step()
+        
+            # Step all schedulers after each epoch
+            if epoch > 0:
+                for scheduler in schedulers:
+                    scheduler.step()
+        
+        train_loss += loss.item()
+        _, predicted = outputs.max(1)
+        train_total += targets.size(0)
+        train_correct += predicted.eq(targets).sum().item()
         
         train_acc = 100. * train_correct / train_total
         train_losses.append(train_loss/len(train_loader))
@@ -206,12 +155,23 @@ def run_training(model, optimizers, train_loader, test_loader, total_epochs, opt
         test_accs.append(test_acc)
         times.append(time.time() - start_time)
         
-        print(f'Epoch: {epoch+1}/{total_epochs} | '
-              f'Train Loss: {train_losses[-1]:.3f} | '
-              f'Train Acc: {train_acc:.2f}% | '
-              f'Test Loss: {test_losses[-1]:.3f} | '
-              f'Test Acc: {test_acc:.2f}% | '
-              f'Optimizer: {optimizer_label}')
+        # Print current learning rates
+        if epoch > 0:
+            lrs = [param_group['lr'] for optimizer in optimizers for param_group in optimizer.param_groups]
+            print(f'Epoch: {epoch}/{total_epochs} | '
+                  f'Train Loss: {train_losses[-1]:.3f} | '
+                  f'Train Acc: {train_acc:.2f}% | '
+                  f'Test Loss: {test_losses[-1]:.3f} | '
+                  f'Test Acc: {test_acc:.2f}% | '
+                  f'LR: {min(lrs):.6f} | '
+                  f'Optimizer: {optimizer_label}')
+        else:
+            print(f'Epoch: {epoch}/{total_epochs} | '
+                  f'Train Loss: {train_losses[-1]:.3f} | '
+                  f'Train Acc: {train_acc:.2f}% | '
+                  f'Test Loss: {test_losses[-1]:.3f} | '
+                  f'Test Acc: {test_acc:.2f}% | '
+                  f'Optimizer: {optimizer_label}')
     
     return {
         'train_losses': train_losses,
@@ -226,20 +186,14 @@ def plot_results(results, model_name):
     save_dir = Path(PLOT_CONFIG['save_dir'])
     save_dir.mkdir(exist_ok=True)
     
-    # Default colors for different optimizer types
-    default_colors = {
-        'neon': 'b-',
-        'muon': 'r-',
-        'sgd': 'g-'
-    }
-    
     # Plot accuracy vs epochs
     plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
     for opt_key, result in results.items():
         opt_config = OPTIMIZER_CONFIGS[opt_key]
-        color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
-        plt.plot(range(1, len(result['test_accs']) + 1), result['test_accs'],
-                color, label=opt_config['label'])
+        # color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
+        plt.plot(range(0, len(result['test_accs'])), result['test_accs'],
+                #color,
+                label=opt_config['label'])
     plt.xlabel('Epoch')
     plt.ylabel('Test Accuracy (%)')
     plt.title(f'Test Accuracy vs Epochs ({model_name})')
@@ -252,9 +206,10 @@ def plot_results(results, model_name):
     plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
     for opt_key, result in results.items():
         opt_config = OPTIMIZER_CONFIGS[opt_key]
-        color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
+        # color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
         plt.plot(result['times'], result['test_accs'],
-                color, label=opt_config['label'])
+                #color
+                label=opt_config['label'])
     plt.xlabel('Time (seconds)')
     plt.ylabel('Test Accuracy (%)')
     plt.title(f'Test Accuracy vs Training Time ({model_name})')
@@ -267,9 +222,9 @@ def plot_results(results, model_name):
     plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
     for opt_key, result in results.items():
         opt_config = OPTIMIZER_CONFIGS[opt_key]
-        color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
-        plt.plot(range(1, len(result['train_losses']) + 1), result['train_losses'],
-                color, label=opt_config['label'])
+        # color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
+        plt.plot(range(0, len(result['train_losses'])), result['train_losses'],
+                label=opt_config['label'])
     plt.xlabel('Epoch')
     plt.ylabel('Training Loss')
     plt.title(f'Training Loss vs Epochs ({model_name})')
@@ -282,9 +237,10 @@ def plot_results(results, model_name):
     plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
     for opt_key, result in results.items():
         opt_config = OPTIMIZER_CONFIGS[opt_key]
-        color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
+        # color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
         plt.plot(result['times'], result['train_losses'],
-                color, label=opt_config['label'])
+                #color
+                label=opt_config['label'])
     plt.xlabel('Time (seconds)')
     plt.ylabel('Training Loss')
     plt.title(f'Training Loss vs Training Time ({model_name})')
@@ -293,7 +249,7 @@ def plot_results(results, model_name):
     plt.savefig(save_dir / f'loss_vs_time_{model_name.lower()}.png')
     plt.close()
 
-def main(model_type='simple'):
+def main():
     # Create data loaders
     train_loader = CifarLoader(
         'data',
@@ -307,13 +263,18 @@ def main(model_type='simple'):
         batch_size=TRAIN_CONFIG['batch_size']
     )
     
-    # Create initial model
+    # Create initial model based on config
+    model_type = TRAIN_CONFIG['model_type']
     if model_type == 'simple':
         model = SimplePerceptron()
+    elif model_type == 'big_mlp':
+        model = ComplexMLP()
     elif model_type == 'moderate':
         model = ModerateCIFARModel()
     elif model_type == 'advanced':
         model = AdvancedCIFARModel()
+    elif model_type == 'CifarNet':
+        model = CifarNet()
     else:
         raise ValueError(f"Unknown model type: {model_type}")
     
@@ -326,16 +287,20 @@ def main(model_type='simple'):
         # Create a new model instance and copy the initial state
         if model_type == 'simple':
             current_model = SimplePerceptron()
+        elif model_type == 'big_mlp':
+            current_model = ComplexMLP()    
         elif model_type == 'moderate':
             current_model = ModerateCIFARModel()
-        else:
+        elif model_type == 'advanced':
             current_model = AdvancedCIFARModel()
+        elif model_type == 'CifarNet':
+            current_model = CifarNet()
         
         # Copy the initial state from the original model
         current_model.load_state_dict(model.state_dict())
         
-        # Create optimizers for each layer
-        optimizers = create_optimizer(current_model, opt_config['type'], **{
+        # Create optimizers and schedulers for each layer
+        optimizers, schedulers = create_optimizer(current_model, len(train_loader) * opt_config['num_epochs'], opt_config['type'], **{
             k: v for k, v in opt_config.items() 
             if k not in ['type', 'label', 'num_epochs']
         })
@@ -344,19 +309,17 @@ def main(model_type='simple'):
         results[opt_key] = run_training(
             current_model,
             optimizers,
+            schedulers,
             train_loader,
             test_loader,
             opt_config['num_epochs'],
-            opt_config['label']
+            opt_config['label'],
+            opt_config['type'],
+            opt_key
         )
     
     # Plot results
     plot_results(results, model.__class__.__name__)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='moderate', 
-                      choices=['simple', 'moderate', 'advanced'],
-                      help='Model type to train (simple, moderate, or advanced)')
-    args = parser.parse_args()
-    main(model_type=args.model) 
+    main() 

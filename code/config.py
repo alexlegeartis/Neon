@@ -1,3 +1,4 @@
+import math
 import torch
 
 # Device configuration
@@ -7,6 +8,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 CIFAR_MEAN = torch.tensor((0.4914, 0.4822, 0.4465), device=device)
 CIFAR_STD = torch.tensor((0.2470, 0.2435, 0.2616), device=device)
 
+batch_size = 2000
+
 # Model configurations
 MODEL_CONFIGS = {
     'simple': {
@@ -14,6 +17,7 @@ MODEL_CONFIGS = {
         'hidden_size': 1000,
         'output_size': 10
     },
+    'big_mlp': {},
     'moderate': {
         'channels': [32, 64, 128],
         'output_size': 10
@@ -23,29 +27,73 @@ MODEL_CONFIGS = {
         'output_size': 10
     }
 }
+'''
+Old optimizers:
 
-# Optimizer labels and configurations
-OPTIMIZER_CONFIGS = {
-    'neon_fast': {
+    'neon_fastest': {
         'type': 'neon',
-        'label': 'Neon (Fast)',
-        'num_epochs': 20,
+        'label': 'Neon (Fast, small iter_num)',
+        'num_epochs': 30,
         'lr': 0.1,
         'momentum': 0.6,
         'nesterov': True,
+        'neon_mode': 'fast',
+        'iter_num': 10,
+    },
+    'neon_fast': {
+        'type': 'neon',
+        'label': 'Neon (Fast)',
+        'num_epochs': 30,
+        'lr': 0.1,
+        'momentum': 0.6,
+        'nesterov': True,
+        'neon_mode': 'fast',
+        'iter_num': 100,
     },
     'neon_acc': {
         'type': 'neon',
         'label': 'Neon (Accurate)',
-        'num_epochs': 20,
-        'lr': 0.05,
+        'num_epochs': 30,
+        'lr': 0.1,
         'momentum': 0.6,
         'nesterov': True,
+        'neon_mode': 'accurate',
+        'iter_num': 100,
+        'k': 2,
+    },
+
+
+
+
+'''
+# Optimizer labels and configurations
+OPTIMIZER_CONFIGS = {
+     'neon_acc': {
+        'type': 'neon',
+        'label': 'Neon (Accurate)',
+        'num_epochs': 30,
+        'lr': 0.1,
+        'momentum': 0.3,
+        'nesterov': True,
+        'neon_mode': 'accurate',
+        'iter_num': 40,
+        'k': 3,
+    },
+    'neon_acc_no_mom': {
+        'type': 'neon',
+        'label': 'Neon (Accurate No momentum)',
+        'num_epochs': 30,
+        'lr': 0.1,
+        'momentum': 0,
+        'nesterov': False,
+        'neon_mode': 'accurate',
+        'iter_num': 100,
+        'k': 2,
     },
     'muon_fast': {
         'type': 'muon',
         'label': 'Muon (Fast)',
-        'num_epochs': 20,
+        'num_epochs': 30,
         'lr': 0.1,
         'momentum': 0.6,
         'nesterov': True,
@@ -53,17 +101,18 @@ OPTIMIZER_CONFIGS = {
     'sgd_accurate': {
         'type': 'sgd',
         'label': 'SGD (Accurate)',
-        'num_epochs': 20,
-        'lr': 0.05,
-        'momentum': 0.9,
+        'num_epochs': 30,
+        'lr': 0.001 * math.sqrt(batch_size / 2000),
+        'momentum': 0.85,
         'nesterov': True,
-        'weight_decay': 2e-6 * 128
+        'weight_decay': 2e-6 * batch_size
     }
 }
 
 # Training configuration
 TRAIN_CONFIG = {
-    'batch_size': 2000,
+    'batch_size': batch_size,
+    'model_type': 'simple',
     'optimizers': list(OPTIMIZER_CONFIGS.keys())  # List of optimizer keys to use
 }
 
@@ -76,14 +125,6 @@ AUG_CONFIG = {
 # Plotting configuration
 PLOT_CONFIG = {
     'save_dir': 'figures',
-    'colors': {
-        'neon_fast': 'b-',
-        'neon_accurate': 'b--',
-        'muon_fast': 'r-',
-        'muon_accurate': 'r--',
-        'sgd_fast': 'g-',
-        'sgd_accurate': 'g--'
-    },
     'figsize': (10, 5),
     'dpi': 100
 } 

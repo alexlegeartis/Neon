@@ -1,7 +1,7 @@
+import math
 import torch
 import torch.nn.functional as F
 from torch import nn
-
 from matrix_functions import k_sv_svds_approximation_dlpack, one_sv_svds_approximation
 
 def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
@@ -96,14 +96,17 @@ class Muon(torch.optim.Optimizer):
                 p.data.mul_(len(p.data)**0.5 / norm)
                 
                 update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                p.data.add_(update, alpha=-lr)
+                
+                n, m = g.shape # d_out and d_in
+                p.data.add_(update, alpha=-lr * math.sqrt(n / m))
 
 class Neon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, tau = 0, nesterov=False, type='fast'):
+    def __init__(self, params, lr=1e-3, momentum=0, k=1, tau = 0, nesterov=False,
+                 neon_mode='fast', iter_num = 100):
         self.tau = tau
-        self.k = 5
-        self.lanczos_iter_num = 100
-        self.type = type
+        self.k = k
+        self.lanczos_iter_num = iter_num
+        self.type = neon_mode
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -137,11 +140,13 @@ class Neon(torch.optim.Optimizer):
                 
                 # update = u1s1v1t_torch(g.reshape(len(g), -1)).view(g.shape)
                 g_resh = g.reshape(len(g), -1)
+                n, m = g_resh.shape # d_out and d_in
                 if g_resh.shape[0] == 1 or g_resh.shape[1] == 1:
                     update = zeropower_via_newtonschulz5(g_resh).view(g.shape)
+                    print("Using Muon is illegal!")
                 else:
                     if self.type == 'fast':
                         update = one_sv_svds_approximation(g_resh, self.lanczos_iter_num)
                     elif self.type == 'accurate':
                         update, self.tau, self.k = k_sv_svds_approximation_dlpack(g_resh, self.k, self.tau, self.lanczos_iter_num)
-                p.data.add_(update.view(g.shape), alpha=-lr) 
+                p.data.add_(update.view(g.shape), alpha=-lr * math.sqrt(n / m)) 

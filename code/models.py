@@ -24,6 +24,64 @@ class SimplePerceptron(nn.Module):
         x = self.fc2(x)
         return x
 
+class ComplexMLP(nn.Module):
+    def __init__(self):
+        super(ComplexMLP, self).__init__()
+        
+        self.flatten = nn.Flatten()
+        
+        self.fc1 = nn.Linear(3 * 32 * 32, 2048)
+        self.bn1 = nn.BatchNorm1d(2048)
+        self.dropout1 = nn.Dropout(0.3)
+        
+        self.fc2 = nn.Linear(2048, 1024)
+        self.bn2 = nn.BatchNorm1d(1024)
+        self.dropout2 = nn.Dropout(0.3)
+
+        self.fc3 = nn.Linear(1024, 512)
+        self.bn3 = nn.BatchNorm1d(512)
+        self.dropout3 = nn.Dropout(0.4)
+
+        self.fc4 = nn.Linear(512, 256)
+        self.bn4 = nn.BatchNorm1d(256)
+        self.dropout4 = nn.Dropout(0.5)
+
+        self.fc5 = nn.Linear(256, 128)
+        self.bn5 = nn.BatchNorm1d(128)
+        self.dropout5 = nn.Dropout(0.5)
+
+        self.output = nn.Linear(128, 10)
+        self.initialize_weights()
+
+    def initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+
+
+    def forward(self, x):
+        x = self.flatten(x)
+
+        x = F.relu(self.bn1(self.fc1(x)))
+        x = self.dropout1(x)
+
+        x = F.relu(self.bn2(self.fc2(x)))
+        x = self.dropout2(x)
+
+        x = F.relu(self.bn3(self.fc3(x)))
+        x = self.dropout3(x)
+
+        x = F.relu(self.bn4(self.fc4(x)))
+        x = self.dropout4(x)
+
+        x = F.relu(self.bn5(self.fc5(x)))
+        x = self.dropout5(x)
+
+        x = self.output(x)
+        return x
+
 class ModerateCIFARModel(nn.Module):
     def __init__(self):
         super().__init__()

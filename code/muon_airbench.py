@@ -1,3 +1,5 @@
+# Testing Neon on the benchmark, the code works for Muon around 3s indeed on a powerful GPU
+# Neon is far worse. Somehow its accuracy more depends on the batchsize.
 from math import ceil
 import torch
 torch.backends.cudnn.benchmark = True
@@ -151,7 +153,9 @@ def main():
                      dict(params=norm_biases,         lr=bias_lr, weight_decay=wd/bias_lr),
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True) #, fused=True)
-    optimizer2 = Neon(filter_params, lr=0.05, momentum=0.6, nesterov=True)
+    # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True)
+    optimizer2 = Neon(filter_params, lr=0.05, momentum=0.6, nesterov=True, neon_mode='accurate',
+                      iter_num=500 * batch_size / 500)
     optimizers = [optimizer1, optimizer2]
     for opt in optimizers:
         for group in opt.param_groups:
@@ -182,7 +186,7 @@ def main():
                 break
 
     tta_val_acc = airbench.evaluate(model, test_loader, tta_level=2)
-    print(f"{tta_val_acc:.4f}")
+    print(f"Accuracy: {tta_val_acc:.4f}")
     return tta_val_acc
 
 if __name__ == "__main__":
