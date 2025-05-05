@@ -34,6 +34,8 @@
 \usepackage[absolute]{textpos}
 
 \usepackage{fleqn,psfrag,wrapfig,tikz}
+\usepackage{enumitem}
+\usepackage{amsmath}
 
 \usepackage[papersize={38in,28in}]{geometry}
 
@@ -110,13 +112,13 @@
 % Watch out for hyphenation in titles - LaTeX will do it
 % but it looks awful.
 \begin{textblock}{23}(0,0)
-\Title{The Title of the Project}
+\Title{Neon: Nuclear Norm to Beat Muon}
 \end{textblock}
 
 \begin{textblock}{23}(0,0.6)
 {
 \LARGE
-Firstname Lastname
+Alexey Kravatskiy, Ivan Kozyrev, Nikolay Kozlov, Alexander Vinogradov
 }
 
 {
@@ -145,44 +147,32 @@ Firstname Lastname
 
 \hrule\medskip
 \Head{Introduction}\\
-Many approaches to solving regression problems with hierarchical structures 
-(\eg, Yuan \& Lin; Meier, van de Geer, B\"uhlmann; Jacob, Obozinski, Vert)
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Recent advances in optimization techniques have highlighted the benefits of leveraging the matrix structure of neural network weights during training. Optimizers like Muon (Jordan et al.) and Shampoo (Gupta, Koren and Singer) have shown promise, but at a significantly higher computational cost than traditional methods like Adam. To bridge this gap, we propose Neon, a new optimizer that builds upon the framework of Bernstein and Newhouse. By using alternative norms, such as kernel norm (Kernel-Neon) or custom $F*$ norm ($F*$-Neon), we induce low-rank update matrices that enable more efficient computation. We evaluate the performance of Neon, Muon, and Adam on multilayer perceptrons, CIFAR10, and NanoGPT, and demonstrate [resting results here].
 
 \medskip
 \hrule\medskip
-\Head{Group lasso}\\
-One approach is the \emph{group lasso}:
-\[
-\begin{array}{ll}
-\mbox{minimize} & f(x) + \lambda \sum_{i=1}^N \|x_i\|_2
-\end{array}
-\]
-\ie, like lasso, but require groups of variables to be zero or not
-\begin{itemize}\itemsep=12pt
-\item also called $\ell_{1,2}$ mixed norm regularization
-\end{itemize}
+\Head{Neon's update rule}\\
+Bernstein and Newhouse suggest obtaining the update step for a weight matrix $W$ as a solution to the optimization problem:
+\begin{equation}
+    \langle G, \delta W \rangle + \frac{\lambda}{2} \norm{\delta W}^2 \to \min_{\delta W}\,,
+\end{equation}
+where $G$ is a gradient-like matrix obtained via backpropagation. Setting norm to RMS-to-RMS norm (scaled version of Spectral norm) produces Muon. We consider two different choices instead:
+\begin{enumerate}
+    \item Choosing kernel norm, $\norm{\cdot}_*$, produces rank-1 update, defined by 
+    \begin{equation}
+        \delta W = -\frac{1}{\lambda} u_1 \sigma_1 v_1^T\,,
+    \end{equation}\label{eqn:update_star}
+    where $\sigma_1$ is largest singular value of $G$, and $u_1$, $v_1$ are corresponding singular values.
 
-\medskip
-\hrule\medskip
-\Head{Structured group lasso}\\
-Another approach is the \emph{structured group lasso}:
-\[
-\begin{array}{ll}
-\mbox{minimize} & f(x) + \sum_{i=1}^N \lambda_i \|x_{g_i}\|_2
-\end{array}
-\]
-where $g_i \subseteq [n]$ and $\mathcal G = \{g_1, \dots, g_N\}$
-\begin{itemize}\itemsep=12pt
-\item like group lasso, but the groups can overlap arbitrarily
-\item particular choices of groups can impose `structured' sparsity
-\item \eg, topic models, selecting interaction terms for (graphical) models,
-    tree structure of gene networks, fMRI data
-\item generalizes to the \textbf{composite absolute penalties family}:
-\[
-r(x) = \|(\|x_{g_1}\|_{p_1}, \dots, \|x_{g_N}\|_{p_N})\|_{p_0}
-\]
-\end{itemize}
+    \item Choosing $F*$ norm, defined by $\norm{\cdot}_{F*} = (\norm{\cdot}_{*} + \norm{\cdot}_{F})/2$, produces a relatively small-rank update, defined by
+    \begin{equation}\label{eqn:update_F_star}
+    \delta W = -\frac{1}{\lambda}UDV^T
+    \end{equation} 
+    with $D = \diag(d_i)$, where $d_i = [\sigma_i - \tau]_+$ and $\tau$ is given by
+    \begin{equation*}
+        \sum_{i=1}^n [\sigma_i - \tau]_+ = \tau\,.
+    \end{equation*}
+\end{enumerate}
 
 \medskip
 \hrule\medskip
