@@ -179,8 +179,11 @@ where $G$ is a gradient-like matrix obtained via backpropagation. Setting norm t
 \medskip
 \hrule\medskip
 \Head{Efficient update computation}\\
-A couple of sentences about Lanczos algorithm and reference computation times and required number of iterations for tipical value of $\tau$.
-
+% A couple of sentences about Lanczos algorithm and reference computation times and required number of iterations for tipical value of $\tau$.
+We use cupy's svds routine to obtain gradients' matrices' SVD approximation formed by largest singular values and corresponding vectors.
+By applying the Lanczos process to either $A^TA$ or $AA^T$, it generates a sequence of orthogonal vectors (Lanczos vectors) that capture 
+the dominant spectral properties of the original matrix. The singular values and vectors are then extracted from the tridiagonal matrix using 
+standard eigenvalue techniques like QR iteration.
 \end{textblock}
 
 \begin{textblock}{7.0}(8,1.5)
