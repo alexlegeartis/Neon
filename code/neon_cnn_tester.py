@@ -48,42 +48,44 @@ def create_optimizer(model, total_steps, optimizer_type, **kwargs):
             layers.append((name, module))
     
     for name, layer in layers:
-        if optimizer_type == 'neon':
-            # For Neon, create a new optimizer with random tau for each layer
-            import random
-            tau = random.uniform(0.01, 1)  # Random tau between 0.1 and 1.0
-            layer_kwargs = kwargs.copy()
-            layer_kwargs['tau'] = tau
-            optimizer = Neon(layer.parameters(), **layer_kwargs)
-            # Create scheduler for Neon
-            scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: lr_lambda(t, total_steps))
-            '''
-            scheduler = torch.optim.lr_scheduler.StepLR(
-                optimizer,
-                step_size=kwargs.get('lr_double_after_epoch', 3),
-                gamma=2.0  # Double the learning rate
-            )'''
-        elif optimizer_type == 'muon':
-            optimizer = Muon(layer.parameters(), **kwargs)
-            # Create scheduler for Muon
-            scheduler = torch.optim.lr_scheduler.StepLR(
-                optimizer,
-                step_size=5,  # Adjust every 5 epochs
-                gamma=0.5  # Halve the learning rate
-            )
-        elif optimizer_type == 'sgd':
-            optimizer = torch.optim.SGD(layer.parameters(), **kwargs)
-            # Create scheduler for SGD
-            scheduler = torch.optim.lr_scheduler.StepLR(
-                optimizer,
-                step_size=5,  # Adjust every 5 epochs
-                gamma=0.5  # Halve the learning rate
-            )
-        else:
-            raise ValueError(f"Unknown optimizer type: {optimizer_type}")
+        # Separate parameters based on their shapes
+        matrix_params = []
+        non_matrix_params = []
         
-        optimizers.append(optimizer)
-        schedulers.append(scheduler)
+        for p in layer.parameters():
+            if p.requires_grad:
+                if len(p.shape) == 2:  # Matrix parameters
+                    matrix_params.append(p)
+                else:  # Non-matrix parameters (bias, conv weights, etc.)
+                    non_matrix_params.append(p)
+        
+        # Create optimizer for non-matrix parameters using SGD
+        if non_matrix_params:
+            sgd_optimizer = torch.optim.SGD(
+                non_matrix_params,
+                momentum=0.85,
+                nesterov=True,
+                lr=kwargs.get('lr', 0.1)
+            )
+            optimizers.append(sgd_optimizer)
+        
+        # Create optimizer for matrix parameters based on optimizer_type
+        if matrix_params:
+            if optimizer_type == 'neon':
+                # For Neon, create a new optimizer with random tau for each layer
+                import random
+                tau = random.uniform(0.01, 1)  # Random tau between 0.1 and 1.0
+                layer_kwargs = kwargs.copy()
+                layer_kwargs['tau'] = tau
+                optimizer = Neon(matrix_params, **layer_kwargs)
+            elif optimizer_type == 'muon':
+                optimizer = Muon(matrix_params, **kwargs)
+            elif optimizer_type == 'sgd':
+                optimizer = torch.optim.SGD(matrix_params, **kwargs)
+            else:
+                raise ValueError(f"Unknown optimizer type: {optimizer_type}")
+            
+            optimizers.append(optimizer)
     
     return optimizers, schedulers
 
@@ -184,45 +186,41 @@ def run_training(model, optimizers, schedulers, train_loader, test_loader, total
 def plot_results(results, model_name):
     # Create directory for plots
     save_dir = Path(PLOT_CONFIG['save_dir'])
+    save_dir.parent.mkdir(exist_ok=True)
     save_dir.mkdir(exist_ok=True)
     
     # Plot accuracy vs epochs
     plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
     for opt_key, result in results.items():
         opt_config = OPTIMIZER_CONFIGS[opt_key]
-        # color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
         plt.plot(range(0, len(result['test_accs'])), result['test_accs'],
-                #color,
                 label=opt_config['label'])
     plt.xlabel('Epoch')
     plt.ylabel('Test Accuracy (%)')
     plt.title(f'Test Accuracy vs Epochs ({model_name})')
     plt.legend()
     plt.grid(True)
-    plt.savefig(save_dir / f'accuracy_vs_epochs_{model_name.lower()}.png')
+    plt.savefig(save_dir / f'accuracy_vs_epochs_{model_name.lower()}.svg', format='svg', bbox_inches='tight')
     plt.close()
     
     # Plot accuracy vs time
     plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
     for opt_key, result in results.items():
         opt_config = OPTIMIZER_CONFIGS[opt_key]
-        # color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
         plt.plot(result['times'], result['test_accs'],
-                #color
                 label=opt_config['label'])
     plt.xlabel('Time (seconds)')
     plt.ylabel('Test Accuracy (%)')
     plt.title(f'Test Accuracy vs Training Time ({model_name})')
     plt.legend()
     plt.grid(True)
-    plt.savefig(save_dir / f'accuracy_vs_time_{model_name.lower()}.png')
+    plt.savefig(save_dir / f'accuracy_vs_time_{model_name.lower()}.svg', format='svg', bbox_inches='tight')
     plt.close()
     
     # Plot training loss vs epochs
     plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
     for opt_key, result in results.items():
         opt_config = OPTIMIZER_CONFIGS[opt_key]
-        # color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
         plt.plot(range(0, len(result['train_losses'])), result['train_losses'],
                 label=opt_config['label'])
     plt.xlabel('Epoch')
@@ -230,23 +228,21 @@ def plot_results(results, model_name):
     plt.title(f'Training Loss vs Epochs ({model_name})')
     plt.legend()
     plt.grid(True)
-    plt.savefig(save_dir / f'loss_vs_epochs_{model_name.lower()}.png')
+    plt.savefig(save_dir / f'loss_vs_epochs_{model_name.lower()}.svg', format='svg', bbox_inches='tight')
     plt.close()
     
     # Plot training loss vs time
     plt.figure(figsize=PLOT_CONFIG['figsize'], dpi=PLOT_CONFIG['dpi'])
     for opt_key, result in results.items():
         opt_config = OPTIMIZER_CONFIGS[opt_key]
-        # color = PLOT_CONFIG['colors'].get(opt_key, default_colors.get(opt_config['type'], 'k-'))
         plt.plot(result['times'], result['train_losses'],
-                #color
                 label=opt_config['label'])
     plt.xlabel('Time (seconds)')
     plt.ylabel('Training Loss')
     plt.title(f'Training Loss vs Training Time ({model_name})')
     plt.legend()
     plt.grid(True)
-    plt.savefig(save_dir / f'loss_vs_time_{model_name.lower()}.png')
+    plt.savefig(save_dir / f'loss_vs_time_{model_name.lower()}.svg', format='svg', bbox_inches='tight')
     plt.close()
 
 def main():

@@ -27,6 +27,28 @@ def find_tau(S, tau_start, eps=1e-2):
             high = mid
     return (low + high) / 2
 
+def find_tau_torch(S, tau_start, eps=1e-2):
+    smax = torch.max(S)
+    f_mid = torch.sum(torch.clamp(S - tau_start, min=0))
+    if abs(f_mid - tau_start) < eps * smax:
+        # print("Already ok")
+        return tau_start
+    # print("Not ok")
+    if f_mid > tau_start:
+        low = tau_start
+    else:
+        high = tau_start
+ 
+    low, high = torch.tensor(0.0, device=S.device), smax
+    while high - low > eps * smax:
+        mid = (low + high) / 2
+        f_mid = torch.sum(torch.clamp(S - mid, min=0))
+        if f_mid > mid:
+            low = mid
+        else:
+            high = mid
+    return (low + high) / 2
+
 def k_sv_svds_approximation_dlpack(W_torch, k, tau, num_iter=30):
     """SVD approximation using the top k singular values and corresponding vectors."""
     W = cp.from_dlpack(thd.to_dlpack(W_torch)).astype(cp.float32)
@@ -45,6 +67,25 @@ def k_sv_svds_approximation_dlpack(W_torch, k, tau, num_iter=30):
     approx = U @ cp.diag(S_thresholded) @ Vt
     approx_torch = thd.from_dlpack(approx.toDlpack()) 
     return approx_torch, opt_tau, k
+
+
+def svd_full_approximation(A, tau=0):
+    k = 0
+    if (k == 0):
+        k = min(A.shape[0],A.shape[1])
+    # A = A.double() # uncomment this if you need higher precision
+    U, S, Vh = torch.linalg.svd(A, full_matrices=False)
+    opt_tau = find_tau_torch(S, tau)
+    S_thresholded = torch.clamp(S - opt_tau, min=0)
+    # print(sum(S_thresholded), opt_tau)
+    approx = U @ torch.diag(S_thresholded) @ Vh
+    return approx, opt_tau, k
+
+    # S_thresholded = torch.clamp(S - tau, min=0) 
+    # A_reconstructed = U[:,:k] @ torch.diag(S[:k]) @ Vh[:k,:]
+    # print(f"condition {S[0]/S[-1]:.4e}")
+    return A_reconstructed
+
 
 def one_sv_svds_approximation(W_torch, num_iter=30):
     """SVD approximation using the top k singular values and corresponding vectors."""

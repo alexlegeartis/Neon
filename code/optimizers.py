@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn.functional as F
 from torch import nn
-from matrix_functions import k_sv_svds_approximation_dlpack, one_sv_svds_approximation
+from matrix_functions import k_sv_svds_approximation_dlpack, one_sv_svds_approximation, svd_full_approximation
 
 def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
     """Simplified Newton-Schulz iteration for whitening"""
@@ -149,4 +149,5 @@ class Neon(torch.optim.Optimizer):
                         update = one_sv_svds_approximation(g_resh, self.lanczos_iter_num)
                     elif self.type == 'accurate':
                         update, self.tau, self.k = k_sv_svds_approximation_dlpack(g_resh, self.k, self.tau, self.lanczos_iter_num)
+                        # update, self.tau, self.k = svd_full_approximation(g_resh, self.tau) -- too slow
                 p.data.add_(update.view(g.shape), alpha=-lr * math.sqrt(n / m)) 

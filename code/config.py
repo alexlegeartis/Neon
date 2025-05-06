@@ -71,7 +71,7 @@ OPTIMIZER_CONFIGS = {
      'neon_acc': {
         'type': 'neon',
         'label': 'Neon (Accurate)',
-        'num_epochs': 30,
+        'num_epochs': 20,
         'lr': 0.1,
         'momentum': 0.3,
         'nesterov': True,
@@ -112,7 +112,7 @@ OPTIMIZER_CONFIGS = {
 # Training configuration
 TRAIN_CONFIG = {
     'batch_size': batch_size,
-    'model_type': 'simple',
+    'model_type': 'moderate',
     'optimizers': list(OPTIMIZER_CONFIGS.keys())  # List of optimizer keys to use
 }
 
@@ -124,7 +124,7 @@ AUG_CONFIG = {
 
 # Plotting configuration
 PLOT_CONFIG = {
-    'save_dir': 'figures',
+    'save_dir': 'fig/06mlp_no_schedule',
     'figsize': (10, 5),
     'dpi': 100
 } 
