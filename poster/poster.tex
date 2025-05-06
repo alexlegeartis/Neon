@@ -37,12 +37,14 @@
 \usepackage{enumitem}
 \usepackage{amsmath}
 
+\usepackage{caption}
+
+
 \usepackage[papersize={38in,28in}]{geometry}
 
 % Graphics to include graphics. Times is nice on posters, but you
 % might want to switch it off and go for CMR fonts.
 \usepackage{graphics}
-
 
 % we are running pdflatex, so convert .eps files to .pdf
 %\usepackage[pdftex]{graphicx}
@@ -147,7 +149,7 @@ Alexey Kravatskiy, Ivan Kozyrev, Nikolay Kozlov, Alexander Vinogradov
 
 \hrule\medskip
 \Head{Introduction}\\
-Recent advances in optimization techniques have highlighted the benefits of leveraging the matrix structure of neural network weights during training. Optimizers like Muon (Jordan et al.) and Shampoo (Gupta, Koren and Singer) have shown promise, but at a significantly higher computational cost than traditional methods like Adam. To bridge this gap, we propose Neon, a new optimizer that builds upon the framework of Bernstein and Newhouse. By using alternative norms, such as kernel norm (Kernel-Neon) or custom $F*$ norm ($F*$-Neon), we induce low-rank update matrices that enable more efficient computation. We evaluate the performance of Neon, Muon, and Adam on multilayer perceptrons, CIFAR10, and NanoGPT, and demonstrate [resting results here].
+Recent advances in optimization techniques have highlighted the benefits of leveraging the matrix structure of neural network weights during training. Optimizers like Muon (Jordan et al.) and Shampoo (Gupta, Koren and Singer) have shown promise, but at a significantly higher computational cost than traditional methods like Adam. To bridge this gap, we propose Neon, a new optimizer that builds upon the framework of Bernstein and Newhouse. By using alternative norms, such as kernel norm (Kernel-Neon) or custom $F*$ norm ($F*$-Neon), we induce low-rank update matrices that enable more efficient computation. We evaluate the performance of Neon, Muon, and Adam on MLP, CIFAR10, and NanoGPT, and demonstrate [resting results here].
 
 \medskip
 \hrule\medskip
@@ -159,9 +161,9 @@ Bernstein and Newhouse suggest obtaining the update step for a weight matrix $W$
 where $G$ is a gradient-like matrix obtained via backpropagation. Setting norm to RMS-to-RMS norm (scaled version of Spectral norm) produces Muon. We consider two different choices instead:
 \begin{enumerate}
     \item Choosing kernel norm, $\norm{\cdot}_*$, produces rank-1 update, defined by 
-    \begin{equation}
+    \begin{equation}\label{eqn:update_star}
         \delta W = -\frac{1}{\lambda} u_1 \sigma_1 v_1^T\,,
-    \end{equation}\label{eqn:update_star}
+    \end{equation}
     where $\sigma_1$ is largest singular value of $G$, and $u_1$, $v_1$ are corresponding singular values.
 
     \item Choosing $F*$ norm, defined by $\norm{\cdot}_{F*} = (\norm{\cdot}_{*} + \norm{\cdot}_{F})/2$, produces a relatively small-rank update, defined by
@@ -176,113 +178,85 @@ where $G$ is a gradient-like matrix obtained via backpropagation. Setting norm t
 
 \medskip
 \hrule\medskip
-\Head{Hierarchical selection}\\
-\begin{center}
-\begin{tikzpicture}
-[dot/.style={rectangle,draw=black,fill=white,inner sep=5pt,minimum size=5pt}]
-\node[dot,draw=orange,thick] at (0,10) (n1) {1};
-\node[dot] at (-3,8) (n2) {2};
-\node[dot,draw=orange,thick] at (3,8) (n3) {3};
-\node[dot] at (-3,6) (n4) {4};
-\node[dot,draw=orange,thick] at (1.5,6) (n5) {5};
-\node[dot] at (4.5,6) (n6) {6};
-\draw[->] (n1) -- (n2);
-\draw[->] (n1) -- (n3);
-\draw[->] (n2) -- (n4);
-\draw[->] (n3) -- (n5);
-\draw[->] (n3) -- (n6);
-\end{tikzpicture}
-\end{center}
-
-\begin{itemize}\itemsep=8pt
-    \item $\mathcal G = \{ \{4\}, \textcolor{orange}{\{5\}}, \{6\}, \{2,4\}, 
-        \textcolor{orange}{\{3,5,6\}}, \textcolor{orange}{\{1,2,3,4,5,6\} \}}$
-\item nonzero variables form a rooted and connected subtree
-    \begin{itemize}
-        \item if node is selected, so are its ancestors
-        \item if node is not selected, neither are its descendants
-    \end{itemize}
-\end{itemize}
+\Head{Efficient update computation}\\
+A couple of sentences about Lanczos algorithm and reference computation times and required number of iterations for tipical value of $\tau$.
 
 \end{textblock}
 
 \begin{textblock}{7.0}(8,1.5)
 \hrule\medskip
-\Head{Algorithm}\\
-We solve this problem using an ADMM lasso implementation:
-\begin{verbatim}
-prox_f = @(v,rho) (rho/(1 + rho))*(v - b) + b;
-prox_g = @(v,rho) (max(0, v - 1/rho) - max(0, -v - 1/rho));
+\Head{Algorithms}\\
+Now we can write down pseudocode for both versions of Neon.
 
-AA = A*A';
-L  = chol(eye(m) + AA);
-
-for iter = 1:MAX_ITER
-    xx = prox_g(xz - xt, rho);
-    yx = prox_f(yz - yt, rho);
-
-    yz = L \ (L' \ (A*(xx + xt) + AA*(yx + yt)));
-    xz = xx + xt + A'*(yx + yt - yz);
-  
-    xt = xt + xx - xz;
-    yt = yt + yx - yz;
-end
-\end{verbatim}
-
-\medskip
-\hrule\medskip
-\Head{Line search}\\
-If $L$ is not known (usually the case), can use the following line search:
-
-\noindent\rule[-5pt]{.8\textwidth}{0.4pt}
-{\footnotesize
-\begin{tabbing}
-    {\bf given} $x^k$, $\lambda^{k-1}$, and parameter $\beta \in (0,1)$. \\*[\smallskipamount]
-    Let $\lambda := \lambda^{k-1}$. \\*[\smallskipamount]
-    {\bf repeat} \\
-    \qquad \= 1.\ Let $z := \prox_{\lambda g}(x^{k} - \lambda \nabla f(x^{k}))$. \\
-    \> 2.\ {\bf break if} $f(z) \leq \hat{f}_{\lambda}(z, x^{k})$. \\
-    \> 3.\ Update $\lambda := \beta \lambda$. \\*[\smallskipamount]
-    {\bf return} $\lambda^{k} := \lambda$, $x^{k+1}:=z$.
-\end{tabbing}}
+\noindent\rule[-5pt]{.8\textwidth}{0.4pt}\\
+{\bf Algorithm 1} Kernel-Neon update step for linear layer\\
+\noindent\rule[10pt]{.8\textwidth}{0.4pt}
+\vspace{-10pt}
+\noindent\begin{tabbing}
+    {\bf Input:} $\lambda$, gradient-like matrix $G$. \\
+    {\bf Output:} Weight matrix update $\delta W$.\\*[\smallskipamount]
+    \qquad \= 1.\ $U, \Sigma, V := \textrm{Lanczos}(G, 1)$. \\
+    {\bf Return} $-\frac{1}{\lambda}U \Sigma V^T$.
+\end{tabbing}
+\vspace{-8pt}
 \noindent\rule[10pt]{.8\textwidth}{0.4pt}
 
-typical value of $\beta$ is $1/2$, and 
-\[
-\hat{f}_\lambda(x,y) = f(y) + \nabla f(y)^T (x - y) + 
-(1/2\lambda)\|x - y\|_2^2
-\]
+For $F*$-Neon it is a bit trickier~\eqref{eqn:update_F_star}, we need to compute $\tau$ and know number of singular values larger then $\tau$, which we denote by $r$. Assuming that singular values spectrum of $G$ changes little between iterations (which was true in our experiments) we propose the following algorithm.
 
-\medskip
+\noindent\rule[-5pt]{.8\textwidth}{0.4pt}\\
+{\bf Algorithm 2} $F*$-Neon update step for linear layer\\
+\noindent\rule[10pt]{.8\textwidth}{0.4pt}
+\vspace{-10pt}
+\noindent\begin{tabbing}
+    \qquad\=\qquad\=\qquad\=\kill % Set three tab stops (4em total)
+    {\bf Input:} $\lambda$, $r$, gradient-like matrix $G$. \\
+    {\bf Output:} Weight matrix update $\delta W$.\\*[\smallskipamount]
+    \> 1. $U, \Sigma, V := \textrm{Lanczos}(G, r + 1)$. \\
+    \> 2. $s := \sum_{i=1}^{r}\sigma_r$. \\
+    \> 3.\ {\bf If} $(r + 1)\sigma_{r + 1} > s${\bf:}\\
+    \>\> 4. $r := r + 1$. 5. $\tau := \frac{s + \sigma_{r}}{r + 1}$.\\
+    \> 6.\ {\bf Else if} $(r + 1)\sigma_{r - 1} < s${\bf:}\\
+    \>\> 7. $r := r - 1$. 8. $\tau := \frac{s - \sigma_{r}}{r + 1}$.\\
+    \> 9.\ {\bf Else:}\\
+    \>\> 10. $\tau := \frac{s}{r + 1}$\\
+    \> 11. $D = [\Sigma - \tau I]_+$. \\*[\smallskipamount]
+    {\bf Save} $r$ for the next iteration.\\
+    {\bf Return} $-\frac{1}{\lambda}U D V^T$.
+\end{tabbing}
+\vspace{10pt}
+%\noindent\rule[10pt]{.8\textwidth}{0.4pt}
+
 \hrule\medskip
-\Head{Convergence proof}\\
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+\Head{MLP tests}\\
+Couple of sentences and a vector(!) picture (reference picture for now).
+\begin{figure}[h]
+    \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_simple.png}}
+    \caption{MLP validation loss}
+    \label{fig:mlp_loss}
+\end{figure} 
 
 \end{textblock}
 
 \begin{textblock}{7.0}(16,1.5)
 
 \hrule\medskip
-\Head{Numerical example}\\
-Consider a numerical example with $f(x) = \|Ax - b\|_2^2$
-with $A \in \reals^{10 \times 100}$ and $b \in \reals^{10}$.
-Entries of $A$ and $b$ are generated as independent samples from
-a standard normal distribution.
-Here, we have chosen $\lambda$ using cross validation.
+\Head{CIFAR10 tests}\\
+Couple of sentences and a vector(!) picture (reference picture for now).
+\begin{figure}[h]
+    \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_moderate.png}}
+    \caption{CIFAR10 validation loss}
+    \label{fig:cifar10_loss}
+\end{figure} 
 
 \medskip
 \hrule\medskip
-\Head{Results}\\
-On this numerical example, the ADMM method converges quickly.
-We give two realizations corresponding to different parameters $A$ and $b$.
-\begin{center}
-\psfrag{k}[t][b]{$k$}
-\psfrag{fbest - fmin}[b][t]{$f_\mathrm{best}^{(k)} - f^\star$}
-\psfrag{noise-free realize}{noise-free case}
-\psfrag{realize1}{realization 1}
-\psfrag{realize2}{realization 2}
-\includegraphics[width=0.9\textwidth]{figures/pwl_error_fbest_realize.eps}
-\end{center}
+\Head{NanoGPT tests}\\
+Couple of sentences and a vector(!) picture (reference picture for now).
+\begin{figure}[h]
+    \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/loss_val.png}}
+    \caption{NanoGPT validation loss}
+    \label{fig:nanogpt_loss}
+\end{figure} 
 
 \medskip
 \hrule\medskip
