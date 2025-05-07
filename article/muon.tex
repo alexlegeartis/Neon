@@ -50,6 +50,12 @@ linkcolor = blue]{hyperref}	% нумерование страниц, ссылк�
   \and
   Alexander Vinogradov \\
   \texttt{vinogradov.am@phystech.edu}
+  \and
+  Daniil Merkulov \\
+  \texttt{daniil.merkulov@phystech.edu}
+  \and
+  Ivan Oseledets \\
+  \texttt{i.oseledets@scholtech.ru}
 }
 
 %\author{\begin{tabular}{c c}
@@ -225,7 +231,7 @@ Building on this foundation, hybrid approaches like COSMOS \cite{chen2025cosmosh
     
     \item Neon (rank-1 version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_epochs_simple.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp0605/loss_vs_epochs_mlp.pdf}}
         \caption{MLP: self.linear1 = nn.Linear(32*32*3, 512), self.linear2 = nn.Linear(512, 10), self.activ = nn.GELU()}
         \label{fig:mlp_epochs}
     \end{figure}
@@ -235,7 +241,7 @@ Building on this foundation, hybrid approaches like COSMOS \cite{chen2025cosmosh
         \label{fig:cnn_epochs}
     \end{figure}
     \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp24/accuracy_vs_time_simple.png}}
+        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp0605/accuracy_vs_time_mlp.pdf}}
         \caption{MLP: wallclock time measurements}
         \label{fig:mlp_time}
     \end{figure}
