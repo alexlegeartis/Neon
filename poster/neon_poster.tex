@@ -245,18 +245,24 @@ We test Muon, SGD, and Neon on a simple MLP (2 linear layers) that solves CIFAR-
 
 \end{textblock}
 
-\begin{textblock}{7.0}(16,1.5)
-    \begin{figure}[h]
-        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp0605/accuracy_vs_time_mlp.pdf}}
-        \caption{MLP Accuracy vs wallclock time}
-        \label{fig:mlp_loss}
-    \end{figure} 
+%\begin{textblock}{7.0}(16,1.5)
+%    \begin{figure}[h]
+%        \center{\includegraphics[width=0.8\linewidth]{../figs/mlp0605/accuracy_vs_time_mlp.pdf}}
+%        \caption{MLP Accuracy vs wallclock time}
+%        \label{fig:mlp_loss}
+%    \end{figure} 
 
 \hrule\medskip
 \Head{CIFAR-10 tests}\\
-Now we compare Muon and Neon on ResNet from Keller's cifar10-aribench at GitHub. On RTX-4050, Muon is approximately twice as fast as Neon. Moreover, Neon has a strange dependency on batch size that has not been observed for Muon: smaller batch size 500 leads to accuracy 84\% in eight epochs, while batch size 2000 results in only 51\%.
+Now we compare Muon and Neon on ResNet from Keller's cifar10-aribench at GitHub. On RTX-4050, Muon is approximately twice as fast as Neon. That is likely caused by ineffective implementation of Neon's update, because in theory updates of Neon are more light and simple, especially for Nuclear Neon. Interestingly, Neon has a ceiling of convergence about 70\% which is not observed for Muon. Moreover, Neon requires far smaller learning rates to converge. All these aspects should be considered when we improve the algorithm.
 
-TO-DO: we conduct experiments like those with MLP, and add plots here.
+
+\begin{textblock}{7.0}(16,1.5)
+    \begin{figure}[h]
+        \center{\includegraphics[width=0.8\linewidth]{../figures/13may_muon_neon/test_acc_vs_epoch.pdf}}
+        \caption{Accuracy vs Epoch for Muon vs Neon}
+        \label{fig:mlp_loss}
+    \end{figure} 
 
 
 \medskip
