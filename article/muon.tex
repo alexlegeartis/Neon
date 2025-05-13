@@ -13,6 +13,7 @@ linkcolor = blue]{hyperref}	% нумерование страниц, ссылк�
 \usepackage[english]{babel}		% поддержка русского языка
 \usepackage{wrapfig}					% Плавающие картинки
 \usepackage{amssymb, amsmath}			% стилевой пакет для формул
+\usepackage{amsthm}                     % поддержка теорем
 \usepackage{algorithm}
 \usepackage{algorithmic} 
 \usepackage[backend=biber]{biblatex}
@@ -29,6 +30,8 @@ linkcolor = blue]{hyperref}	% нумерование страниц, ссылк�
 
 \graphicspath{{./figures/}}
 \usepackage{subcaption}
+
+\newtheorem{lemma}{Lemma}
 
 %custom commands
 \newcommand{\norm}[1]{\Vert{#1}\Vert}
@@ -74,7 +77,7 @@ In this paper, we develop a new algorithm for optimization of functions of weigh
 \end{abstract}
 
 \section{Idea}
-The goal of the project is to make variations on Muon to speed it up. Recently, authors of \cite{bernstein2024oldoptimizernewnorm} have proposed to look at different optimizers as the solution of the optimization problem for an update. This approach can be utilized to derive Muon \cite{jordan2024muon}, a novel algorithm for fast training of neural networks. Instead of using spectral norm in the problem, we use nuclear norm to produce a new problem. %Then, we add momentum to update. After finalizing the algorithm, we test it on MLP, and, if results are satisfactory, on transformers (probably something from huggingface). The result will be a fast algorithm, which we will convert into a new optimizer class for PyTorch, as was done with Muon.%
+The goal of the project is to make variations on Muon to speed it up. Recently, authors of \cite{bernstein2024oldoptimizernewnorm} have proposed to derive update step for an optimizer as the solution of the certain optimization problem. This approach can be utilized to derive Muon \cite{jordan2024muon}, a novel algorithm for fast training of neural networks. Instead of using spectral norm, used to derive Muon, we utilize nuclear norm to produce a new optimization algorithm. %Then, we add momentum to update. After finalizing the algorithm, we test it on MLP, and, if results are satisfactory, on transformers (probably something from huggingface). The result will be a fast algorithm, which we will convert into a new optimizer class for PyTorch, as was done with Muon.%
 
 \subsection{Problem (Project description)}
 
@@ -94,11 +97,15 @@ where $\norm{\cdot}$ denotes a certain matrix norm. By setting this norm to the 
 \end{equation}
 where $m$ is the input dimension of the layer, $n$ is the output dimension, and $U$ and $V$ are obtained from the singular value decomposition of the gradient matrix $G = U \Sigma V$.
 
-Motivated by the recent achievements of the Muon optimizer (e.g., \cite{liu2025muon}), we consider alternative choices of norms, specifically the kernel norm $\norm{\cdot}_*$ and a custom $F*$ norm, given by $\norm{X}_{F*}^2 = (\norm{X}_F + \norm{X}_*)/2$, where $\norm{\cdot}_F$ denotes the Frobenius norm.
+Motivated by the recent achievements of the Muon optimizer (e.g., \cite{liu2025muon}), we consider alternative choices of norms, specifically the nuclear norm $\norm{\cdot}_*$ and a custom $F*$ norm, given by 
+\begin{equation}\label{eqn:F_star}
+    \norm{X}_{F*}^2 = \frac{\norm{X}_F + \norm{X}_*}{2}\,,
+\end{equation}
+where $\norm{\cdot}_F$ denotes the Frobenius norm.
 
-Using the kernel norm in \eqref{eqn:opt_problem_mat} leads to a rank-one update of the weight matrices:
+Using the nuclear norm in \eqref{eqn:opt_problem_mat} leads to a rank-one update of the weight matrices:
 \begin{equation}\label{eqn:update_star}
-  \delta W = -\frac{1}{\lambda} u_1 \sigma_1 v_1^T\,,
+  \delta W = -\frac{1}{2\lambda} u_1 \sigma_1 v_1^T\,,
 \end{equation}
 where $\sigma_1$ is the largest singular value, and $u_1$ and $v_1$ are the corresponding singular vectors. We expect one iteration of this method to be significantly faster than one iteration of Muon.
 
@@ -106,13 +113,13 @@ Another choice is the $F*$ norm. With this choice, \eqref{eqn:opt_problem_mat} y
 \begin{equation}\label{eqn:update_F_star}
 \delta W = -\frac{1}{\lambda}UDV^T
 \end{equation} 
-with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$ and $\tau$ is given by:
+with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$, and $\tau$ is given by
 \begin{equation}
-    \sum_{i=1}^n [\sigma_i - \tau]_+ = \tau\,.
+    \sum_{i} [\sigma_i - \tau]_+ = \tau\,.
 \end{equation}
 We anticipate that the method with this update step will perform well with large batch sizes.
 
-In this article we show how one can quickly compute weight updates defined by \eqref{eqn:update_star} or \eqref{eqn:update_F_star} (for now we need more tests to accept one variant or both of them). Then we finilize the method by adding momentum and test their performance against those of Muon at training multilayer perceptron and transformer. The results will be fast algorithm, which we will convert into a new optimizer classes for PyTorch, as was done with Muon.
+In this article we show how one can quickly compute weight updates defined by \eqref{eqn:update_star} or \eqref{eqn:update_F_star}. Then we finilize the method by adding momentum and test their performance against those of Muon at training multilayer perceptron and transformer. The results will be fast algorithm, which we will convert into a new optimizer classes for PyTorch, as was done with Muon.
 
 \section{Outcomes}
 The main results of the project are expected to be:
@@ -157,6 +164,106 @@ The unprecedented scale of modern Large Language Models (LLMs) has pushed tradit
 The Muon optimizer  has emerged as a promising alternative based on matrix orthogonalization principles. Scaling Muon to billion-parameter LLMs required two key adaptations: the integration of L2 weight decay for stability and the implementation of per-parameter update scaling to handle diverse parameter distributions efficiently . Empirical evaluations demonstrate that Muon can match or exceed AdamW's model quality while requiring only about 52 of the training FLOPs. The successful training of the Moonlight model series, including a 16B-parameter Mixture-of-Experts model, validates Muon's practicality for production-scale applications \cite{liu2025muon}.
 
 Building on this foundation, hybrid approaches like COSMOS \cite{chen2025cosmoshybridadaptive} further enhance efficiency by combining optimization techniques based on gradient structure. COSMOS applies computationally intensive updates to a low-dimensional "leading eigensubspace" while using memory-efficient methods like Muon for the remaining parameters. This approach maintains convergence benefits while substantially reducing memory requirements. For distributed training environments, optimizers like Dion \cite{ahn2025dioncommunicationefficientoptimizerlarge} specifically target communication efficiency by minimizing data exchange between workers through distributed orthonormalization techniques.
+
+\section{Derivation of update rules}
+
+\begin{lemma}\label{lem:opt_star}
+Let $G \in \mathbb{R}^{m \times n}$ and $\lambda > 0$. Then, the following optimization problem
+\begin{equation*} 
+  f(\delta W) = \langle G, \delta W \rangle + \lambda \norm{\delta W}_*^2 \to \min_{\delta W}
+\end{equation*}
+has solution 
+\begin{equation*}
+  \delta W = -\frac{1}{2\lambda} u_1 \sigma_1 v_1^T\,,
+\end{equation*}
+where $\sigma_1$ is the largest singular value of $G$, and $u_1$ and $v_1$ are the corresponding singular vectors.
+\end{lemma}
+
+\begin{proof}
+Let us denote $r = \min\{m, n\}$. Then by Von Neumann's trace inequality,
+\begin{equation*}
+    \vert\langle G, \delta W \rangle\vert \leq \sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W)
+    \Rightarrow
+    \langle G, \delta W \rangle \geq -\sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W)\,.
+\end{equation*}
+Thus, expressing nuclear norm through singular values, we can write down
+\begin{equation*}
+    f(\delta W) \geq -\sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W) + \lambda\left(\sum_{i=1}^{r}\sigma_i(\delta W)\right)^2 \geq \min_{d_1,\dots,d_r \geq 0}-\sum_{i=1}^r \sigma_i(G)d_i + \lambda\left(\sum_{i=1}^{r}d_i\right)^2.
+\end{equation*}
+By Karush-Kuhn-Tucker theorem, necessary conditions of minimum are
+\begin{equation*}
+    \left(d_i \geq 0\ \text{and}\ -\sigma_i(G) + 2\lambda\sum_{j=1}^{r}d_j = 0\right)\ \text{or}\ \left(d_i = 0\ \text{and}\ -\sigma_i(G) + 2\lambda\sum_{j=1}^{r}d_j \geq 0\right) \,,\ i = 1,\dots,r\,.
+\end{equation*}
+These conditions simplify to 
+\begin{equation*}
+    \sum_{i \in S}d_i = \sigma_1(G)\,,\ \begin{cases}
+        d_i \geq 0 & \text{if}\ \sigma_i(G) = \sigma_1(G)\,, \\
+        d_i = 0 & \text{otherwise}\,.
+    \end{cases}
+\end{equation*}
+All points satisfying those conditions deliver minimum, and
+\begin{equation*}
+    f(\delta W) \geq -\frac{\sigma_1^2(G)}{4\lambda}\,.
+\end{equation*}
+
+Now let
+\begin{equation*}
+    \delta W^* = -\frac{1}{2\lambda} u_1 \sigma_1(G) v_1^T\,.
+\end{equation*}
+Inserting it to $f(\delta W)$ gives
+\begin{equation*}
+    f\left(\delta W^*\right) = -\frac{\sigma_1(G)^2}{2\lambda} + \frac{\sigma_1(G)^2}{4\lambda} = -\frac{\sigma_1(G)^2}{4\lambda}
+\end{equation*}
+This matches the derived lower bound. Thus, $\delta W^*$ minimizes $f(\delta W)$.
+\end{proof}
+
+\begin{lemma}\label{lem:opt_F_star}
+Let $G \in \mathbb{R}^{m \times n}$, $r = \min\{m. n\}$ and $\lambda > 0$. Then, the following optimization problem
+\begin{equation*} 
+  f(\delta W) = \langle G, \delta W \rangle + \lambda \norm{\delta W}_{F*}^2 \to \min_{\delta W}\,,
+\end{equation*}
+where $\norm{\cdot}_{F*}$ is defined in \eqref{eqn:F_star} has solution 
+\begin{equation}
+\delta W = -\frac{1}{\lambda}UDV^T
+\end{equation} 
+with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$, and $\tau$ is given by
+\begin{equation}
+    \sum_{i=1}^r [\sigma_i - \tau]_+ = \tau\,.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Analogously to the proof of Lemma~\ref{lem:opt_star}, we can use Von Neumann's trace inequality to write down
+\begin{equation*}
+    f(\delta W) \geq -\sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W) + \frac{\lambda}{2}\left(\sum_{i=1}^{r}\sigma_i(\delta W)\right)^2 + \frac{\lambda}{2}\sum_{i=1}^{r}\sigma_i^2(\delta W)\,,
+\end{equation*}
+\begin{equation}\label{eqn:f_min_F_star}
+    f(\delta W) \geq \frac{1}{\lambda}\min_{d_1,\dots,d_r \geq 0}-\sum_{i=1}^r \sigma_i(G)d_i + \frac{1}{2}\left(\sum_{i=1}^{r}d_i\right)^2 + \frac{1}{2}\left(\sum_{i=1}^{r}d_i^2\right)\,.
+\end{equation}
+By Karush-Kuhn-Tucker theorem, neccesary conditions of minimum are
+\begin{equation*}
+    \left(d_i \geq 0\ \text{and}\ -\sigma_i(G) + \sum_{j=1}^{r}d_j +  d_i = 0\right)\ \text{or}\ \left(d_i = 0\ \text{and}\ -\sigma_i(G) + \sum_{j=1}^{r}d_j + d_i \geq 0\right) \,,\ i = 1,\dots,r\,.
+\end{equation*}
+Denoting $\tau = \sum_{i = 1}^r d_i$ gives $d_i = [\sigma_i(G) - \tau]_+$, where $\tau$ satisfies
+\begin{equation}
+    \sum_{i=1}^n [\sigma_i(G) - \tau]_+ = \tau\,.
+\end{equation}
+Inserting found minimum point into~\eqref{eqn:f_min_F_star} yields
+\begin{equation*}
+    f(\delta W) \geq -\sum_{i = 1}^r d_i(\tau + d_i) + \frac{\tau^2}{2\lambda} + \frac{1}{2\lambda}\sum_{i=1}^{r}d_i^2 = -\frac{1}{2 \lambda} \left( \tau^2 + \sum_{i=1}^r d_i^2 \right)\,.
+\end{equation*}
+
+Now let
+\begin{equation}
+\delta W^* = -\frac{1}{\lambda}UDV^T
+\end{equation} 
+with $D = \text{diag}(d_i)$. Inserting it to $f(\delta W)$ gives
+\begin{equation*}
+    f(\delta W^*) = -\sum_{i = 1}^r d_i(\tau + d_i) + \frac{\tau^2}{2\lambda} + \frac{1}{2\lambda}\sum_{i=1}^{r}d_i^2 = -\frac{1}{2 \lambda} \left( \tau^2 + \sum_{i=1}^r d_i^2 \right)\,.
+\end{equation*}
+This matches the derived lower bound. Thus, $\delta W^*$ minimizes $f(\delta W)$.
+\end{proof}
+
 \section{Quality metrics}
 \begin{enumerate}
     \item The derivation is theoretically solid
