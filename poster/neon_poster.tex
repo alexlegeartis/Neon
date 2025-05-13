@@ -162,7 +162,7 @@ where $G$ is a gradient-like matrix obtained via backpropagation. Setting norm t
 \begin{enumerate}
     \item Choosing nuclear norm, $\norm{\cdot}_*$, produces rank-1 update, defined by 
     \begin{equation}\label{eqn:update_star}
-        \delta W = -\frac{1}{\lambda} u_1 \sigma_1 v_1^T\,,
+        \delta W = -\frac{1}{2\lambda} u_1 \sigma_1 v_1^T\,,
     \end{equation}
     where $\sigma_1$ is largest singular value of $G$, and $u_1$, $v_1$ are corresponding singular values.
 
@@ -199,7 +199,7 @@ Now we can write down pseudocode for both versions of Neon.
     {\bf Input:} $\lambda$, gradient-like matrix $G$. \\
     {\bf Output:} Weight matrix update $\delta W$.\\*[\smallskipamount]
     \qquad \= 1.\ $U, \Sigma, V := \textrm{Lanczos}(G, 1)$. \\
-    {\bf Return} $-\frac{1}{\lambda}U \Sigma V^T$.
+    {\bf Return} $-\frac{1}{2\lambda}U \Sigma V^T$.
 \end{tabbing}
 \vspace{-8pt}
 \noindent\rule[10pt]{.8\textwidth}{0.4pt}
