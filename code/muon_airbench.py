@@ -147,11 +147,11 @@ def main():
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
     # Create optimizers and learning rate schedulers
-    filter_params = [p for p in model.parameters() if len(p.shape) == 4 and p.requires_grad]
+    filter_params = [p for p in model.parameters() if len(p.shape) == 4 and p.requires_grad] # for convolution
     norm_biases = [p for n, p in model.named_parameters() if "norm" in n and p.requires_grad]
-    param_configs = [dict(params=[model.whiten.bias], lr=bias_lr, weight_decay=wd/bias_lr),
-                     dict(params=norm_biases,         lr=bias_lr, weight_decay=wd/bias_lr),
-                     dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
+    param_configs = [dict(params=[model.whiten.bias], lr=bias_lr, weight_decay=wd/bias_lr), # whitening or normalization layer
+                     dict(params=norm_biases,         lr=bias_lr, weight_decay=wd/bias_lr), # batch normalization
+                     dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)] # output
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True) #, fused=True)
     # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True)
     optimizer2 = Neon(filter_params, lr=0.05, momentum=0.6, nesterov=True, neon_mode='accurate',
