@@ -149,7 +149,7 @@ Alexey Kravatskiy, Ivan Kozyrev, Nikolay Kozlov, Alexander Vinogradov, Daniil Me
 
 \hrule\medskip
 \Head{Introduction}\\
-Recent advances in optimization techniques have highlighted the benefits of leveraging the matrix structure of neural network weights during training. Optimizers like Muon (Jordan et al.) and Shampoo (Gupta, Koren and Singer) have shown promise, but at a significantly higher computational cost than traditional methods like Adam. To bridge this gap, we propose Neon, a new optimizer that builds upon the framework of Bernstein and Newhouse. By using alternative norms, such as kernel norm (Kernel-Neon) or custom $F*$ norm ($F*$-Neon), we induce low-rank update matrices that enable more efficient computation. We evaluate the performance of Neon, Muon, and Adam on MLP, CIFAR10, and NanoGPT, and demonstrate [resting results here].
+Recent advances in optimization techniques have highlighted the benefits of leveraging the matrix structure of neural network weights during training. Optimizers like Muon (Jordan et al.) and Shampoo (Gupta, Koren and Singer) have shown promise, but at a significantly higher computational cost than traditional methods like Adam. To bridge this gap, we propose Neon, a new optimizer that builds upon the framework of Bernstein and Newhouse. By using alternative norms, such as nuclear norm (Nuclear-Neon) or custom $F*$ norm ($F*$-Neon), we induce low-rank update matrices that enable more efficient computation. We evaluate the performance of Neon, Muon, and Adam on MLP, CIFAR10, and NanoGPT, and demonstrate [resting results here].
 
 \medskip
 \hrule\medskip
@@ -160,7 +160,7 @@ Bernstein and Newhouse suggest obtaining the update step for a weight matrix $W$
 \end{equation}
 where $G$ is a gradient-like matrix obtained via backpropagation. Setting norm to RMS-to-RMS norm (scaled version of Spectral norm) produces Muon. We consider two different choices instead:
 \begin{enumerate}
-    \item Choosing kernel norm, $\norm{\cdot}_*$, produces rank-1 update, defined by 
+    \item Choosing nuclear norm, $\norm{\cdot}_*$, produces rank-1 update, defined by 
     \begin{equation}\label{eqn:update_star}
         \delta W = -\frac{1}{\lambda} u_1 \sigma_1 v_1^T\,,
     \end{equation}
@@ -192,7 +192,7 @@ standard eigenvalue techniques like QR iteration.
 Now we can write down pseudocode for both versions of Neon.
 
 \noindent\rule[-5pt]{.8\textwidth}{0.4pt}\\
-{\bf Algorithm 1} Kernel-Neon update step for linear layer\\
+{\bf Algorithm 1} Nuclear-Neon update step for linear layer\\
 \noindent\rule[10pt]{.8\textwidth}{0.4pt}
 \vspace{-10pt}
 \noindent\begin{tabbing}
