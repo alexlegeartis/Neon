@@ -191,10 +191,11 @@ standard eigenvalue techniques like QR iteration.
 \Head{Algorithms}\\
 Now we can write down pseudocode for both versions of Neon.
 
+{\footnotesize{}
 \noindent\rule[-5pt]{.8\textwidth}{0.4pt}\\
 {\bf Algorithm 1} Nuclear-Neon update step for linear layer\\
-\noindent\rule[10pt]{.8\textwidth}{0.4pt}
-\vspace{-10pt}
+\noindent\rule[5pt]{.8\textwidth}{0.4pt}
+\vspace{-15pt}
 \noindent\begin{tabbing}
     {\bf Input:} $\lambda$, gradient-like matrix $G$. \\
     {\bf Output:} Weight matrix update $\delta W$.\\*[\smallskipamount]
@@ -203,13 +204,15 @@ Now we can write down pseudocode for both versions of Neon.
 \end{tabbing}
 \vspace{-8pt}
 \noindent\rule[10pt]{.8\textwidth}{0.4pt}
+}
 
 For $F*$-Neon it is a bit trickier~\eqref{eqn:update_F_star}, we need to compute $\tau$ and know number of singular values larger then $\tau$, which we denote by $r$. Assuming that singular values spectrum of $G$ changes little between iterations (which was true in our experiments) we propose the following algorithm.
 
+{\footnotesize{}
 \noindent\rule[-5pt]{.8\textwidth}{0.4pt}\\
 {\bf Algorithm 2} $F*$-Neon update step for linear layer\\
-\noindent\rule[10pt]{.8\textwidth}{0.4pt}
-\vspace{-10pt}
+\noindent\rule[5pt]{.8\textwidth}{0.4pt}
+\vspace{-15pt}
 \noindent\begin{tabbing}
     \qquad\=\qquad\=\qquad\=\kill % Set three tab stops (4em total)
     {\bf Input:} $\lambda$, $r$, gradient-like matrix $G$. \\
@@ -227,6 +230,7 @@ For $F*$-Neon it is a bit trickier~\eqref{eqn:update_F_star}, we need to compute
     {\bf Return} $-\frac{1}{\lambda}U D V^T$.
 \end{tabbing}
 \vspace{10pt}
+}
 %\noindent\rule[10pt]{.8\textwidth}{0.4pt}
 
 \hrule\medskip
