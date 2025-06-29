@@ -1,0 +1,96 @@
+\documentclass[a0]{a0poster}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{lipsum}       % for placeholder text
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage[absolute]{textpos}
+\usepackage{color}
+\usepackage{amsmath}
+
+% Define colors
+\definecolor{bluegray}{rgb}{0.15,0.20,0.40}
+\definecolor{Red}{rgb}{0.9,0.0,0.1}
+
+% Set up the grid
+\TPGrid[40mm,40mm]{23}{12}
+
+% Define header styles
+\def\Head#1{\noindent{\LARGE\color{bluegray} #1}\bigskip}
+\def\Title#1{\noindent{\VeryHuge\color{Red} #1}}
+
+\begin{document}
+
+% Header with AIRIxTGU logo
+\begin{textblock}{23}(0,-0.25)
+  \begin{minipage}{0.2\linewidth}
+    \includegraphics[height=8em]{logo-1.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.6\linewidth}
+    \centering
+    \Title{Project Title}\\[1em]
+    {\Large A. Author, B. Author, C. Author}\\[1em]
+    {\large Summer with AIRI}
+  \end{minipage}
+\end{textblock}
+
+% Column 1 - Motivation
+\begin{textblock}{7.0}(0,1.25)
+\hrule\medskip
+\Head{Motivation}\\
+\lipsum[1][1-5]
+
+\begin{center}
+  \fbox{\begin{minipage}[c][8cm][c]{0.9\linewidth}
+    \centering
+    \textbf{Figure 1:} Caption of your figure here.
+  \end{minipage}}
+\end{center}
+\end{textblock}
+
+% Column 1 - Problem Statement
+\begin{textblock}{7.0}(0,6.0)
+\hrule\medskip
+\Head{Problem Statement}\\
+\lipsum[2][1-5]
+
+\vspace{1em}
+\textit{References and Acknowledgements}
+\end{textblock}
+
+% Column 2 - Approach Description
+\begin{textblock}{7.0}(8,1.0)
+\hrule\medskip
+\Head{Approach Description}\\
+\lipsum[3][1-5]
+\end{textblock}
+
+% Column 2 - Dataset Development
+\begin{textblock}{7.0}(8,3.5)
+\hrule\medskip
+\Head{Dataset Development}\\
+\lipsum[4][1-5]
+\end{textblock}
+
+% Column 2 - Qualitative Results
+\begin{textblock}{7.0}(8,6.0)
+\hrule\medskip
+\Head{Qualitative Results}\\
+\lipsum[5][1-5]
+\end{textblock}
+
+% Column 3 - Quantitative Results
+\begin{textblock}{7.0}(16,1.0)
+\hrule\medskip
+\Head{Quantitative Results}\\
+\lipsum[6][1-5]
+
+\begin{center}
+  \fbox{\begin{minipage}[c][6cm][c]{0.9\linewidth}
+    \centering
+    \textbf{Figure 2:} Another figure caption.
+  \end{minipage}}
+\end{center}
+\end{textblock}
+
+\end{document}

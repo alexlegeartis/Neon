@@ -17,7 +17,7 @@
 %
 % 'psnup -w85cm -h119cm -f poster_from_dvips.ps poster_in_landscape.ps'
 
-\documentclass[a1]{a1poster}
+\documentclass[a0]{a0poster}
 % You might find the 'draft' option to a0 poster useful if you have
 % lots of graphics, because they can take some time to process and
 % display. (\documentclass[a0,draft]{a0poster})
@@ -50,6 +50,11 @@
 %\usepackage[pdftex]{graphicx}
 %\usepackage{epstopdf}
 
+% Russian language support
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
 % These colours are tried and tested for titles and headers. Don't
 % over use color!
 \usepackage{color}
@@ -71,10 +76,10 @@
 % see documentation for a0poster class for the size options here
 \let\Textsize\normalsize
 %\def\Head#1{\noindent\hbox to \hsize{\hfil{\LARGE\color{bluegray} #1}}\bigskip}
-\def\Head#1{\noindent{\LARGE\color{bluegray} #1}\bigskip}
+\def\Head#1{\noindent{\LARGE\color{black} #1}\bigskip}
 \def\LHead#1{\noindent{\LARGE\color{bluegray} #1}\bigskip}
 \def\Subhead#1{\noindent{\large\color{bluegray} #1}\bigskip}
-\def\Title#1{\noindent{\VeryHuge\color{Red} #1}}
+\def\Title#1{\noindent\hbox to \hsize{\hfil{\fontsize{72}{86}\selectfont\color{Red} #1}}}
 
 
 % Set up the grid
@@ -110,49 +115,52 @@
 % You will have to do a lot of previewing to get everything in the 
 % right place.
 
+% AIRIxTGU logo in the top left corner
+\begin{textblock}{2}(0,0)
+\includegraphics[width=4\TPHorizModule]{AIRIxTGU_logos.pdf}
+\end{textblock}
+
+% "Лето с AIRI" in the top right corner
+\begin{textblock}{5}(19.5, 0)
+    \begin{center}
+    {\Large \textcolor{bluegray}{\textbf{Лето с AIRI}}}
+    \end{center}
+    \end{textblock}
+
 % This gives good title positioning for a portrait poster.
 % Watch out for hyphenation in titles - LaTeX will do it
 % but it looks awful.
-\begin{textblock}{23}(0,-0.25)
-\Title{Neon: Nuclear Norm to Beat Muon}
+\begin{textblock}{23}(0,-0.1)
+    \begin{center}
+    {\fontsize{96}{110}\selectfont\color{Red} \textbf{Neon: Nuclear Norm to Beat Muon}}
+    \end{center}
+    \end{textblock}
+
+\begin{textblock}{23}(0,0.2)
+    \begin{center}
+    {\large Alexey Kravatskiy, Ivan Kozyrev, Nikolay Kozlov, Alexander Vinogradov, Daniil Merkulov, Ivan Oseledets}
+    
+    \vspace{0.5em}
+    
+    {\normalsize \color{bluegray} \emph{Optimization Class Project, MIPT}}
+    \end{center}
+    \end{textblock}
+
+% Vertical lines to separate sections - very thin and grey
+\begin{textblock}{0.02}(7.5,1.0)
+\textcolor{lightgray}{\rule{0.02\TPHorizModule}{10\TPVertModule}}
 \end{textblock}
 
-\begin{textblock}{23}(0,0.35)
-{
-\LARGE
-Alexey Kravatskiy, Ivan Kozyrev, Nikolay Kozlov, Alexander Vinogradov, Daniil Merkulov, Ivan Oseledets
-}
-
-{
-\Large
-\color{bluegray}
-\emph{Optimization Class Project. MIPT}
-}
+\begin{textblock}{0.02}(15.5,1.0)
+\textcolor{lightgray}{\rule{0.02\TPHorizModule}{10\TPVertModule}}
 \end{textblock}
-
-
-% Uni logo in the top right corner. A&A in the bottom left. Gives a
-% good visual balance, but you may want to change this depending upon
-% the graphics that are in your poster.
-%\begin{textblock}{2}(0,10)
-%Your logo here
-%%\includegraphics{/usr/local/share/images/AandA.epsf}
-%\end{textblock}
-
-%\begin{textblock}{2}(21.2,0)
-%Another logo here
-%%\resizebox{2\TPHorizModule}{!}{\includegraphics{/usr/local/share/images/GUVIu/GUVIu.eps}}
-%\end{textblock}
-
 
 \begin{textblock}{7.0}(0,1.25)
 
-\hrule\medskip
 \Head{Introduction}\\
 Recent advances in optimization techniques have highlighted the benefits of leveraging the matrix structure of neural network weights during training. Optimizers like Muon (Jordan et al.) and Shampoo (Gupta, Koren and Singer) have shown promise, but at a significantly higher computational cost than traditional methods like Adam. To bridge this gap, we propose Neon, a new optimizer that builds upon the framework of Bernstein and Newhouse. By using alternative norms, such as nuclear norm (Nuclear-Neon) or custom $F*$ norm ($F*$-Neon), we obtain low-rank update matrices that enable more efficient computation. We evaluate the performance of Neon, Muon, and Adam on training MLP and CNN on CIFAR-10 and on finetuning NanoGPT.
 
 \medskip
-\hrule\medskip
 \Head{Neon's update rule}\\
 Bernstein and Newhouse suggest obtaining the update step for a weight matrix $W$ as a solution to the optimization problem:
 \begin{equation}
@@ -177,7 +185,6 @@ where $G$ is a gradient-like matrix obtained via backpropagation. Setting norm t
 \end{enumerate}
 
 \medskip
-\hrule\medskip
 \Head{Efficient update computation}\\
 % A couple of sentences about Lanczos algorithm and reference computation times and required number of iterations for tipical value of $\tau$.
 We use cupy's svds routine to obtain gradients' matrices' SVD approximation formed by largest singular values and corresponding vectors.
@@ -187,7 +194,6 @@ standard eigenvalue techniques like QR iteration.
 \end{textblock}
 
 \begin{textblock}{7.0}(8,1.0)
-\hrule\medskip
 \Head{Algorithms}\\
 Now we can write down pseudocode for both versions of Neon.
 
@@ -233,7 +239,7 @@ For $F*$-Neon it is a bit trickier~\eqref{eqn:update_F_star}, we need to compute
 }
 %\noindent\rule[10pt]{.8\textwidth}{0.4pt}
 
-\hrule\medskip
+\medskip
 \Head{MLP tests}\\
 We test Muon, SGD, and Neon on a simple MLP (2 linear layers) that solves CIFAR-10 classification problem. Muon converges faster than Neon and reaches higher accuracy.
 \begin{figure}[h]
@@ -250,12 +256,7 @@ We test Muon, SGD, and Neon on a simple MLP (2 linear layers) that solves CIFAR-
 
 \end{textblock}
 
-%\begin{textblock}{7.0}(16,1.5)
-
-
 \begin{textblock}{7.0}(16,0.75)
-
-\hrule\medskip
 \Head{CIFAR-10 tests}\\
 Now we compare Muon and Neon on ResNet from Keller's cifar10-aribench at GitHub. On RTX-4050, Muon is approximately twice as fast as Neon. That is likely caused by ineffective implementation of Neon's update, because in theory updates of Neon are more light and simple, especially for Nuclear Neon. Interestingly, Neon has a ceiling of convergence about 70\% which is not observed for Muon. Moreover, Neon requires far smaller learning rates to converge. All these aspects should be considered when we improve the algorithm.
 
@@ -265,9 +266,7 @@ Now we compare Muon and Neon on ResNet from Keller's cifar10-aribench at GitHub.
         \label{fig:mlp_loss}
     \end{figure} 
 
-
 \medskip
-\hrule\medskip
 \Head{NanoGPT tests}\\
 We finetuned NanoGPT by Alex Karpathy on two NVIDIA RTX 4090 GPUs (24 GB each) on tiny stories dataset via 200 iterations. Both Neon and Muon showed better convergence then AdamW. Neon showed similiar convergence rate to Muon
 
@@ -287,15 +286,38 @@ We finetuned NanoGPT by Alex Karpathy on two NVIDIA RTX 4090 GPUs (24 GB each) o
     \label{fig:nanogpt_val_loss}
 \end{figure}
 \medskip
-\hrule\medskip
 \Head{Conclusion}\\
 A new norm-motivated algorithm proved to be not so effective as Muon, at least from the first sight. However, its updates seem to be much faster to compute, and more so for large matrices that have not been tested yet. We believe our algorithm is not an alternative to Muon, but probably a more effective tool for solving some other optimization problems. A deep inspection of nuclear norm and its properties might give us an insight into Neon's future.
 
 \medskip
-%\hrule\medskip
 %\Head{Acknowledgements}\\
 %We thank Jeremy Bernstein for his idea to use norms to derive a optimizer.
 
 \end{textblock}
 
-\end{document}
+\begin{textblock}{6}(-0,11.3)
+    \footnotesize
+    \raggedright
+    \textcolor{gray}{\emph{Jeremy Bernstein and Laker Newhouse. Old optimizer, new norm: An anthology (2024)}}
+    \end{textblock}
+    
+    \begin{textblock}{6}(-0,11.5)
+    \footnotesize
+    \raggedright
+    \textcolor{gray}{\emph{Jeremy Bernstein. Deriving Muon (2025)}}
+    \end{textblock}
+    
+    \begin{textblock}{6}(-0,11.7)
+    \footnotesize
+    \raggedright
+    \textcolor{gray}{\emph{Keller Jordan et al. Muon: An optimizer for hidden layers in neural networks (2024)}}
+    \end{textblock}
+    
+% QR code in the lower right corner
+\begin{textblock}{2}(21.2,9.6)
+\begin{center}
+\includegraphics[width=0.7\TPHorizModule]{neon_repo_qr.png}
+\end{center}
+\end{textblock}
+
+\end{document} 
