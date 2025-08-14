@@ -87,18 +87,201 @@ def svd_full_approximation(A, tau=0):
     return A_reconstructed
 
 
+import torch
+
+def randomized_svd_torch_full(G, n_components=1, n_oversamples=5, n_iter=2):
+    """
+    Full randomized SVD in PyTorch to compute top k singular triplets.
+    
+    This function implements the randomized SVD algorithm as described in:
+    Halko, N., Martinsson, P. G., & Tropp, J. A. (2011). Finding structure 
+    with randomness: Probabilistic algorithms for constructing approximate 
+    matrix decompositions. SIAM review, 53(2), 217-288.
+    
+    Args:
+        G (torch.Tensor): Input matrix of shape (m, n)
+        n_components (int): Number of singular values/vectors to compute
+        n_oversamples (int): Extra dimensions to improve accuracy (default: 5)
+        n_iter (int): Number of power iterations for accuracy (default: 2)
+    
+    Returns:
+        tuple: (U, S, Vt) where:
+            - U (torch.Tensor): Left singular vectors of shape (m, n_components)
+            - S (torch.Tensor): Singular values of shape (n_components,)
+            - Vt (torch.Tensor): Right singular vectors of shape (n_components, n)
+    
+    Note:
+        This function is more efficient than full SVD for large matrices when
+        only a few singular values are needed. The accuracy improves with
+        n_oversamples and n_iter, but at the cost of more computation.
+    """
+    # Ensure G is a torch tensor
+    if not isinstance(G, torch.Tensor):
+        G = torch.tensor(G, device=G.device if hasattr(G, 'device') else 'cpu')
+    
+    m, n = G.shape
+    
+    # Handle edge cases
+    if m == 0 or n == 0:
+        raise ValueError("Matrix dimensions must be positive")
+    
+    if n_components > min(m, n):
+        n_components = min(m, n)
+        print(f"Warning: n_components reduced to {n_components}")
+    
+    l = n_components + n_oversamples
+    l = min(l, min(m, n))  # Ensure l doesn't exceed matrix dimensions
+    
+    # Ensure we use torch dtypes - avoid half precision for QR decomposition
+    dtype = G.dtype if isinstance(G.dtype, torch.dtype) else torch.float32
+    if dtype == torch.float16:
+        dtype = torch.float32  # QR decomposition not supported for half precision on CUDA
+    device = G.device
+    
+    # Convert to appropriate dtype if needed
+    G_compute = G.to(dtype) if G.dtype != dtype else G
+    
+    # Step 1: Random test matrix
+    Omega = torch.randn(n, l, device=device, dtype=dtype)
+    
+    # Step 2: Sample Y = G * Omega
+    Y = G_compute @ Omega
+    
+    # Step 3: Power iterations (optional, improves accuracy if spectrum decays slowly)
+    if n_iter > 0:
+        for _ in range(n_iter):
+            Y = G_compute @ (G_compute.T @ Y)
+    
+    # Step 4: Orthonormalize Y (QR)
+    Q, _ = torch.linalg.qr(Y, mode='reduced')
+    
+    # Step 5: B = Q^T * G  (small matrix)
+    B = Q.T @ G_compute
+    
+    # Step 6: SVD of small matrix B
+    Ub, S, Vt = torch.linalg.svd(B, full_matrices=False)
+    
+    # Step 7: Recover U
+    U = Q @ Ub
+    
+    # Return only the requested number of components
+    return U[:, :n_components], S[:n_components], Vt[:n_components, :]
+
+
+def randomized_svd_torch(G, n_components=1, n_oversamples=5, n_iter=2):
+    """
+    Randomized SVD in PyTorch to compute the top singular triplet.
+    
+    This is a simplified version that returns only the first (largest) 
+    singular value and corresponding singular vectors.
+    
+    Args:
+        G (torch.Tensor): Input matrix of shape (m, n)
+        n_components (int): Must be 1 for this function (kept for compatibility)
+        n_oversamples (int): Extra dimensions to improve accuracy (default: 5)
+        n_iter (int): Number of power iterations for accuracy (default: 2)
+    
+    Returns:
+        tuple: (u1, sigma1, v1) where:
+            - u1 (torch.Tensor): First left singular vector of shape (m,)
+            - sigma1 (torch.Tensor): First singular value (scalar)
+            - v1 (torch.Tensor): First right singular vector of shape (n,)
+    
+    Note:
+        This function is optimized for computing only the largest singular
+        value and vectors. For multiple singular values, use 
+        randomized_svd_torch_full instead.
+    """
+    # Ensure G is a torch tensor
+    if not isinstance(G, torch.Tensor):
+        G = torch.tensor(G, device=G.device if hasattr(G, 'device') else 'cpu')
+    
+    m, n = G.shape
+    
+    # Handle edge cases
+    if m == 0 or n == 0:
+        raise ValueError("Matrix dimensions must be positive")
+    
+    if n_components > min(m, n):
+        n_components = min(m, n)
+        print(f"Warning: n_components reduced to {n_components}")
+    
+    l = n_components + n_oversamples
+    l = min(l, min(m, n))  # Ensure l doesn't exceed matrix dimensions
+    
+    # Ensure we use torch dtypes - avoid half precision for QR decomposition
+    dtype = G.dtype if isinstance(G.dtype, torch.dtype) else torch.float32
+    if dtype == torch.float16:
+        dtype = torch.float32  # QR decomposition not supported for half precision on CUDA
+    device = G.device
+    
+    # Convert to appropriate dtype if needed
+    G_compute = G.to(dtype) if G.dtype != dtype else G
+    
+    # Step 1: Random test matrix
+    Omega = torch.randn(n, l, device=device, dtype=dtype)
+    
+    # Step 2: Sample Y = G * Omega
+    Y = G_compute @ Omega
+    
+    # Step 3: Power iterations (optional, improves accuracy if spectrum decays slowly)
+    if n_iter > 0:
+        for _ in range(n_iter):
+            Y = G_compute @ (G_compute.T @ Y)
+    
+    # Step 4: Orthonormalize Y (QR)
+    Q, _ = torch.linalg.qr(Y, mode='reduced')
+    
+    # Step 5: B = Q^T * G  (small matrix)
+    B = Q.T @ G_compute
+    
+    # Step 6: SVD of small matrix B
+    Ub, S, Vt = torch.linalg.svd(B, full_matrices=False)
+    
+    # Step 7: Recover U
+    U = Q @ Ub
+    
+    # Take the first singular triplet
+    u1 = U[:, 0]
+    sigma1 = S[0]
+    v1 = Vt[0, :]
+    
+    return u1, sigma1, v1
+
+
+
 def one_sv_svds_approximation(W_torch, num_iter=30):
     """SVD approximation using the top k singular values and corresponding vectors."""
     k = 1
-    # assert (W.shape[0] > 3 and W.shape[1] > 3), "Dimensions of W must be greater than 3"
     W = cp.from_dlpack(thd.to_dlpack(W_torch)).astype(cp.float32)
-    # if W.shape[0] <= 3 or W.shape[1] <= 3:
-        #print(f"strange {W}")
-        #return W_torch
     U, S, Vt = cupyx_svds(W, k=min([k, W.shape[0] - 1, W.shape[1] - 1]), maxiter=num_iter, which='LM')
+
     approx = U @ cp.diag(S) @ Vt
     approx_torch = thd.from_dlpack(approx.toDlpack()) 
     return approx_torch
+
+    '''
+    # Ensure W_torch is a torch tensor
+    if not isinstance(W_torch, torch.Tensor):
+        W_torch = torch.tensor(W_torch, device=W_torch.device if hasattr(W_torch, 'device') else 'cpu')
+    
+    # Use the randomized SVD directly on the torch tensor
+    # u1, sigma1, v1 = randomized_svd_torch(W_torch, n_components=1)
+    G = W_torch
+    dtype = G.dtype if isinstance(G.dtype, torch.dtype) else torch.float32
+    if dtype == torch.float16:
+        dtype = torch.float32  # QR decomposition not supported for half precision on CUDA
+    device = G.device
+    
+    # Convert to appropriate dtype if needed
+    G_compute = G.to(dtype) if G.dtype != dtype else G
+    u, s, v = torch.svd_lowrank(G_compute, q=2, niter=2)
+
+    u1 = u[:, 0]
+    sigma1 = s[0]
+    v1 = v[:, 0]
+    '''
+    return sigma1 * torch.outer(u1, v1)
 
 def lanczos_svdt(W_torch, k, num_iter=30):
     """SVD approximation using the top k singular values and corresponding vectors."""

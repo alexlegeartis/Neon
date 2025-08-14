@@ -146,6 +146,7 @@ class Neon(torch.optim.Optimizer):
                     print("Using Muon is illegal!")
                 else:
                     if self.type == 'fast':
+                        # print(g_resh.shape)
                         update = one_sv_svds_approximation(g_resh, self.lanczos_iter_num)
                     elif self.type == 'accurate':
                         update, self.tau, self.k = k_sv_svds_approximation_dlpack(g_resh, self.k, self.tau, self.lanczos_iter_num)

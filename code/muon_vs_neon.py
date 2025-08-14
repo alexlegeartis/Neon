@@ -21,14 +21,14 @@ NEON_LR_SCHEDULE = {
     0: 0.001,    # Initial learning rate
     1: 0.001,    # Epoch 1
     2: 0.001,    # Epoch 2
-    3: 0.002,    # Epoch 3
-    4: 0.002,    # Epoch 4
-    5: 0.002,   # Epoch 5
-    6: 0.002,   # Epoch 6
-    7: 0.001,  # Epoch 7
-    8: 0.001,
-    9: 0.001,
-    10: 0.001,
+    3: 0.001,    # Epoch 3
+    4: 0.001,    # Epoch 4
+    5: 0.001,   # Epoch 5
+    6: 0.0001,   # Epoch 6
+    7: 0.0001,  # Epoch 7
+    8: 0.0001,
+    9: 0.0001,
+    10: 0.0001,
 }
 
 # @torch.compile
@@ -155,10 +155,10 @@ class CifarNet(nn.Module):
 
 def main(optimizer_type='neon'):
     """Run training with specified optimizer type ('muon' or 'neon')"""
-    num_epochs = 10
+    num_epochs = 3
     model = CifarNet().cuda().to(memory_format=torch.channels_last)
 
-    batch_size = 2000
+    batch_size = 100
     bias_lr = 0.053
     head_lr = 0.67
     wd = 2e-6 * batch_size
@@ -192,13 +192,14 @@ def main(optimizer_type='neon'):
         print(f"Muon Momentum: 0.6")
         print(f"Muon Nesterov: True")
     else:  # default to neon
-        neon_mode = 'accurate'
-        # neon_mode = 'fast'
+        # neon_mode = 'accurate'
+        neon_mode = 'fast'
         # Use the initial learning rate from the schedule
         neon_lr = NEON_LR_SCHEDULE[0]
-        neon_momentum = 0.85
+        neon_momentum = 0.6
         optimizer2 = Neon(filter_params, lr=neon_lr, momentum=neon_momentum, nesterov=True, neon_mode=neon_mode,
-                      iter_num=100 * batch_size / 500)
+                          iter_num = 1)
+                      #iter_num=1 * batch_size / 500)
         print(f"Neon Learning Rate: {neon_lr}")
         print(f"Neon Momentum: {neon_momentum}")
         print(f"Neon Mode: {neon_mode}")
