@@ -759,7 +759,7 @@ if __name__ == "__main__":
         m=1000,           # Matrix rows
         n=100,          # Matrix columns
         num_nodes=20,
-        num_iterations=50000,  # Number of optimization iterations
+        num_iterations=200000,  # Number of optimization iterations
         plot_interval=100,     # Plot data every 50 iterations
     )
     
