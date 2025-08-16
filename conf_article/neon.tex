@@ -70,8 +70,87 @@ In this article, we develop a new algorithm for optimizing functions of weight m
 New variant:
 \iffalse This article investigates utilization of matrix norms besides the spectral norm in linear optimization oracle (LMO) framework. Making use of the nuclear norm, the mean between the nuclear norm and the Frobenius norm we name the F*-norm, and the dual to F*-norm, we develop 3 new algorithms for optimizing functions of weight matrices that arise in training large language models.\fi
 
-In this article, we develop a family of 3 new algorithms for optimizing functions of weight matrices that arise in training large language models. By replacing the spectral norm, which is used when deriving Muon within the linear optimization oracle framework (LMO), with the nuclear norm, the mean between the nuclear norm and the Frobenius norm we name the F*-norm, and the dual to F*-norm we name F2-norm, we obtain 3 new optimization problems for the update matrix; their solutions define 3 novel algorithms we name Neon, F*-Neon, and F2-Muon respectively. We derive the optimal solutions to these problems and propose a numerically efficient method to compute updates for Neon and F*-Neon via the Lanczos algorithm (while an update of F2-Muon turns out to be a mean between the Muon update and the Normalized SGD update). We analyze all 3 algorithms from a theoretical perspective and provide an extensive empirical study across diverse relevant tasks and settings.
+In this article, we develop a family of 3 new algorithms for optimizing functions of weight matrices that arise in training large language models. By replacing the spectral norm, which was used to derive Muon within the linear minimization oracle (LMO) framework, with the nuclear norm, the mean between the nuclear norm and the Frobenius norm we name the F*-norm, and the dual to F*-norm we name F2-norm, we obtain 3 new optimization problems for the update matrix; their solutions define 3 novel algorithms we name Neon, F*-Neon, and F2-Muon respectively. We derive the optimal solutions to these problems and propose a numerically efficient method to compute updates for Neon and F*-Neon via the Lanczos algorithm (while an update of F2-Muon turns out to be a mean between the Muon update and the Normalized SGD update). We analyze all 3 algorithms from a theoretical perspective and provide an extensive empirical study across diverse relevant tasks and settings.
+\end{abstract}
 
+
+\section{Introduction}
+* Hype of Muon and others: 
+- Importance of the functions of a matrix weight. Special structure.
+- Write the equation
+- Memory efficiency and hyperparameter transferability
+- Proven efficient computing (cite benchmarks and Dion and Cosmos)
+* Comparison:
+- Shampoo (very compute intensive for large layers, we need asymptotics!), second order
+- LMO has produced several effective algorithms: Muon, Dion, Scion, Gluon (citations)
+- generalization is better for Muon and others (citations!). Possibly nuSAM here (definitely)
+- Scion and Gluon for multilayer
+- Gluon for (L0, L1)-smooth problems, which is more realistic (low L0, faster convergence - no impractically small stepsizes)
+* Analyis:
+- Several generalizations have been already presented by the community: Old Optimizer and New Norm (idea and evidence that it explains famous algorithms); Pethick (LMO and different layers); Kovalev (as trust region and arbitrary norm); Gluon (generalized smoothness model).
+- However, to the best of our knowledge, no attempt has been made to try other norms. Here we come in.
+- No attempt to mitigate high computation cost of matrix computation has been made. Here again we come in.
+- It has been shown that $O(1/esp^4)$ bounds for Muon, Scion, Gluon and even Adam for L-smooth functions (citations). Some bounds depend on the dimensionality of space (cite Kovalev), which for spectral norm gives much more iterations (cite Kovalev)
+- This motivates us to try new norms
+
+
+
+\section{Linear Minimization Oracle and Nuclear norm}
+\subsection{Problem statement}
+Norm is not necessarily induced by the inner product.
+Bernstein vs LMO (choose LMO as more correct)
+\subsection{Nuclear Neon}
+Problem and update
+\subsection{F*-Neon}
+Motivation: we need updates of higher rank. Hence, F* (why? regularization?)
+\subsection{F2-Muon}
+Motivation: if the spectral norm (Muon) is dual to the nuclear norm (Neon), then what is dual to F*? F2-Muon! Derivation.
+
+\section{Matrix speedup}
+\subsection{Theory}
+Not only formulas, but also citations!
+Solutions to efficiently find some parts of SVD:
+- Basic SVD (complexity asymptotic!)
+- Newton-Schulz (complexity asymptotic!)
+- Our job: Power iterations, Randomized SVD and Lanczos
+\subsection{Experiments}
+Nikolay's task: SVD, RSVD, Lanczos, Newton-Schulz. We use torch and cupy to test it.
+Options: all possible on torch, or additionally to compare all on cupy. The goal: to find how much do we lose due to cupy
+
+\section{"Smooth" theory via Trust Region bounds}
+* Probably statement of the trust region problem
+* Assumption on unbiasedness and limited variance of stoch. grad.
+* Assumption on L-smoothness as in the Kovalev's article.
+* Assumption on rho. To be more precise, the statement of lemmas on rho for all 4 norms.
+* We utilize the Kovalev's corollary to derive convergence
+* Bonus: convert all the norms into a common sense (L2?) norm to get the true dependency on dimensionality
+
+
+\section{Experiments}
+\subsection{Synthetic quadratics}
+Description of how to construct L-smooth functions in a given norm, and how to estimate variance of the gradient. Then check of the 
+\subsection{MLP}
+Deep learning?
+\subsection{Benchmarks}
+CNN benchmark
+NanoGPT benchmark
+
+\section{Conclusion}
+* Future work: (L0, L1)-smoothness, probably extrapolation (to make dependency on eps milder)
+\section{Appendix}
+\subsection{Proofs}
+\subsection{Norm derivations}
+* Dual to F* norm
+* Bounds on rho for all 4 norms (with their tighness if possible)
+\subsection{Updates derivations}
+%yep, many KKT and so on
+- Neon
+- F*-Neon
+- F2-Muon
+* F* choice from KKT
+\subsection{}
+~ Note: nuSAM and their update. They had no Lanczos
+Technical details on experiments
 
 
 \section{Idea}
@@ -371,7 +450,7 @@ This matches the derived lower bound. Thus, $\delta W^*$ minimizes $f(\delta W)$
 \bibliographystyle{icomp2024_conference}
 
 \appendix
-\section{Appendix}
+\section{Old Appendix}
 You may include other additional sections here.
 
 \end{document}
