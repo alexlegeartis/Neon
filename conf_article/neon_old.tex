@@ -1,0 +1,337 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{icomp2024_conference,times}
+
+% Optional math command from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\newtheorem{lemma}{Lemma}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+
+
+\title{From Muon to Neon: Introducing Nuclear Norm to Large Matrices}
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \icompfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+
+\author{Alexey Kravatskiy \\
+Moscow Institute of Physics and Technology (MIPT) \\
+\texttt{kravtskii.aiu@phystech.edu} \\
+\And
+Ivan Kozyrev \\
+Moscow Institute of Physics and Technology (MIPT) \\
+\texttt{kozyrev.in@phystech.edu} \\
+\And
+Nikolai Kozlov \\
+Moscow Institute of Physics and Technology (MIPT) \\
+\texttt{kozlov.na@phystech.edu} \\
+\And
+Alexander Vinogradov \\
+Moscow Institute of Physics and Technology (MIPT) \\
+\texttt{vinogradov.am@phystech.edu} \\
+\And
+Daniil Merkulov \\
+Moscow Institute of Physics and Technology (MIPT), Skoltech, HSE, Sber \\
+\texttt{daniil.merkulov@phystech.edu} \\
+\And
+Ivan Oseledets \\
+AIRI, Skoltech \\
+\texttt{i.oseledets@skoltech.ru}
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+%\icompfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+In this paper, we develop a new algorithm for optimization of functions of weight matrices, which are typical for training large language models. Changing spectral norm, which was used to derive Muon, to nuclear norm, we pose a new optimization problem for an update matrix, solution of which defines a novel algorithm we name Neon. To make it feasible, we use Lanczos algorithm to find a required step. After providing theoretical guarantees of Neon convergence, we compare performances of Neon, Muon, and Adam on training multilayer perceptron, convolutional neural network and NanoGPT.
+\end{abstract}
+
+\section{Idea}
+The goal of the project is to make variations on Muon to speed it up. Recently, authors of \cite{bernstein2024oldoptimizernewnorm} have proposed to derive update step for an optimizer as the solution of the certain optimization problem. This approach can be utilized to derive Muon \cite{jordan2024muon}, a novel algorithm for fast training of neural networks. Instead of using spectral norm, used to derive Muon, we utilize nuclear norm to produce a new optimization algorithm.
+
+\subsection{Problem (Project description)}
+
+In this subsection, we provide a more detailed description of our idea and formulate it as a mathematical problem. The authors of \cite{bernstein2024oldoptimizernewnorm} suggest obtaining the update step as a solution to the optimization problem:
+\begin{equation}
+    \langle g, \delta w \rangle + \lambda \norm{\delta w}^2 \to \min_{\delta w}\,,
+\end{equation}
+where $w$ is the weight vector, $g$ is a gradient-like vector (e.g., obtained via momentum SGD), and $\norm{\cdot}$ represents a certain norm. Many popular optimizers, such as Adam (with exponential moving average disabled) and vanilla SGD, can be cast within this framework \cite{bernstein2024oldoptimizernewnorm}.
+
+In large language models, most weights are structured as matrices, which offers additional opportunities for optimization. Let $W$ be the weight matrix of a linear layer, and $G$ be a gradient-like matrix. Then, the update step $\delta W$ can be obtained as a solution to the optimization problem:
+\begin{equation}\label{eqn:opt_problem_mat}
+  \langle G, \delta W \rangle + \lambda \norm{\delta W}^2 \to \min_{\delta W}\,,
+\end{equation}
+where $\norm{\cdot}$ denotes a certain matrix norm. By setting this norm to the RMS-to-RMS norm (a scaled version of the spectral norm), we recover the Muon optimizer \cite{bernstein2025deriving, bernstein2024oldoptimizernewnorm} with an update step defined by:
+\begin{equation}\label{eqn:update_muon}
+\delta W = - \frac{1}{\lambda}\sqrt{\frac{n}{m}}UV^T\,,
+\end{equation}
+where $m$ is the input dimension of the layer, $n$ is the output dimension, and $U$ and $V$ are obtained from the singular value decomposition of the gradient matrix $G = U \Sigma V$.
+
+Motivated by the recent achievements of the Muon optimizer (e.g., \cite{liu2025muon}), we consider alternative choices of norms, specifically the nuclear norm $\norm{\cdot}_*$ and a custom $F*$ norm, given by 
+\begin{equation}\label{eqn:F_star}
+    \norm{X}_{F*}^2 = \frac{\norm{X}_F + \norm{X}_*}{2}\,,
+\end{equation}
+where $\norm{\cdot}_F$ denotes the Frobenius norm.
+
+Using the nuclear norm in \eqref{eqn:opt_problem_mat} leads to a rank-one update of the weight matrices:
+\begin{equation}\label{eqn:update_star}
+  \delta W = -\frac{1}{2\lambda} u_1 \sigma_1 v_1^T\,,
+\end{equation}
+where $\sigma_1$ is the largest singular value, and $u_1$ and $v_1$ are the corresponding singular vectors. We expect one iteration of this method to be significantly faster than one iteration of Muon.
+
+Another choice is the $F*$ norm. With this choice, \eqref{eqn:opt_problem_mat} yields 
+\begin{equation}\label{eqn:update_F_star}
+\delta W = -\frac{1}{\lambda}UDV^T
+\end{equation} 
+with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$, and $\tau$ is given by
+\begin{equation}
+    \sum_{i} [\sigma_i - \tau]_+ = \tau\,.
+\end{equation}
+We anticipate that the method with this update step will perform well with large batch sizes.
+
+In this article we show how one can quickly compute weight updates defined by \eqref{eqn:update_star} or \eqref{eqn:update_F_star}. Then we finilize the method by adding momentum and test their performance against those of Muon at training multilayer perceptron and transformer. The results will be fast algorithm, which we will convert into a new optimizer classes for PyTorch, as was done with Muon.
+
+% Removed template instructions sections
+
+\section{Derivation of update rules}
+
+\begin{lemma}\label{lem:opt_star}
+Let $G \in \mathbb{R}^{m \times n}$ and $\lambda > 0$. Then, the following optimization problem
+\begin{equation*} 
+  f(\delta W) = \langle G, \delta W \rangle + \lambda \norm{\delta W}_*^2 \to \min_{\delta W}
+\end{equation*}
+has solution 
+\begin{equation*}
+  \delta W = -\frac{1}{2\lambda} u_1 \sigma_1 v_1^T\,,
+\end{equation*}
+where $\sigma_1$ is the largest singular value of $G$, and $u_1$ and $v_1$ are the corresponding singular vectors.
+\end{lemma}
+
+\begin{proof}
+Let us denote $r = \min\{m, n\}$. Then by Von Neumann's trace inequality,
+\begin{equation*}
+    \vert\langle G, \delta W \rangle\vert \leq \sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W)
+    \Rightarrow
+    \langle G, \delta W \rangle \geq -\sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W)\,.
+\end{equation*}
+Thus, expressing nuclear norm through singular values, we can write down
+\begin{equation*}
+    f(\delta W) \geq -\sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W) + \lambda\left(\sum_{i=1}^{r}\sigma_i(\delta W)\right)^2 \geq \min_{d_1,\dots,d_r \geq 0}-\sum_{i=1}^r \sigma_i(G)d_i + \lambda\left(\sum_{i=1}^{r}d_i\right)^2.
+\end{equation*}
+By Karush-Kuhn-Tucker theorem, necessary conditions of minimum are
+\begin{equation*}
+    \left(d_i \geq 0\ \text{and}\ -\sigma_i(G) + 2\lambda\sum_{j=1}^{r}d_j = 0\right)\ \text{or}\ \left(d_i = 0\ \text{and}\ -\sigma_i(G) + 2\lambda\sum_{j=1}^{r}d_j \geq 0\right) \,\, i = 1,\dots,r\,.
+\end{equation*}
+These conditions simplify to 
+\begin{equation*}
+    \sum_{i \in S}d_i = \sigma_1(G)\,,\ \begin{cases}
+        d_i \geq 0 & \text{if}\ \sigma_i(G) = \sigma_1(G)\,, \\
+        d_i = 0 & \text{otherwise}\,.
+    \end{cases}
+\end{equation*}
+All points satisfying those conditions deliver minimum, and
+\begin{equation*}
+    f(\delta W) \geq -\frac{\sigma_1^2(G)}{4\lambda}\,.
+\end{equation*}
+
+Now let
+\begin{equation*}
+    \delta W^* = -\frac{1}{2\lambda} u_1 \sigma_1(G) v_1^T\,.
+\end{equation*}
+Inserting it to $f(\delta W)$ gives
+\begin{equation*}
+    f\left(\delta W^*\right) = -\frac{\sigma_1(G)^2}{2\lambda} + \frac{\sigma_1(G)^2}{4\lambda} = -\frac{\sigma_1(G)^2}{4\lambda}
+\end{equation*}
+This matches the derived lower bound. Thus, $\delta W^*$ minimizes $f(\delta W)$.
+\end{proof}
+
+\begin{lemma}\label{lem:opt_F_star}
+Let $G \in \mathbb{R}^{m \times n}$, $r = \min\{m. n\}$ and $\lambda > 0$. Then, the following optimization problem
+\begin{equation*} 
+  f(\delta W) = \langle G, \delta W \rangle + \lambda \norm{\delta W}_{F*}^2 \to \min_{\delta W}\,,
+\end{equation*}
+where $\norm{\cdot}_{F*}$ is defined in \eqref{eqn:F_star} has solution 
+\begin{equation}
+\delta W = -\frac{1}{\lambda}UDV^T
+\end{equation} 
+with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$, and $\tau$ is given by
+\begin{equation}
+    \sum_{i=1}^r [\sigma_i - \tau]_+ = \tau\,.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Analogously to the proof of Lemma~\ref{lem:opt_star}, we can use Von Neumann's trace inequality to write down
+\begin{equation*}
+    f(\delta W) \geq -\sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W) + \frac{\lambda}{2}\left(\sum_{i=1}^{r}\sigma_i(\delta W)\right)^2 + \frac{\lambda}{2}\sum_{i=1}^{r}\sigma_i^2(\delta W)\,,
+\end{equation*}
+\begin{equation}\label{eqn:f_min_F_star}
+    f(\delta W) \geq \frac{1}{\lambda}\min_{d_1,\dots,d_r \geq 0}-\sum_{i=1}^r \sigma_i(G)d_i + \frac{1}{2}\left(\sum_{i=1}^{r}d_i\right)^2 + \frac{1}{2}\left(\sum_{i=1}^{r}d_i^2\right)\,,
+\end{equation}
+By Karush-Kuhn-Tucker theorem, neccesary conditions of minimum are
+\begin{equation*}
+    \left(d_i \geq 0\ \text{and}\ -\sigma_i(G) + \sum_{j=1}^{r}d_j +  d_i = 0\right)\ \text{or}\ \left(d_i = 0\ \text{and}\ -\sigma_i(G) + \sum_{j=1}^{r}d_j + d_i \geq 0\right) \,\, i = 1,\dots,r\,.
+\end{equation*}
+Denoting $\tau = \sum_{i = 1}^r d_i$ gives $d_i = [\sigma_i(G) - \tau]_+$, where $\tau$ satisfies
+\begin{equation}
+    \sum_{i=1}^n [\sigma_i(G) - \tau]_+ = \tau\,.
+\end{equation}
+Inserting found minimum point into~\eqref{eqn:f_min_F_star} yields
+\begin{equation*}
+    f(\delta W) \geq -\sum_{i = 1}^r d_i(\tau + d_i) + \frac{\tau^2}{2\lambda} + \frac{1}{2\lambda}\sum_{i=1}^{r}d_i^2 = -\frac{1}{2 \lambda} \left( \tau^2 + \sum_{i=1}^r d_i^2 \right)\,.
+\end{equation*}
+
+Now let
+\begin{equation}
+\delta W^* = -\frac{1}{\lambda}UDV^T
+\end{equation} 
+with $D = \text{diag}(d_i)$. Inserting it to $f(\delta W)$ gives
+\begin{equation*}
+    f(\delta W^*) = -\sum_{i = 1}^r d_i(\tau + d_i) + \frac{\tau^2}{2\lambda} + \frac{1}{2\lambda}\sum_{i=1}^{r}d_i^2 = -\frac{1}{2 \lambda} \left( \tau^2 + \sum_{i=1}^r d_i^2 \right)\,.
+\end{equation*}
+This matches the derived lower bound. Thus, $\delta W^*$ minimizes $f(\delta W)$.
+\end{proof}
+
+\section{Quality metrics}
+\begin{enumerate}
+    \item The derivation is theoretically solid
+    \item The numerical procedure used to compute a step is grounded and has estimated time overhead (say, in FLOPS)
+    \item The code with Neon trains MLP and CNN (and NanoGPT, but it's a bonus) less than 3 times slower than Adam
+    \item Instruction of setting the parameters of the algorithm are presented and justified
+    \item The announced article has full structure (Abstract, Introduction, Theory, Experiments, Conclusion, Appendix)
+    \item If results are positive, it is written with NeurIPS template.
+\end{enumerate}
+
+\section{Preliminary plan}
+\paragraph{Week April 28 - May 4}
+\begin{itemize}
+    \item For Alexey: solve how to tune the algorithms for MLP and CNN, try formulating theory (and an appropriate model of the problem) why Muon and Neon are so successful, and create the drafts of the proofs. Register at NeurIPS site.
+    
+    \item For Ivan: write the theory for an update from the algebra point of view (as for an article)
+    
+    \item For Nikolay: write the theory for computing an update, and implement the method, if required
+    
+    \item For Alexander: reproduce results of Jordan on NanoGPT and ResNet (CIFAR-10), learn to train both models with Neon.
+\end{itemize}
+
+\paragraph{Week May 5 - May 11}
+\begin{itemize}
+    \item For Alexey: finalize the proofs. Verify them via small experiments on MLP and CNN. Write with Alexander Experiments for the article.
+    
+    \item For Ivan: join Nikolay to finalize algebra part of the article. Estimate FLOPS, memory and other overheads (produce O bounds)
+    
+    \item For Nikolay: write a draft of the poster (before May 6), and work with Ivan
+    
+    \item For Alexander: agressively test algorithms, prove that Neon outperforms competitors and prepare the results for the article.
+    
+    \item For everybody: write and edit the article
+    
+    \item May 11: submit an abstract to NeurIPS.
+    
+    \item May 12-14: the article is being polished.
+    
+    \item May 15: the article must be sent.
+\end{itemize}
+
+\section{Prototyping phase report}
+\begin{enumerate}
+    \item Update rule is derived, see idea
+    \item Update rule methods are tested: power iteration vs Lanczos (see \ref{tab:matrix_methods})
+    \item Recorded the distribution of singular values of gradients during NanoGPT training (see Firgures ~\ref{fig:svd_all}, \ref{fig:svd_all}).
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/svd_evolution_all.png}}
+        \caption{Singular values of $50257\times 1280$ layer via 200 iterations}
+        \label{fig:svd_all}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/svd_evolution.png}}
+        \caption{Singular values of  of $50257\times 1280$ layer for 5-th,45-th, 65-th,175-th and 200-th iteration}
+        \label{fig:svd}
+    \end{figure} 
+    
+    \item NanoGPT is tested on Muon and Adam. For now, Neon (rank-1 version) does not converge (see Figures ~\ref{fig:train_loss} \ref{fig:val_loss})
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/loss_train.png}}
+        \caption{Train loss}
+        \label{fig:train_loss}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/loss_val.png}}
+        \caption{Validation loss}
+        \label{fig:val_loss}
+    \end{figure} 
+
+
+    The pictures show the best results achieved so far. The experiments were conducted with two 4090 24GB GPUs for nanotgpt-large on the tiny stories dataset.
+    
+    \item Neon (rank-1 version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{figs/mlp0605/loss_vs_epochs_mlp.pdf}}
+        \caption{MLP: self.linear1 = nn.Linear(32*32*3, 512), self.linear2 = nn.Linear(512, 10), self.activ = nn.GELU()}
+        \label{fig:mlp_epochs}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/accuracy_vs_epochs_moderate.png}}
+        \caption{CNN: 2 convolutional blocks, 2 fully connected layers, activation + dropout}
+        \label{fig:cnn_epochs}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{figs/mlp0605/accuracy_vs_time_mlp.pdf}}
+        \caption{MLP: wallclock time measurements}
+        \label{fig:mlp_time}
+    \end{figure}
+    \begin{figure}[h!]
+        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/accuracy_vs_time_moderate.png}}
+        \caption{CNN: wallclock time measurements}
+        \label{fig:cnn_time}
+    \end{figure}
+    \begin{table}[h!]
+        \centering
+        \begin{tabular}{c|c|c|c}
+        \hline
+        Method                              & rtol        & k & time,s \\
+        \hline 
+        Power Iterations                    & 0.01        & 1 & 7.7\\ 
+        SVDS (thick-restart Lanczos method) & 0.01        & 1 & 0.18\\
+        PCA Low Rank (RSVD)                 & 0.01        & 1 & 1.15\\
+        SVDS (thick-restart Lanczos method) & 0.01        & 10 & 0.47\\
+        PCA Low Rank (RSVD)                 & 0.01        & 10 & 19.4\\
+        SVDS (thick-restart Lanczos method) & 0.01        & 100 & 1.96\\
+        PCA Low Rank (RSVD)                 & 0.01        & 100 & 170\\
+        \end{tabular}
+        \caption{k-rank updated comparison}
+        Comparison of different numerical methods to calculate k-rank update on $5000\times5000$ matrix of real numbers, rtol is an error in Frobenius norm relative to the k-rank approximation of truncated svd. During the research it was noted that rsvd can give good and fast approximation for singular values, but the matrix of approximation is far from the one given by truncated svd, while Lanczos method gives good and fast approximation for a matrix, but not so good approximation for singular values. 
+        \label{tab:matrix_methods}
+    \end{table}
+\end{enumerate}
+
+\bibliography{icomp2024_conference}
+\bibliographystyle{icomp2024_conference}
+
+\appendix
+\section{Appendix}
+You may include other additional sections here.
+
+\end{document}

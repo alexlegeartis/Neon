@@ -1,0 +1,147 @@
+#rough idea to generate new methods
+@article{bernstein2024oldoptimizernewnorm,
+  title={Old optimizer, new norm: An anthology},
+  author={Bernstein, Jeremy and Newhouse, Laker},
+  journal={arXiv preprint arXiv:2409.20325},
+  year={2024}
+}
+
+#muon tests
+@misc{jordan2024muon,
+  author       = {Keller Jordan and Yuchen Jin and Vlado Boza and Jiacheng You and
+                  Franz Cesista and Laker Newhouse and Jeremy Bernstein},
+  title        = {Muon: An optimizer for hidden layers in neural networks},
+  year         = {2024},
+  url          = {https://kellerjordan.github.io/posts/muon/}
+}
+
+#muon theory
+@misc{bernstein2025deriving,
+  author = {Jeremy Bernstein},
+  title = {Deriving Muon},
+  url = {https://jeremybernste.in/writing/deriving-muon},
+  year = {2025}
+}
+
+#muon performance
+@article{liu2025muon,
+  title={Muon is scalable for llm training},
+  author={Liu, Jingyuan and Su, Jianlin and Yao, Xingcheng and Jiang, Zhejun and Lai, Guokun and Du, Yulun and Qin, Yidao and Xu, Weixin and Lu, Enzhe and Yan, Junjie and others},
+  journal={arXiv preprint arXiv:2502.16982},
+  year={2025}
+}
+
+#we don't need this, or muon performance
+@misc{tveit2025muonoptimizeracceleratesgrokking,
+      title={Muon Optimizer Accelerates Grokking}, 
+      author={Amund Tveit and Bjørn Remseth and Arve Skogvold},
+      year={2025},
+      eprint={2504.16041},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2504.16041}, 
+}
+
+#about bounds, though that's not an ideal
+@misc{li2025noteconvergencemuon,
+      title={A Note on the Convergence of Muon and Further}, 
+      author={Jiaxiang Li and Mingyi Hong},
+      year={2025},
+      eprint={2502.02900},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/2502.02900}, 
+}
+
+#do we need Shampoo at all? Probably, yes, it's a function of a matrix
+@misc{gupta2018shampoopreconditionedstochastictensor,
+      title={Shampoo: Preconditioned Stochastic Tensor Optimization}, 
+      author={Vineet Gupta and Tomer Koren and Yoram Singer},
+      year={2018},
+      eprint={1802.09568},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/1802.09568}, 
+}
+
+# muon in llms
+@misc{chen2025cosmoshybridadaptive,
+      title={COSMOS: A Hybrid Adaptive Optimizer for Memory-Efficient Training of  LLMs}, 
+      author={Weizhu Chen and Chen Liang and Tuo Zhao and Zixuan Zhang and Hao Kang and Liming Liu and Zichong Li and Zhenghao Xu},
+      year={2025},
+      eprint={2502.17410},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2502.17410}, 
+}
+
+# distributed muon
+@misc{ahn2025dioncommunicationefficientoptimizerlarge,
+      title={Dion: A Communication-Efficient Optimizer for Large Models}, 
+      author={Kwangjun Ahn and Byron Xu},
+      year={2025},
+      eprint={2504.05295},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2504.05295}, 
+}
+
+# AdamW classics
+@Article{Loshchilov2017FixingWD,
+ author = {I. Loshchilov and F. Hutter},
+ booktitle = {arXiv.org},
+ journal = {ArXiv},
+ title = {Fixing Weight Decay Regularization in Adam},
+ volume = {abs/1711.05101},
+ year = {2017}
+}
+
+# do we need this?
+@inproceedings{
+morwani2025a,
+title={A New Perspective on Shampoo's Preconditioner},
+author={Depen Morwani and Itai Shapira and Nikhil Vyas and eran malach and Sham M. Kakade and Lucas Janson},
+booktitle={The Thirteenth International Conference on Learning Representations},
+year={2025},
+url={https://openreview.net/forum?id=c6zI3Cp8c6}
+}
+#------------------------------------------------------- my literature:
+
+# different layers, different norms, boring, but (L0, L1)
+@article{riabinin2025gluon,
+  title={Gluon: Making Muon \& Scion Great Again!(Bridging Theory and Practice of LMO-based Optimizers for LLMs)},
+  author={Riabinin, Artem and Shulgin, Egor and Gruntkowska, Kaja and Richt{\'a}rik, Peter},
+  journal={arXiv preprint arXiv:2505.13416},
+  year={2025}
+}
+
+# also nuclear norm, but for SAM, power iterations
+@article{
+pethick2025sam,
+title={\ensuremath{\nu}{SAM}: Memory-Efficient Sharpness-Aware Minimization via Nuclear Norm Constraints},
+author={Thomas Pethick and Parameswaran Raman and Lenon Minorics and Mingyi Hong and Shoham Sabach and Volkan Cevher},
+journal={Transactions on Machine Learning Research},
+issn={2835-8856},
+year={2025},
+url={https://openreview.net/forum?id=V6ia5hWIMD},
+note={}
+}
+
+# basic framewok, but without the nuclear norm
+@article{pethick2025training,
+  title={Training deep learning models with norm-constrained lmos},
+  author={Pethick, Thomas and Xie, Wanyun and Antonakopoulos, Kimon and Zhu, Zhenyu and Silveti-Falls, Antonio and Cevher, Volkan},
+  journal={arXiv preprint arXiv:2502.07529},
+  year={2025}
+}
+
+# trust-region and Muon, L-smooth bounds
+@article{kovalev2025understanding,
+  title={Understanding gradient orthogonalization for deep learning via non-euclidean trust-region optimization},
+  author={Kovalev, Dmitry},
+  journal={arXiv preprint arXiv:2503.12645},
+  year={2025}
+}
+
+
+@Comment{jabref-meta: databaseType:bibtex;}
