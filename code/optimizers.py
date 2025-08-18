@@ -154,9 +154,11 @@ class Neon(torch.optim.Optimizer):
                     elif self.type == 'accurate':
                         update, self.tau, self.k = k_sv_svds_approximation_dlpack(g_resh, self.k, self.tau, self.lanczos_iter_num)
                         # update, self.tau, self.k = svd_full_approximation(g_resh, self.tau) -- too slow
-                # update2 = (1-self.sgd_coeff) * update + self.sgd_coeff * g_resh / (g_resh.norm() + 1e-12)
+                update2 = (1-self.sgd_coeff) * update + self.sgd_coeff * g_resh / (g_resh.norm() + 1e-12)
+                '''
                 b = float(g_resh.norm())
                 a = sigma1 # torch.linalg.matrix_norm(g_resh, ord=2)
                 den = (a + b) + 1e-12
                 update2 = 2 * b * b / den / den * update + 2 * a * a / den / den * g_resh / (b + 1e-12)
+                '''
                 p.data.add_(update2.view(g.shape), alpha=-lr)# * math.sqrt(n / m))
