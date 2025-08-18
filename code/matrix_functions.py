@@ -256,9 +256,9 @@ def one_sv_svds_approximation(W_torch, num_iter=30):
     W = cp.from_dlpack(thd.to_dlpack(W_torch)).astype(cp.float32)
     U, S, Vt = cupyx_svds(W, k=min([k, W.shape[0] - 1, W.shape[1] - 1]), maxiter=num_iter, which='LM')
 
-    approx = U @ cp.diag(S) @ Vt
+    approx = U @ Vt #cp.diag(S) - we don't need this!
     approx_torch = thd.from_dlpack(approx.toDlpack()) 
-    return approx_torch
+    return approx_torch, float(S[0]) # sigma1
 
     '''
     # Ensure W_torch is a torch tensor
@@ -281,7 +281,7 @@ def one_sv_svds_approximation(W_torch, num_iter=30):
     sigma1 = s[0]
     v1 = v[:, 0]
     '''
-    return sigma1 * torch.outer(u1, v1)
+    # return torch.outer(u1, v1), sigma1 # * - we do not need this! Muon doesn't have this 
 
 def lanczos_svdt(W_torch, k, num_iter=30):
     """SVD approximation using the top k singular values and corresponding vectors."""

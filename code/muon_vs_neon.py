@@ -18,17 +18,17 @@ code_version = '13may_muon_neon'
 # Neon learning rate schedule by epoch (0-indexed)
 # Modify these values to change the learning rate at each epoch
 NEON_LR_SCHEDULE = {
-    0: 0.001,    # Initial learning rate
-    1: 0.001,    # Epoch 1
-    2: 0.001,    # Epoch 2
-    3: 0.001,    # Epoch 3
-    4: 0.001,    # Epoch 4
-    5: 0.001,   # Epoch 5
-    6: 0.0001,   # Epoch 6
-    7: 0.0001,  # Epoch 7
-    8: 0.0001,
-    9: 0.0001,
-    10: 0.0001,
+    0: 0.24,    # Initial learning rate
+    1: 0.24,    # Epoch 1
+    2: 0.24,    # Epoch 2
+    3: 0.24,    # Epoch 3
+    4: 0.24,    # Epoch 4
+    5: 0.24,   # Epoch 5
+    6: 0.24,   # Epoch 6
+    7: 0.24,  # Epoch 7
+    8: 0.24,
+    9: 0.24,
+    10: 0.24,
 }
 
 # @torch.compile
@@ -46,7 +46,7 @@ def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
     if G.size(0) > G.size(1):
         X = X.T
     return X
-
+'''
 class Muon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
@@ -76,7 +76,7 @@ class Muon(torch.optim.Optimizer):
                 update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
                 update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
                 p.data.add_(update, alpha=-lr) # take a step
-
+'''
 # note the use of low BatchNorm stats momentum
 class BatchNorm(nn.BatchNorm2d):
     def __init__(self, num_features, momentum=0.6, eps=1e-12):
@@ -163,7 +163,7 @@ def main(optimizer_type='neon', sgd_coeff=0):
     num_epochs = 10
     model = CifarNet().cuda().to(memory_format=torch.channels_last)
 
-    batch_size = 100
+    batch_size = 2000
     bias_lr = 0.053
     head_lr = 0.67
     wd = 2e-6 * batch_size
@@ -176,7 +176,7 @@ def main(optimizer_type='neon', sgd_coeff=0):
     print(f"Head Learning Rate: {head_lr}")
     print(f"Weight Decay: {wd}")
     
-    test_loader = airbench.CifarLoader("cifar10", train=False, batch_size=2000)
+    test_loader = airbench.CifarLoader("cifar10", train=False, batch_size=batch_size)
     train_loader = airbench.CifarLoader("cifar10", train=True, batch_size=batch_size,
                                         aug=dict(flip=True, translate=2), altflip=True)
     total_train_steps = ceil(num_epochs * len(train_loader))
@@ -192,7 +192,7 @@ def main(optimizer_type='neon', sgd_coeff=0):
     
     # Select optimizer based on parameter
     if optimizer_type.lower() == 'muon':
-        optimizer2 = Muon(filter_params, lr=0.3, momentum=0.6, nesterov=True, sgd_coeff=sgd_coeff)
+        optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=sgd_coeff)
         print(f"Muon Learning Rate: 0.24")
         print(f"Muon Momentum: 0.6")
         print(f"Muon Nesterov: True")
@@ -200,22 +200,22 @@ def main(optimizer_type='neon', sgd_coeff=0):
         # neon_mode = 'accurate'
         neon_mode = 'fast'
         # Use the initial learning rate from the schedule
-        neon_lr = NEON_LR_SCHEDULE[0]
-        neon_momentum = 0.6
-        optimizer2 = Neon(filter_params, lr=neon_lr, momentum=neon_momentum, nesterov=True, neon_mode=neon_mode,
-                          iter_num = 1)
+        neon_lr = 0.2 # NEON_LR_SCHEDULE[0]
+        neon_momentum = 0.95
+        optimizer2 = Neon(filter_params, lr=neon_lr, momentum=neon_momentum, 
+        nesterov=True, neon_mode=neon_mode,
+                          iter_num = 50, sgd_coeff=0)
                       #iter_num=1 * batch_size / 500)
         print(f"Neon Learning Rate: {neon_lr}")
         print(f"Neon Momentum: {neon_momentum}")
         print(f"Neon Mode: {neon_mode}")
         print(f"Neon Nesterov: True")
-        print(f"Neon Iter Num: {500 * batch_size / 500}")
-        
         # Manual learning rate schedule for Neon
+        '''
         if optimizer_type.lower() == 'neon':
             print("Neon Learning Rate Schedule:")
             for epoch, lr in NEON_LR_SCHEDULE.items():
-                print(f"  Epoch {epoch}: {lr}")
+                print(f"  Epoch {epoch}: {lr}")'''
     print("="*50 + "\n")
     
     optimizers = [optimizer1, optimizer2]
@@ -249,7 +249,7 @@ def main(optimizer_type='neon', sgd_coeff=0):
     for epoch in range(ceil(total_train_steps / len(train_loader))):
         epoch_loss = 0
         batch_count = 0
-        
+        '''
         # Apply manual learning rate schedule for Neon at the beginning of each epoch
         if optimizer_type.lower() == 'neon' and epoch in NEON_LR_SCHEDULE:
             new_lr = NEON_LR_SCHEDULE[epoch]
@@ -257,6 +257,7 @@ def main(optimizer_type='neon', sgd_coeff=0):
                 group["lr"] = new_lr
                 group["initial_lr"] = new_lr
             print(f"Epoch {epoch}: Setting Neon learning rate to {new_lr}")
+        '''
             
         model.train()
         for inputs, labels in train_loader:
@@ -270,13 +271,13 @@ def main(optimizer_type='neon', sgd_coeff=0):
                 group["lr"] = group["initial_lr"] * (1 - step / whiten_bias_train_steps)
             
             # Only apply automatic learning rate decay to non-Neon optimizer or Muon optimizer
-            if optimizer_type.lower() != 'neon':
-                for group in optimizer1.param_groups[1:]+optimizer2.param_groups:
-                    group["lr"] = group["initial_lr"] * (1 - step / total_train_steps)
-            else:
+            #if optimizer_type.lower() != 'neon':
+            for group in optimizer1.param_groups[1:]+optimizer2.param_groups:
+                group["lr"] = group["initial_lr"] * (1 - step / total_train_steps)
+            #else:
                 # For Neon, only apply to optimizer1 groups
-                for group in optimizer1.param_groups[1:]:
-                    group["lr"] = group["initial_lr"] * (1 - step / total_train_steps)
+            #    for group in optimizer1.param_groups[1:]:
+            #        group["lr"] = group["initial_lr"] * (1 - step / total_train_steps)
                     
             for opt in optimizers:
                 opt.step()
@@ -333,14 +334,15 @@ def plot_comparison():
     figures_dir = f"figures/{code_version}"
     os.makedirs(figures_dir, exist_ok=True)
     print(f"Saving figures to: {figures_dir}")
-    
-     # Run with Neon optimizer
-    print("Training with Cringe Muon optimizer...")
-    neon_results = main(optimizer_type='muon', sgd_coeff=1)
-
     # Run with Muon optimizer
+     # Run with Neon optimizer
+    print("Training with Neon optimizer...")
+    neon_results = main(optimizer_type='neon')
     print("Training with Muon optimizer...")
-    muon_results = main(optimizer_type='muon')
+    muon_results = main(optimizer_type='muon', sgd_coeff=0.5)
+    
+    
+
     
     # Define more pleasing color palette
     muon_color = '#4363d8'  # Vibrant blue

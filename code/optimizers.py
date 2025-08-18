@@ -97,18 +97,18 @@ class Muon(torch.optim.Optimizer):
                 p.data.mul_(len(p.data)**0.5 / norm)
                 
                 update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g
-                
-                n, m = g.shape # d_out and d_in
-                p.data.add_(update, alpha=-lr * math.sqrt(n / m))
+                update2, sigma = one_sv_svds_approximation(g.reshape(len(g), -1), 50)
+                update = (1-self.sgd_coeff) * update_part  + self.sgd_coeff * g / (g.norm() + 1e-12) * update2.view(g.shape)
+                p.data.add_(update, alpha=-lr)
 
 class Neon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, k=1, tau = 0, nesterov=False,
-                 neon_mode='fast', iter_num = 100):
+                 neon_mode='fast', iter_num = 100, sgd_coeff=0):
         self.tau = tau
         self.k = k
         self.lanczos_iter_num = iter_num
         self.type = neon_mode
+        self.sgd_coeff = sgd_coeff
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -143,14 +143,20 @@ class Neon(torch.optim.Optimizer):
                 # update = u1s1v1t_torch(g.reshape(len(g), -1)).view(g.shape)
                 g_resh = g.reshape(len(g), -1)
                 n, m = g_resh.shape # d_out and d_in
+                sigma1 = 0
                 if g_resh.shape[0] == 1 or g_resh.shape[1] == 1:
                     update = zeropower_via_newtonschulz5(g_resh).view(g.shape)
                     print("Using Muon is illegal!")
                 else:
                     if self.type == 'fast':
                         # print(g_resh.shape)
-                        update = one_sv_svds_approximation(g_resh, self.lanczos_iter_num)
+                        update, sigma1 = one_sv_svds_approximation(g_resh, self.lanczos_iter_num)
                     elif self.type == 'accurate':
                         update, self.tau, self.k = k_sv_svds_approximation_dlpack(g_resh, self.k, self.tau, self.lanczos_iter_num)
                         # update, self.tau, self.k = svd_full_approximation(g_resh, self.tau) -- too slow
-                p.data.add_(update.view(g.shape), alpha=-lr * math.sqrt(n / m)) 
+                # update2 = (1-self.sgd_coeff) * update + self.sgd_coeff * g_resh / (g_resh.norm() + 1e-12)
+                b = float(g_resh.norm())
+                a = sigma1 # torch.linalg.matrix_norm(g_resh, ord=2)
+                den = (a + b) + 1e-12
+                update2 = 2 * b * b / den / den * update + 2 * a * a / den / den * g_resh / (b + 1e-12)
+                p.data.add_(update2.view(g.shape), alpha=-lr)# * math.sqrt(n / m))
