@@ -48,9 +48,10 @@ def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
     return X
 
 class Muon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
+        self.sgd_coeff = sgd_coeff
 
     def step(self):
         for group in self.param_groups:
@@ -69,7 +70,11 @@ class Muon(torch.optim.Optimizer):
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
                 p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
-                update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
+                # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
+                eps = 1e-12
+                g_normalized = g / (g.norm() + eps)           
+                update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
+                update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
                 p.data.add_(update, alpha=-lr) # take a step
 
 # note the use of low BatchNorm stats momentum
@@ -153,9 +158,9 @@ class CifarNet(nn.Module):
         x = x.view(len(x), -1)
         return self.head(x) / x.size(-1)
 
-def main(optimizer_type='neon'):
+def main(optimizer_type='neon', sgd_coeff=0):
     """Run training with specified optimizer type ('muon' or 'neon')"""
-    num_epochs = 3
+    num_epochs = 10
     model = CifarNet().cuda().to(memory_format=torch.channels_last)
 
     batch_size = 100
@@ -187,7 +192,7 @@ def main(optimizer_type='neon'):
     
     # Select optimizer based on parameter
     if optimizer_type.lower() == 'muon':
-        optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True)
+        optimizer2 = Muon(filter_params, lr=0.3, momentum=0.6, nesterov=True, sgd_coeff=sgd_coeff)
         print(f"Muon Learning Rate: 0.24")
         print(f"Muon Momentum: 0.6")
         print(f"Muon Nesterov: True")
@@ -330,8 +335,8 @@ def plot_comparison():
     print(f"Saving figures to: {figures_dir}")
     
      # Run with Neon optimizer
-    print("Training with Neon optimizer...")
-    neon_results = main(optimizer_type='neon')
+    print("Training with Cringe Muon optimizer...")
+    neon_results = main(optimizer_type='muon', sgd_coeff=1)
 
     # Run with Muon optimizer
     print("Training with Muon optimizer...")

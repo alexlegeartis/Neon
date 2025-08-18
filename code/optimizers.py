@@ -63,7 +63,7 @@ def u1s1v1t_torch(W, num_iter=20, eps=1e-8):
     return sigma1 * (u @ v.T)
 
 class Muon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -72,6 +72,7 @@ class Muon(torch.optim.Optimizer):
             raise ValueError("Nesterov momentum requires a momentum")
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
+        self.sgd_coeff = sgd_coeff
 
     def step(self):
         for group in self.param_groups:
@@ -95,7 +96,8 @@ class Muon(torch.optim.Optimizer):
                     continue
                 p.data.mul_(len(p.data)**0.5 / norm)
                 
-                update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
+                update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
+                update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g
                 
                 n, m = g.shape # d_out and d_in
                 p.data.add_(update, alpha=-lr * math.sqrt(n / m))
