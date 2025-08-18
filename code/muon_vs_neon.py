@@ -160,7 +160,7 @@ class CifarNet(nn.Module):
 
 def main(optimizer_type='neon', sgd_coeff=0):
     """Run training with specified optimizer type ('muon' or 'neon')"""
-    num_epochs = 10
+    num_epochs = 30
     model = CifarNet().cuda().to(memory_format=torch.channels_last)
 
     batch_size = 2000
