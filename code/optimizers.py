@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn.functional as F
 from torch import nn
-from matrix_functions import k_sv_svds_approximation_dlpack, one_sv_svds_approximation, svd_full_approximation
+from matrix_functions import k_sv_svds_approximation_dlpack, one_sv_svds_approximation, svd_full_approximation, several_sv_svds_approximation
 
 def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
     """Simplified Newton-Schulz iteration for whitening"""
@@ -62,15 +62,19 @@ def u1s1v1t_torch(W, num_iter=20, eps=1e-8):
     # Return scaled outer product
     return sigma1 * (u @ v.T)
 
+
+def soft_threshold(x: torch.Tensor, lam: float) -> torch.Tensor:
+    return torch.sign(x) * torch.clamp(torch.abs(x) - lam, min=0.0)
+
 class Muon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, weight_decay=0):
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
             raise ValueError(f"Invalid momentum value: {momentum}")
         if nesterov and momentum <= 0:
             raise ValueError("Nesterov momentum requires a momentum")
-        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov, weight_decay=weight_decay)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
 
@@ -97,9 +101,14 @@ class Muon(torch.optim.Optimizer):
                 p.data.mul_(len(p.data)**0.5 / norm)
                 
                 update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                update2, sigma = one_sv_svds_approximation(g.reshape(len(g), -1), 50)
-                update = (1-self.sgd_coeff) * update_part  + self.sgd_coeff * g / (g.norm() + 1e-12) * update2.view(g.shape)
+                # update2, sigma = one_sv_svds_approximation(g.reshape(len(g), -1), 50)
+                # update = (1-self.sgd_coeff) * update_part  + self.sgd_coeff * g / (g.norm() + 1e-12) * update2.view(g.shape)
+                update = update_part
+                # --- APPLY WEIGHT DECAY ---
+                if group['weight_decay'] != 0:
+                    update = update.add(p, alpha=group['weight_decay'])
                 p.data.add_(update, alpha=-lr)
+
 
 class Neon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, k=1, tau = 0, nesterov=False,
@@ -153,6 +162,16 @@ class Neon(torch.optim.Optimizer):
                         update, sigma1 = one_sv_svds_approximation(g_resh, self.lanczos_iter_num)
                     elif self.type == 'accurate':
                         update, self.tau, self.k = k_sv_svds_approximation_dlpack(g_resh, self.k, self.tau, self.lanczos_iter_num)
+                        # print(update.norm())
+                        # update = update / update.norm() * min(update.shape)
+                        '''
+                        u, s, vt = several_sv_svds_approximation(g_resh, 10)
+                        s_old_norm = s.norm()
+                        s = soft_threshold(s, lam=s.min()/2)
+                        s = s/s_old_norm
+                        # s[1] = 0
+                        update = u @ torch.diag(s) @ vt
+                        '''
                         # update, self.tau, self.k = svd_full_approximation(g_resh, self.tau) -- too slow
                 update2 = (1-self.sgd_coeff) * update + self.sgd_coeff * g_resh / (g_resh.norm() + 1e-12)
                 '''

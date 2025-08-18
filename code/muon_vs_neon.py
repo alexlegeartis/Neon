@@ -163,7 +163,7 @@ def main(optimizer_type='neon', sgd_coeff=0):
     num_epochs = 30
     model = CifarNet().cuda().to(memory_format=torch.channels_last)
 
-    batch_size = 2000
+    batch_size = 10000
     bias_lr = 0.053
     head_lr = 0.67
     wd = 2e-6 * batch_size
@@ -192,16 +192,22 @@ def main(optimizer_type='neon', sgd_coeff=0):
     
     # Select optimizer based on parameter
     if optimizer_type.lower() == 'muon':
-        optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=sgd_coeff)
+        optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=sgd_coeff, weight_decay=0)
         print(f"Muon Learning Rate: 0.24")
         print(f"Muon Momentum: 0.6")
         print(f"Muon Nesterov: True")
+    elif optimizer_type.lower() == 'adamw':
+        adamw_lr = 1e-3
+        # optimizer2 = torch.optim.AdamW(filter_params, lr=adamw_lr, weight_decay=wd)
+        optimizer2 = torch.optim.SGD(filter_params, momentum=0.85, nesterov=True)
+        print(f"AdamW Learning Rate: {adamw_lr}")
+        print(f"AdamW Weight Decay: {wd}")
     else:  # default to neon
         # neon_mode = 'accurate'
         neon_mode = 'fast'
         # Use the initial learning rate from the schedule
-        neon_lr = 0.2 # NEON_LR_SCHEDULE[0]
-        neon_momentum = 0.95
+        neon_lr = 0.2 # 0.2 # NEON_LR_SCHEDULE[0]
+        neon_momentum = 0.9
         optimizer2 = Neon(filter_params, lr=neon_lr, momentum=neon_momentum, 
         nesterov=True, neon_mode=neon_mode,
                           iter_num = 50, sgd_coeff=0)
@@ -336,10 +342,14 @@ def plot_comparison():
     print(f"Saving figures to: {figures_dir}")
     # Run with Muon optimizer
      # Run with Neon optimizer
+    
     print("Training with Neon optimizer...")
-    neon_results = main(optimizer_type='neon', sgd_coeff=0.5)
+    neon_results = main(optimizer_type='neon', sgd_coeff=0)
     print("Training with Muon optimizer...")
     muon_results = main(optimizer_type='muon', sgd_coeff=0)
+    print("Training with AdamW optimizer...")
+    adamw_results = main(optimizer_type='adamw', sgd_coeff=0)
+    
     
     
 
@@ -347,6 +357,7 @@ def plot_comparison():
     # Define more pleasing color palette
     muon_color = '#4363d8'  # Vibrant blue
     neon_color = '#e6194B'  # Crimson red
+    adamw_color = '#3cb44b' # Green
     background_color = '#f8f9fa'  # Light gray background
     grid_color = '#dddddd'  # Subtle grid lines
     
@@ -356,6 +367,7 @@ def plot_comparison():
     ax.set_facecolor(background_color)
     plt.plot(muon_results['epochs'], muon_results['test_accs'], color=muon_color, linestyle='-', linewidth=2.5, marker='o', markersize=6, label='Muon')
     plt.plot(neon_results['epochs'], neon_results['test_accs'], color=neon_color, linestyle='-', linewidth=2.5, marker='s', markersize=6, label='Neon')
+    plt.plot(adamw_results['epochs'], adamw_results['test_accs'], color=adamw_color, linestyle='-', linewidth=2.5, marker='^', markersize=6, label='AdamW')
     plt.xlabel('Epoch', fontsize=14, fontweight='bold')
     plt.ylabel('Test Accuracy', fontsize=14, fontweight='bold')
     plt.title('Test Accuracy vs Epoch', fontsize=16, fontweight='bold')
@@ -371,6 +383,7 @@ def plot_comparison():
     ax.set_facecolor(background_color)
     plt.plot(muon_results['epochs'], muon_results['test_losses'], color=muon_color, linestyle='-', linewidth=2.5, marker='o', markersize=6, label='Muon')
     plt.plot(neon_results['epochs'], neon_results['test_losses'], color=neon_color, linestyle='-', linewidth=2.5, marker='s', markersize=6, label='Neon')
+    plt.plot(adamw_results['epochs'], adamw_results['test_losses'], color=adamw_color, linestyle='-', linewidth=2.5, marker='^', markersize=6, label='AdamW')
     plt.xlabel('Epoch', fontsize=14, fontweight='bold')
     plt.ylabel('Test Loss', fontsize=14, fontweight='bold')
     plt.title('Test Loss vs Epoch', fontsize=16, fontweight='bold')
@@ -386,6 +399,7 @@ def plot_comparison():
     ax.set_facecolor(background_color)
     plt.plot(muon_results['times'], muon_results['test_accs'], color=muon_color, linestyle='-', linewidth=2.5, marker='o', markersize=6, label='Muon')
     plt.plot(neon_results['times'], neon_results['test_accs'], color=neon_color, linestyle='-', linewidth=2.5, marker='s', markersize=6, label='Neon')
+    plt.plot(adamw_results['times'], adamw_results['test_accs'], color=adamw_color, linestyle='-', linewidth=2.5, marker='^', markersize=6, label='AdamW')
     plt.xlabel('Time (seconds)', fontsize=14, fontweight='bold')
     plt.ylabel('Test Accuracy', fontsize=14, fontweight='bold')
     plt.title('Test Accuracy vs Time', fontsize=16, fontweight='bold')
@@ -401,6 +415,7 @@ def plot_comparison():
     ax.set_facecolor(background_color)
     plt.plot(muon_results['times'], muon_results['test_losses'], color=muon_color, linestyle='-', linewidth=2.5, marker='o', markersize=6, label='Muon')
     plt.plot(neon_results['times'], neon_results['test_losses'], color=neon_color, linestyle='-', linewidth=2.5, marker='s', markersize=6, label='Neon')
+    plt.plot(adamw_results['times'], adamw_results['test_losses'], color=adamw_color, linestyle='-', linewidth=2.5, marker='^', markersize=6, label='AdamW')
     plt.xlabel('Time (seconds)', fontsize=14, fontweight='bold')
     plt.ylabel('Test Loss', fontsize=14, fontweight='bold')
     plt.title('Test Loss vs Time', fontsize=16, fontweight='bold')
@@ -412,6 +427,7 @@ def plot_comparison():
     
     print(f"Muon Final Accuracy: {muon_results['final_acc']:.4f}")
     print(f"Neon Final Accuracy: {neon_results['final_acc']:.4f}")
+    print(f"AdamW Final Accuracy: {adamw_results['final_acc']:.4f}")
     print(f"All plots saved to {figures_dir}/")
 
 if __name__ == "__main__":

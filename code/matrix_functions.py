@@ -65,7 +65,8 @@ def k_sv_svds_approximation_dlpack(W_torch, k, tau, num_iter=30):
     S_thresholded = cp.maximum(S - opt_tau, 0)
     # print(sum(S_thresholded), opt_tau)
     approx = U @ cp.diag(S_thresholded) @ Vt
-    approx_torch = thd.from_dlpack(approx.toDlpack()) 
+    approx_torch = thd.from_dlpack(approx.toDlpack())
+    # print(opt_tau)
     return approx_torch, opt_tau, k
 
 
@@ -248,7 +249,15 @@ def randomized_svd_torch(G, n_components=1, n_oversamples=5, n_iter=2):
     
     return u1, sigma1, v1
 
+def several_sv_svds_approximation(W_torch, k, num_iter=50):
+    """SVD approximation using the top k singular values and corresponding vectors."""
+    W = cp.from_dlpack(thd.to_dlpack(W_torch)).astype(cp.float32)
+    U, S, Vt = cupyx_svds(W, k=min([k, W.shape[0] - 1, W.shape[1] - 1]), maxiter=num_iter, which='LM')
 
+    # approx = U @ Vt #cp.diag(S) - we don't need this!
+    approx_torch_U = thd.from_dlpack(U.toDlpack()) 
+    approx_torch_Vt = thd.from_dlpack(Vt.toDlpack())
+    return approx_torch_U, thd.from_dlpack(S.toDlpack()), approx_torch_Vt
 
 def one_sv_svds_approximation(W_torch, num_iter=30):
     """SVD approximation using the top k singular values and corresponding vectors."""
@@ -283,7 +292,7 @@ def one_sv_svds_approximation(W_torch, num_iter=30):
     '''
     # return torch.outer(u1, v1), sigma1 # * - we do not need this! Muon doesn't have this 
 
-def lanczos_svdt(W_torch, k, num_iter=30):
+def lanczos_svdt(W_torch, k, num_iter=50):
     """SVD approximation using the top k singular values and corresponding vectors."""
     
     # assert (W.shape[0] > 3 and W.shape[1] > 3), "Dimensions of W must be greater than 3"
