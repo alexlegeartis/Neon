@@ -337,9 +337,9 @@ def plot_comparison():
     # Run with Muon optimizer
      # Run with Neon optimizer
     print("Training with Neon optimizer...")
-    neon_results = main(optimizer_type='neon')
+    neon_results = main(optimizer_type='neon', sgd_coeff=0.5)
     print("Training with Muon optimizer...")
-    muon_results = main(optimizer_type='muon', sgd_coeff=0.5)
+    muon_results = main(optimizer_type='muon', sgd_coeff=0)
     
     
 
