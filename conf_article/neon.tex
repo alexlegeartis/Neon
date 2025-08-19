@@ -141,144 +141,143 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
 \section{Problem Statement}
 \subsection{Function of a matrix and Assumptions}
-Warning: the text was copied, while formulas were adapted. We need to rephrase the subsection! 
-  We consider the problem of minimizing a differentiable matrix function $F(\cdot)\colon \Rmn \to \R$
-  \begin{equation}\label{eq:mat}
-    \min_{\mX \in \Rmn} f(\mX).
-  \end{equation}
+    Warning: the text was copied, while formulas were adapted. We need to rephrase the subsection! 
+    We consider the problem of minimizing a differentiable matrix function $F(\cdot)\colon \Rmn \to \R$
+    \begin{equation}\label{eq:mat}
+        \min_{\mX \in \Rmn} f(\mX).
+    \end{equation}
 
-To make the theoretical analysis possible in the future, we make three reasonable non-restrictive assumptions.
-Idea: move gradient assumptions and smoothness to the L-smooth part. Here we need only custom norm and their relation to the Frobenius norm.
+    To make the theoretical analysis possible in the future, we make three reasonable non-restrictive assumptions.
+    Idea: move gradient assumptions and smoothness to the L-smooth part. Here we need only custom norm and their relation to the Frobenius norm.
 
 {\bf Stochastic gradient estimator.}
-We assume access to a stochastic estimator $g(\cdot\,;\xi)\colon \Rmn \to \Rmn$ of the gradient $\nabla f(\cdot)$, where $\xi \sim \cD$ is a random variable sampled from a probability distribution $\cD$. We assume that the stochastic gradient estimator $g(\cdot;\xi)$ is unbiased and has bounded variance, that is, the following relations hold:
-\begin{aequation}\label{eq:variance}
-  \Ed{\xi \sim \cD}{g(\mX;\xi)} = \nabla f(\mX)
-  \quad\text{and}\quad
-  \Ed{\xi \sim \cD}{\sqnf{g(\mX;\xi) - \nabla f(\mX)}} \leq \sigma^2
-  \quad\text{for all}\;
-  \mX \in \Rmn,
-\end{aequation}
-where $\sigma > 0$ is a positive variance parameter, and $\normf{\cdot}$ is the standard Euclidean, i.e. Frobenius, norm induced by the inner product $\<\cdot,\cdot>$, i.e., $\normf{\mX} = \sqrt{\<\mX,\mX>}=\sqrt{\tr(\mX^\top \mX)}$. These assumptions have been widely adopted for the analysis of many stochastic gradient optimization algorithms \citep{ghadimi2013stochastic,ghadimi2016accelerated,cutkosky2020momentum,sun2023momentum,horvath2023stochastic,gorbunov2020linearly}.
+    We assume access to a stochastic estimator $g(\cdot\,;\xi)\colon \Rmn \to \Rmn$ of the gradient $\nabla f(\cdot)$, where $\xi \sim \cD$ is a random variable sampled from a probability distribution $\cD$. We assume that the stochastic gradient estimator $g(\cdot;\xi)$ is unbiased and has bounded variance, that is, the following relations hold:
+    \begin{aequation}\label{eq:variance}
+    \Ed{\xi \sim \cD}{g(\mX;\xi)} = \nabla f(\mX)
+    \quad\text{and}\quad
+    \Ed{\xi \sim \cD}{\sqnf{g(\mX;\xi) - \nabla f(\mX)}} \leq \sigma^2
+    \quad\text{for all}\;
+    \mX \in \Rmn,
+    \end{aequation}
+    where $\sigma > 0$ is a positive variance parameter, and $\normf{\cdot}$ is the standard Euclidean, i.e. Frobenius, norm induced by the inner product $\<\cdot,\cdot>$, i.e., $\normf{\mX} = \sqrt{\<\mX,\mX>}=\sqrt{\tr(\mX^\top \mX)}$. These assumptions have been widely adopted for the analysis of many stochastic gradient optimization algorithms \citep{ghadimi2013stochastic,ghadimi2016accelerated,cutkosky2020momentum,sun2023momentum,horvath2023stochastic,gorbunov2020linearly}.
 
 {\bf Non-Euclidean norm setting and Lipschitz continuous gradient.}
-We assume that matrix space $\Rmn$ is equipped with a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius, norm $\normf{\cdot}$. In addition, we assume that the gradient $\nabla f(\cdot)$ is Lipschitz continuous with respect to the norm $\norm{\cdot}$, that is, the following inequality holds:
-\begin{aequation}\label{eq:L}
-  \norm{\nabla f(\mX) - \nabla f(\mX')}_* \leq L \norm{\mX-\mX'}
-  \quad\text{for all}\;
-  \mX, \mX' \in \Rmn,
-\end{aequation}
-where $L > 0$ is the gradient Lipschitz constant, and $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ is the dual norm associated with $\norm{\cdot}$, i.e., $\norm{\mX}^\dagger = \sup_{\norm{\mX'}\leq 1} \<\mX,\mX'>$ for all $\mX \in \Rmn$. The assumption of gradient Lipschitz continuity is also widespread in the analysis of first-order optimization methods \citep{ghadimi2013stochastic,gower2019sgd,cutkosky2020momentum,horvath2023stochastic,gorbunov2020linearly}. It is important to highlight that while \Cref{eq:L} uses the dual norm $\norm{\cdot}^\dagger$ to measure the difference between the gradients, the variance in \Cref{eq:variance} is measured with respect to the Frobenius norm $\sqnf{\cdot}$, which is necessary to properly utilize the unbiasedness property of the stochastic gradient estimator $g(\cdot;\xi)$. Therefore, we need to provide a connection between these norms using the following inequality:
-\begin{aequation}\label{eq:norm}
-  \norm{\mX}^\dagger \leq \rho\cdot\normf{\mX}
-  \quad\text{for all}\;
-  \mX \in \Rmn,
-\end{aequation}
-where $\rho > 0$ is a positive constant. Note that such a constant always exists due to the norm equivalence theorem, which always holds in the finite-dimensional space $\Rmn$. We recount $\rho$ for different norms $\norm{\cdot}$ in the appendix.
+    We assume that matrix space $\Rmn$ is equipped with a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius, norm $\normf{\cdot}$. In addition, we assume that the gradient $\nabla f(\cdot)$ is Lipschitz continuous with respect to the norm $\norm{\cdot}$, that is, the following inequality holds:
+    \begin{aequation}\label{eq:L}
+    \norm{\nabla f(\mX) - \nabla f(\mX')}_* \leq L \norm{\mX-\mX'}
+    \quad\text{for all}\;
+    \mX, \mX' \in \Rmn,
+    \end{aequation}
+    where $L > 0$ is the gradient Lipschitz constant, and $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ is the dual norm associated with $\norm{\cdot}$, i.e., $\norm{\mX}^\dagger = \sup_{\norm{\mX'}\leq 1} \<\mX,\mX'>$ for all $\mX \in \Rmn$. The assumption of gradient Lipschitz continuity is also widespread in the analysis of first-order optimization methods \citep{ghadimi2013stochastic,gower2019sgd,cutkosky2020momentum,horvath2023stochastic,gorbunov2020linearly}. It is important to highlight that while \Cref{eq:L} uses the dual norm $\norm{\cdot}^\dagger$ to measure the difference between the gradients, the variance in \Cref{eq:variance} is measured with respect to the Frobenius norm $\sqnf{\cdot}$, which is necessary to properly utilize the unbiasedness property of the stochastic gradient estimator $g(\cdot;\xi)$. Therefore, we need to provide a connection between these norms using the following inequality:
+    \begin{aequation}\label{eq:norm}
+    \norm{\mX}^\dagger \leq \rho\cdot\normf{\mX}
+    \quad\text{for all}\;
+    \mX \in \Rmn,
+    \end{aequation}
+    where $\rho > 0$ is a positive constant. Note that such a constant always exists due to the norm equivalence theorem, which always holds in the finite-dimensional space $\Rmn$. We recount $\rho$ for different norms $\norm{\cdot}$ in the appendix.
 
 
 \subsection{Linear Minimization Oracle and Trust Region}
-Let us look at the problem from the perspective of linear minimization oracle (lmo) and unconstrained stochastic conditional gradient descent (uSCG) (\cite{pethick2025training}). lmo is defined as:
-\begin{equation}\label{eq:lmo}
-    \mathrm{lmo}(\mS) \in \arg\min_{\mX \in \cS} \<\mS, \mX>,
-\end{equation}
-where $\cS$ is some set. We are interested in the case when $\cS$ is a ball in our $\norm{\cdot}$ norm:
-\begin{equation}\label{eq:ball}
-    \cS := \cB_\eta :=\{ \mX \mid \norm{\mX} \leq \eta \}.
-\end{equation}
+    Let us look at the problem from the perspective of linear minimization oracle (lmo) and unconstrained stochastic conditional gradient descent (uSCG) (\cite{pethick2025training}). lmo is defined as:
+    \begin{equation}\label{eq:lmo}
+        \mathrm{lmo}(\mS) \in \arg\min_{\mX \in \cS} \<\mS, \mX>,
+    \end{equation}
+    where $\cS$ is some set. We are interested in the case when $\cS$ is a ball in our $\norm{\cdot}$ norm:
+    \begin{equation}\label{eq:ball}
+        \cS := \cB_\eta :=\{ \mX \mid \norm{\mX} \leq \eta \}.
+    \end{equation}
 
-uSCG update is defined as:
-$\mX^{k+1} = \mX^{k} + \gamma_k lmo(\mM^k),$ where $\mM^{k+1} = (1-\alpha_{k+1})\mM^{k} + \alpha_{k+1}g(\mX^k, \xi_k)$ is a momentum.
+    uSCG update is defined as:
+    $\mX^{k+1} = \mX^{k} + \gamma_k lmo(\mM^k),$ where $\mM^{k+1} = (1-\alpha_{k+1})\mM^{k} + \alpha_{k+1}g(\mX^k, \xi_k)$ is a momentum.
 
-It can be easily shown that the formula is equvalent to
-\begin{equation}\label{eq:almost_trust_update}
-    \mX^{k+1} = \mX^{k} - \gamma_k\eta \arg\max_{\mX \in \cB_1} \<\mS, \mX> = \mX^{k} - \gamma_k\eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}.
-\end{equation}
+    It can be easily shown that the formula is equvalent to
+    \begin{equation}\label{eq:almost_trust_update}
+        \mX^{k+1} = \mX^{k} - \gamma_k\eta \arg\max_{\mX \in \cB_1} \<\mS, \mX> = \mX^{k} - \gamma_k\eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}.
+    \end{equation}
 
-Let us set $\gamma_k = 1$. This transforms algorithm defined by \cref{eq:almost_trust_update} into Algorithm 1 from \cite{kovalev2025understanding}. Therefore, we can view \cref{eq:almost_trust_update} both as an lmo-based algorithm and as a trust-region algorithm.
+    Let us set $\gamma_k = 1$. This transforms algorithm defined by \cref{eq:almost_trust_update} into Algorithm 1 from \cite{kovalev2025understanding}. Therefore, we can view \cref{eq:almost_trust_update} both as an lmo-based algorithm and as a trust-region algorithm.
 
 \section{Different Norms $\norm{\cdot}$ imply different updates}
-% As we have stated in Introduction, we are interested foremost in matrix norms, so we'll start right with them, skipping RMS-RMS norm and others.
+    % As we have stated in Introduction, we are interested foremost in matrix norms, so we'll start right with them, skipping RMS-RMS norm and others.
 
-Based on different norms $\norm{\cdot}$, we simplify the update defined by the aforementioned equation:
+    Based on different norms $\norm{\cdot}$, we simplify the update defined by the aforementioned equation:
 
-\begin{equation}\label{eq:our_update}
-    \mX^{k+1} = \mX^{k} - \eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}
-\end{equation}
+    \begin{equation}\label{eq:our_update}
+        \mX^{k+1} = \mX^{k} - \eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}
+    \end{equation}
 
-In all the work, we define $\mU$, $\mSigma$, $\mV^\top$ as components of the singular value decomposition of $\mM^k$: $\mM^k = \mU \mSigma \mV^\top$. We use common notations: $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and  $\mV = [v_1, v_2, \dots, v_r]$.
+    In all the work, we define $\mU$, $\mSigma$, $\mV^\top$ as components of the singular value decomposition of $\mM^k$: $\mM^k = \mU \mSigma \mV^\top$. We use common notations: $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and  $\mV = [v_1, v_2, \dots, v_r]$.
 
-{\bf $\normf{\mM^{k}}$ and NSGD}
+    {\bf $\normf{\mM^{k}}$ and NSGD}
 
-Lemma. When $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
+        Lemma. When $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
 
-\begin{equation}\label{eq:nsgd_update}
-    \mX^{k+1} = \mX^{k} - \eta \frac{\mM^k}{\normf{\mM^k}}
-\end{equation}
+        \begin{equation}\label{eq:nsgd_update}
+            \mX^{k+1} = \mX^{k} - \eta \frac{\mM^k}{\normf{\mM^k}}
+        \end{equation}
 
-It is an interesting observation, because in other works (\cite{pethick2025training}), $\normf{\cdot}$ was used to recover SGD. The difference is in how one states the problem.
+        It is an interesting observation, because in other works (\cite{pethick2025training}), $\normf{\cdot}$ was used to recover SGD. The difference is in how one states the problem.
 
-{\bf $\norms{\mM^{k}}$ and Muon}
+    {\bf $\norms{\mM^{k}}$ and Muon}
 
-Lemma. When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
+        Lemma. When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
 
-\begin{equation}\label{eq:muon_update}
-    \mX^{k+1} = \mX^{k} - \eta U V^\top
-\end{equation}
+        \begin{equation}\label{eq:muon_update}
+            \mX^{k+1} = \mX^{k} - \eta U V^\top
+        \end{equation}
 
-{\bf $\normn{\mM^{k}}$ and Neon}
+    {\bf $\normn{\mM^{k}}$ and Neon}
 
-Lemma. When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
+        Lemma. When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
 
-\begin{equation}\label{eq:neon_update}
-    \mX^{k+1} = \mX^{k} - \eta u_1 v_1^\top
-\end{equation}
+        \begin{equation}\label{eq:neon_update}
+            \mX^{k+1} = \mX^{k} - \eta u_1 v_1^\top
+        \end{equation}
 
-We name the derived algorithm \emph{Neon}. 
+        We name the derived algorithm \emph{Neon}. In the section Matrix side of updates, we will discuss how to compute an update efficiently.
 
-{\bf $\normfstar{\mM^{k}}^\dagger$ and F2-Muon}
-We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
+    {\bf $\normfstar{\mM^{k}}^\dagger$ and F-Muon}
+        We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
 
-\begin{equation}\label{eq:fstar_norm}
-    \normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
-\end{equation}
+        \begin{equation}\label{eq:fstar_norm}
+            \normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
+        \end{equation}
 
-where $\alpha \in [0, 1]$ defines a specific norm of $F*$-family.
+        where $\alpha \in [0, 1]$ defines a specific norm of $F*$-family.
 
-Lemma. When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+        Lemma. When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
 
-\begin{equation}\label{eq:nsgd_muon_update}
-    \mX^{k+1} = \mX^{k} - \eta (\alpha U V^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
-\end{equation}
+        \begin{equation}\label{eq:nsgd_muon_update}
+            \mX^{k+1} = \mX^{k} - \eta (\alpha U V^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
+        \end{equation}
 
-We name the derived algorithm \emph{F2-Muon}. It turns out that F2-Muon is a convex combination of Normalized SGD and Muon, which is curious. The implications are significant and discussed in the following sections.
+        We name the derived algorithm \emph{F-Muon}. It turns out that F-Muon is a convex combination of Normalized SGD and Muon, which is curious. The implications are significant and discussed in the following sections.
 
-{\bf $\normftwo{\mM^{k}}^\dagger$ and F2-Neon}
-We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
+    {\bf $\normftwo{\mM^{k}}^\dagger$ and F-Neon}
+        We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
 
-\begin{equation}\label{eq:ftwo_norm}
-    \normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
-\end{equation}
+        \begin{equation}\label{eq:ftwo_norm}
+            \normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
+        \end{equation}
 
-where $\alpha \in [0, 1]$ defines a specific norm of $F2$-family.
+        where $\alpha \in [0, 1]$ defines a specific norm of F2-family.
 
-Lemma. When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+        Lemma. When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
 
-\begin{equation}\label{eq:nsgd_neon_update}
-    \mX^{k+1} = \mX^{k} - \eta (\alpha u_1 v_1^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
-\end{equation}
+        \begin{equation}\label{eq:nsgd_neon_update}
+            \mX^{k+1} = \mX^{k} - \eta (\alpha u_1 v_1^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
+        \end{equation}
 
-We name the derived algorithm \emph{F2-Neon}. It turns out that F2-Neon is a convex combination of Normalized SGD and Neon, which is curious. The implications are significant and discussed in the following sections.
+        We name the derived algorithm \emph{F-Neon}. It turns out that F-Neon is a convex combination of Normalized SGD and Neon, which is curious. The implications are significant and discussed in the following sections.
 
-TO-DO: F*-neon? (it would be hard to do it)
+        TO-DO: F*-neon? (it would be hard to do it)
 
 
-\subsection{Nuclear Neon}
-Problem and update
+
 \subsection{F*-Neon}
 Motivation: we need updates of higher rank. Hence, F* (why? regularization?)
-\subsection{F2-Muon}
-Motivation: if the spectral norm (Muon) is dual to the nuclear norm (Neon), then what is dual to F*? F2-Muon! Derivation.
+%\subsection{F-Muon}
+%Motivation: if the spectral norm (Muon) is dual to the nuclear norm (Neon), then what is dual to F*? F-Muon! Derivation.
 
 \section{Matrix side of updates}
 \subsection{Theory}
@@ -316,25 +315,33 @@ NanoGPT benchmark
 
 %related work
 
-    \section{Conclusion}
+\section{Conclusion}
 \begin{itemize}
     \item Future work: (L0, L1)-smoothness, probably extrapolation (to make dependency on eps milder, but we don't to spend memory here so never mind), hyperparameter-free (Bernstein2023)
 \end{itemize}
 \section{Appendix}
-\subsection{Proofs}
 \subsection{Norm derivations}
-\begin{itemize}
-    \item Dual to F* norm
-    \item Bounds on rho for all 4 norms (with their tighness if possible)
-\end{itemize}
+% \begin{itemize}
+%    \item Dual to F* norm
+%    \item Bounds on rho for all 4 norms (with their tighness if possible)
+% \end{itemize}
 \subsection{Updates derivations}
-%yep, many KKT and so on
-\begin{itemize}
-    \item Neon
-    \item F*-Neon
-    \item F2-Muon
-    \item F* choice from KKT
-\end{itemize}
+
+Derivation of \cref{eq:muon_update} follows from \cref{eq:nsgd_muon_update} with $\alpha=1$. Indeed, $\norms{\cdot}^\dagger=1\cdot\normn{\cdot} + 0 \cdot \normf{\cdot} $.
+
+Derivation of \cref{eq:nsgd_muon_update}:
+Since $\norm{\cdot}^\dagger = \normfstar{\cdot}^{\dagger\dagger} = \normfstar{\cdot}$, the goal is to reach $\normfstar{\mM^k} = \alpha \tr{\mSigma} + (1-\alpha) \normf{\mM^k}$.
+
+Let us note that $\Delta = \alpha (\mU \mV^\top) + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha \mU \mV^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \mSigma + (1-\alpha) \normf{\mM^k} = \normfstar{\mM^k}$, which completes the proof.
+
+Derivation of \cref{eq:neon_update} follows from \cref{eq:nsgd_neon_update} with $\alpha=1$. Indeed, $\normn{\cdot}^\dagger=1\cdot\norms{\cdot} + 0 \cdot \normf{\cdot} $.
+
+Derivation of \cref{eq:nsgd_neon_update}:
+Since $\norm{\cdot}^\dagger = \normftwo{\cdot}^{\dagger\dagger} = \normftwo{\cdot}$, the goal is to reach $\normftwo{\mM^k} = \alpha \sigma_1 + (1-\alpha) \normf{\mM^k}$.
+
+Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha u_1 v_1^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \diag({\sigma_1, 0, \dots, 0}), + (1-\alpha) \normf{\mM^k} = \normftwo{\mM^k}$, which completes the proof.
+
+
 \subsection{}
 ~ Note: nuSAM and their update. They had no Lanczos
 Technical details on experiments
