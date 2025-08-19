@@ -69,8 +69,10 @@ AIRI, Skoltech \\
 \newcommand{\Ed}[2]{\mathbb{E}_{#1}\left[#2\right]}
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\sqne}{\|}{\|_2^2}
-\DeclarePairedDelimiter{\norme}{\|}{\|_2}
+%\DeclarePairedDelimiter{\norme}{\|}{\|_2}
 \DeclarePairedDelimiter{\normf}{\|}{\|_\mathrm{F}}
+\DeclarePairedDelimiter{\normfstar}{\|}{\|_\mathrm{F*}}
+\DeclarePairedDelimiter{\normftwo}{\|}{\|_\mathrm{F2}}
 \DeclarePairedDelimiter{\sqns}{\|}{\|_{\mathrm{op}}^2}
 \DeclarePairedDelimiter{\norms}{\|}{\|_{\mathrm{op}}}
 \DeclarePairedDelimiter{\sqnn}{\|}{\|_{\mathrm{nuc}}^2}
@@ -88,6 +90,7 @@ AIRI, Skoltech \\
 
 \usepackage{amsmath}
 \DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
 
 %------------------------------------------------------------------------------------
 
@@ -174,7 +177,7 @@ where $L > 0$ is the gradient Lipschitz constant, and $\norm{\cdot}^\dagger\colo
 where $\rho > 0$ is a positive constant. Note that such a constant always exists due to the norm equivalence theorem, which always holds in the finite-dimensional space $\Rmn$. We recount $\rho$ for different norms $\norm{\cdot}$ in the appendix.
 
 
-\subsection{Linear Minimization Oracle}
+\subsection{Linear Minimization Oracle and Trust Region}
 Let us look at the problem from the perspective of linear minimization oracle (lmo) and unconstrained stochastic conditional gradient descent (uSCG) (\cite{pethick2025training}). lmo is defined as:
 \begin{equation}\label{eq:lmo}
     \mathrm{lmo}(\mS) \in \arg\min_{\mX \in \cS} \<\mS, \mX>,
@@ -188,11 +191,86 @@ uSCG update is defined as:
 $\mX^{k+1} = \mX^{k} + \gamma_k lmo(\mM^k),$ where $\mM^{k+1} = (1-\alpha_{k+1})\mM^{k} + \alpha_{k+1}g(\mX^k, \xi_k)$ is a momentum.
 
 It can be easily shown that the formula is equvalent to
-\begin{equation}\label{eq:trust_update}
+\begin{equation}\label{eq:almost_trust_update}
     \mX^{k+1} = \mX^{k} - \gamma_k\eta \arg\max_{\mX \in \cB_1} \<\mS, \mX> = \mX^{k} - \gamma_k\eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}.
 \end{equation}
 
-Let us set $\gamma_k = 1$. This transforms algorithm defined by \cref{eq:trust_update} into Algorithm 1 from \cite{kovalev2025understanding}. Therefore, we can view \cref{eq:trust_update} both as an lmo-based algorithm and as a trust-region algorithm.
+Let us set $\gamma_k = 1$. This transforms algorithm defined by \cref{eq:almost_trust_update} into Algorithm 1 from \cite{kovalev2025understanding}. Therefore, we can view \cref{eq:almost_trust_update} both as an lmo-based algorithm and as a trust-region algorithm.
+
+\section{Different Norms $\norm{\cdot}$ imply different updates}
+% As we have stated in Introduction, we are interested foremost in matrix norms, so we'll start right with them, skipping RMS-RMS norm and others.
+
+Based on different norms $\norm{\cdot}$, we simplify the update defined by the aforementioned equation:
+
+\begin{equation}\label{eq:our_update}
+    \mX^{k+1} = \mX^{k} - \eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}
+\end{equation}
+
+In all the work, we define $\mU$, $\mSigma$, $\mV^\top$ as components of the singular value decomposition of $\mM^k$: $\mM^k = \mU \mSigma \mV^\top$. We use common notations: $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and  $\mV = [v_1, v_2, \dots, v_r]$.
+
+{\bf $\normf{\mM^{k}}$ and NSGD}
+
+Lemma. When $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
+
+\begin{equation}\label{eq:nsgd_update}
+    \mX^{k+1} = \mX^{k} - \eta \frac{\mM^k}{\normf{\mM^k}}
+\end{equation}
+
+It is an interesting observation, because in other works (\cite{pethick2025training}), $\normf{\cdot}$ was used to recover SGD. The difference is in how one states the problem.
+
+{\bf $\norms{\mM^{k}}$ and Muon}
+
+Lemma. When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
+
+\begin{equation}\label{eq:muon_update}
+    \mX^{k+1} = \mX^{k} - \eta U V^\top
+\end{equation}
+
+{\bf $\normn{\mM^{k}}$ and Neon}
+
+Lemma. When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
+
+\begin{equation}\label{eq:neon_update}
+    \mX^{k+1} = \mX^{k} - \eta u_1 v_1^\top
+\end{equation}
+
+We name the derived algorithm \emph{Neon}. 
+
+{\bf $\normfstar{\mM^{k}}^\dagger$ and F2-Muon}
+We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
+
+\begin{equation}\label{eq:fstar_norm}
+    \normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
+\end{equation}
+
+where $\alpha \in [0, 1]$ defines a specific norm of $F*$-family.
+
+Lemma. When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+
+\begin{equation}\label{eq:nsgd_muon_update}
+    \mX^{k+1} = \mX^{k} - \eta (\alpha U V^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
+\end{equation}
+
+We name the derived algorithm \emph{F2-Muon}. It turns out that F2-Muon is a convex combination of Normalized SGD and Muon, which is curious. The implications are significant and discussed in the following sections.
+
+{\bf $\normftwo{\mM^{k}}^\dagger$ and F2-Neon}
+We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
+
+\begin{equation}\label{eq:ftwo_norm}
+    \normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
+\end{equation}
+
+where $\alpha \in [0, 1]$ defines a specific norm of $F2$-family.
+
+Lemma. When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+
+\begin{equation}\label{eq:nsgd_neon_update}
+    \mX^{k+1} = \mX^{k} - \eta (\alpha u_1 v_1^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
+\end{equation}
+
+We name the derived algorithm \emph{F2-Neon}. It turns out that F2-Neon is a convex combination of Normalized SGD and Neon, which is curious. The implications are significant and discussed in the following sections.
+
+TO-DO: F*-neon? (it would be hard to do it)
 
 
 \subsection{Nuclear Neon}
