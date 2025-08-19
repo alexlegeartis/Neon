@@ -16,7 +16,8 @@
 \newcommand{\norm}[1]{\lVert #1\rVert}
 
 
-\title{From Muon to Neon: Introducing Nuclear Norm to Large Matrices}
+%\title{From Muon to Neon: Introducing Nuclear Norm to Large Matrices}
+\title{The Nuclear Norm and Beyond: Dual Norms and Combinations for Matrix Optimization}
 
 % Authors must not appear in the submitted version. They should be hidden
 % as long as the \icompfinalcopy macro remains commented out below.
@@ -59,46 +60,141 @@ AIRI, Skoltech \\
 \newcommand{\new}{\marginpar{NEW}}
 
 %\icompfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+
+%------------------------------------------------------------------------------------
+\newcommand{\Rmn}{\R^{m\times n}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\cS}{\mathcal{S}}
+\newcommand{\cB}{\mathcal{B}}
+\newcommand{\Ed}[2]{\mathbb{E}_{#1}\left[#2\right]}
+\usepackage{mathtools}
+\DeclarePairedDelimiter{\sqne}{\|}{\|_2^2}
+\DeclarePairedDelimiter{\norme}{\|}{\|_2}
+\DeclarePairedDelimiter{\normf}{\|}{\|_\mathrm{F}}
+\DeclarePairedDelimiter{\sqns}{\|}{\|_{\mathrm{op}}^2}
+\DeclarePairedDelimiter{\norms}{\|}{\|_{\mathrm{op}}}
+\DeclarePairedDelimiter{\sqnn}{\|}{\|_{\mathrm{nuc}}^2}
+\DeclarePairedDelimiter{\sqnf}{\|}{\|_{\mathrm{F}}^2}
+\DeclarePairedDelimiter{\normn}{\|}{\|_{\mathrm{nuc}}}
+\def\<#1,#2>{\langle #1,#2\rangle}
+\DeclarePairedDelimiter{\dotprod}{\langle}{\rangle}
+
+\usepackage{cleveref}
+\usepackage{environ}
+\newcounter{aequation}
+\NewEnviron{aequation}{\refstepcounter{aequation}$$\BODY\eqno{\text{(A\theaequation)}}$$}
+\crefname{aequation}{assumption}{assumptions}
+\creflabelformat{aequation}{(#2A#1#3)}
+
+\usepackage{amsmath}
+\DeclareMathOperator{\tr}{tr}
+
+%------------------------------------------------------------------------------------
+
 \begin{document}
 
 
 \maketitle
 
 \begin{abstract}
-In this article, we develop a new algorithm for optimizing functions of weight matrices that arise in training large language models. By replacing the spectral-norm regularization used in Muon with a nuclear-norm formulation, we obtain a new optimization problem for the update matrix; its solution defines a novel algorithm we call Neon. We derive the optimal solution to this problem and propose a numerically efficient method to compute it via the Lanczos algorithm. We analyze Neon from a theoretical perspective and provide an extensive empirical study across diverse relevant tasks and settings.
-
-New variant:
-\iffalse This article investigates utilization of matrix norms besides the spectral norm in linear optimization oracle (LMO) framework. Making use of the nuclear norm, the mean between the nuclear norm and the Frobenius norm we name the F*-norm, and the dual to F*-norm, we develop 3 new algorithms for optimizing functions of weight matrices that arise in training large language models.\fi
-
-In this article, we develop a family of 3 new algorithms for optimizing functions of weight matrices that arise in training large language models. By replacing the spectral norm, which was used to derive Muon within the linear minimization oracle (LMO) framework, with the nuclear norm, the mean between the nuclear norm and the Frobenius norm we name the F*-norm, and the dual to F*-norm we name F2-norm, we obtain 3 new optimization problems for the update matrix; their solutions define 3 novel algorithms we name Neon, F*-Neon, and F2-Muon respectively. We derive the optimal solutions to these problems and propose a numerically efficient method to compute updates for Neon and F*-Neon via the Lanczos algorithm (while an update of F2-Muon turns out to be a mean between the Muon update and the Normalized SGD update). We analyze all 3 algorithms from a theoretical perspective and provide an extensive empirical study across diverse relevant tasks and settings.
+In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the nuclear norm, its affine combinations with other norms, and their corresponding duals to develop a new family of Muon-like algorithms. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
 \end{abstract}
 
 
 \section{Introduction}
-* Hype of Muon and others: 
-- Importance of the functions of a matrix weight. Special structure.
-- Write the equation
-- Memory efficiency and hyperparameter transferability
-- Proven efficient computing (cite benchmarks and Dion and Cosmos)
-* Comparison:
-- Shampoo (very compute intensive for large layers, we need asymptotics!), second order
-- LMO has produced several effective algorithms: Muon, Dion, Scion, Gluon (citations)
-- generalization is better for Muon and others (citations!). Possibly nuSAM here (definitely)
-- Scion and Gluon for multilayer
-- Gluon for (L0, L1)-smooth problems, which is more realistic (low L0, faster convergence - no impractically small stepsizes)
-* Analyis:
-- Several generalizations have been already presented by the community: Old Optimizer and New Norm (idea and evidence that it explains famous algorithms); Pethick (LMO and different layers); Kovalev (as trust region and arbitrary norm); Gluon (generalized smoothness model).
-- However, to the best of our knowledge, no attempt has been made to try other norms. Here we come in.
-- No attempt to mitigate high computation cost of matrix computation has been made. Here again we come in.
-- It has been shown that $O(1/esp^4)$ bounds for Muon, Scion, Gluon and even Adam for L-smooth functions (citations). Some bounds depend on the dimensionality of space (cite Kovalev), which for spectral norm gives much more iterations (cite Kovalev)
-- This motivates us to try new norms
+ Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam and AdamW (citations), recently proposed Muon has shown promising results on different benchmarks (CIFAR, NanoGPT, citations). Its key difference from earlier algorthims is that it has been constructed specifically for optimizing functions of weight matrices. Such functions are common in modern machine learning (citations), so it does not significantly restrict Muon's applicability to modern problems.
+
+ That is what can be said from a practical point of view. From the perspective of theory, Muon's main innovation was an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update (cite Deriving Muon). Several other attempts have been since made to construct new algorithms, mainly generalizations of Muon's paradigm (cite Scion and Gluon).
+
+ Based upon recent theoretical advances that explain some theory behind Muon, Scion and Gluon (cite), we explore application of other matrix norms to optimization of functions of matrices. As it has been done with Muon, we stipulate that our algorithms' updates be fast to compute.
+\iffalse
+\begin{itemize}
+    \item Hype of Muon and others:
+    \begin{itemize}
+        \item Importance of the functions of a matrix weight. Special structure.
+        \item Write the equation
+        \item Memory efficiency and hyperparameter transferability
+        \item Proven efficient computing (cite benchmarks and Dion and Cosmos)
+    \end{itemize}
+    \item Comparison:
+    \begin{itemize}
+        \item Shampoo (very compute intensive for large layers, we need asymptotics!), second order
+        \item LMO has produced several effective algorithms: Muon, Dion, Scion, Gluon (citations)
+        \item generalization is better for Muon and others (citations!). Possibly nuSAM here (definitely)
+        \item Scion and Gluon for multilayer
+        \item Gluon for (L0, L1)-smooth problems, which is more realistic (low L0, faster convergence - no impractically small stepsizes)
+    \end{itemize}
+    \item Analyis:
+    \begin{itemize}
+        \item Several generalizations have been already presented by the community: Old Optimizer and New Norm (idea and evidence that it explains famous algorithms); Pethick (LMO and different layers); Kovalev (as trust region and arbitrary norm); Gluon (generalized smoothness model).
+        \item However, to the best of our knowledge, no attempt has been made to try other norms. Here we come in.
+        \item No attempt to mitigate high computation cost of matrix computation has been made. Here again we come in.
+        \item It has been shown that $O(1/esp^4)$ bounds for Muon, Scion, Gluon and even Adam for L-smooth functions (citations). Some bounds depend on the dimensionality of space (cite Kovalev), which for spectral norm gives much more iterations (cite Kovalev)
+        \item This motivates us to try new norms
+    \end{itemize}
+\end{itemize}
+\fi
 
 
+\section{Problem Statement}
+\subsection{Function of a matrix and Assumptions}
+Warning: the text was copied, while formulas were adapted. We need to rephrase the subsection! 
+  We consider the problem of minimizing a differentiable matrix function $F(\cdot)\colon \Rmn \to \R$
+  \begin{equation}\label{eq:mat}
+    \min_{\mX \in \Rmn} f(\mX).
+  \end{equation}
 
-\section{Linear Minimization Oracle and Nuclear norm}
-\subsection{Problem statement}
-Norm is not necessarily induced by the inner product.
-Bernstein vs LMO (choose LMO as more correct)
+To make the theoretical analysis possible in the future, we make three reasonable non-restrictive assumptions.
+Idea: move gradient assumptions and smoothness to the L-smooth part. Here we need only custom norm and their relation to the Frobenius norm.
+
+{\bf Stochastic gradient estimator.}
+We assume access to a stochastic estimator $g(\cdot\,;\xi)\colon \Rmn \to \Rmn$ of the gradient $\nabla f(\cdot)$, where $\xi \sim \cD$ is a random variable sampled from a probability distribution $\cD$. We assume that the stochastic gradient estimator $g(\cdot;\xi)$ is unbiased and has bounded variance, that is, the following relations hold:
+\begin{aequation}\label{eq:variance}
+  \Ed{\xi \sim \cD}{g(\mX;\xi)} = \nabla f(\mX)
+  \quad\text{and}\quad
+  \Ed{\xi \sim \cD}{\sqnf{g(\mX;\xi) - \nabla f(\mX)}} \leq \sigma^2
+  \quad\text{for all}\;
+  \mX \in \Rmn,
+\end{aequation}
+where $\sigma > 0$ is a positive variance parameter, and $\normf{\cdot}$ is the standard Euclidean, i.e. Frobenius, norm induced by the inner product $\<\cdot,\cdot>$, i.e., $\normf{\mX} = \sqrt{\<\mX,\mX>}=\sqrt{\tr(\mX^\top \mX)}$. These assumptions have been widely adopted for the analysis of many stochastic gradient optimization algorithms \citep{ghadimi2013stochastic,ghadimi2016accelerated,cutkosky2020momentum,sun2023momentum,horvath2023stochastic,gorbunov2020linearly}.
+
+{\bf Non-Euclidean norm setting and Lipschitz continuous gradient.}
+We assume that matrix space $\Rmn$ is equipped with a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius, norm $\normf{\cdot}$. In addition, we assume that the gradient $\nabla f(\cdot)$ is Lipschitz continuous with respect to the norm $\norm{\cdot}$, that is, the following inequality holds:
+\begin{aequation}\label{eq:L}
+  \norm{\nabla f(\mX) - \nabla f(\mX')}_* \leq L \norm{\mX-\mX'}
+  \quad\text{for all}\;
+  \mX, \mX' \in \Rmn,
+\end{aequation}
+where $L > 0$ is the gradient Lipschitz constant, and $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ is the dual norm associated with $\norm{\cdot}$, i.e., $\norm{\mX}^\dagger = \sup_{\norm{\mX'}\leq 1} \<\mX,\mX'>$ for all $\mX \in \Rmn$. The assumption of gradient Lipschitz continuity is also widespread in the analysis of first-order optimization methods \citep{ghadimi2013stochastic,gower2019sgd,cutkosky2020momentum,horvath2023stochastic,gorbunov2020linearly}. It is important to highlight that while \Cref{eq:L} uses the dual norm $\norm{\cdot}^\dagger$ to measure the difference between the gradients, the variance in \Cref{eq:variance} is measured with respect to the Frobenius norm $\sqnf{\cdot}$, which is necessary to properly utilize the unbiasedness property of the stochastic gradient estimator $g(\cdot;\xi)$. Therefore, we need to provide a connection between these norms using the following inequality:
+\begin{aequation}\label{eq:norm}
+  \norm{\mX}^\dagger \leq \rho\cdot\normf{\mX}
+  \quad\text{for all}\;
+  \mX \in \Rmn,
+\end{aequation}
+where $\rho > 0$ is a positive constant. Note that such a constant always exists due to the norm equivalence theorem, which always holds in the finite-dimensional space $\Rmn$. We recount $\rho$ for different norms $\norm{\cdot}$ in the appendix.
+
+
+\subsection{Linear Minimization Oracle}
+Let us look at the problem from the perspective of linear minimization oracle (lmo) and unconstrained stochastic conditional gradient descent (uSCG) (\cite{pethick2025training}). lmo is defined as:
+\begin{equation}\label{eq:lmo}
+    \mathrm{lmo}(\mS) \in \arg\min_{\mX \in \cS} \<\mS, \mX>,
+\end{equation}
+where $\cS$ is some set. We are interested in the case when $\cS$ is a ball in our $\norm{\cdot}$ norm:
+\begin{equation}\label{eq:ball}
+    \cS := \cB_\eta :=\{ \mX \mid \norm{\mX} \leq \eta \}.
+\end{equation}
+
+uSCG update is defined as:
+$\mX^{k+1} = \mX^{k} + \gamma_k lmo(\mM^k),$ where $\mM^{k+1} = (1-\alpha_{k+1})\mM^{k} + \alpha_{k+1}g(\mX^k, \xi_k)$ is a momentum.
+
+It can be easily shown that the formula is equvalent to
+\begin{equation}\label{eq:trust_update}
+    \mX^{k+1} = \mX^{k} - \gamma_k\eta \arg\max_{\mX \in \cB_1} \<\mS, \mX> = \mX^{k} - \gamma_k\eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}.
+\end{equation}
+
+Let us set $\gamma_k = 1$. This transforms algorithm defined by \cref{eq:trust_update} into Algorithm 1 from \cite{kovalev2025understanding}. Therefore, we can view \cref{eq:trust_update} both as an lmo-based algorithm and as a trust-region algorithm.
+
+
 \subsection{Nuclear Neon}
 Problem and update
 \subsection{F*-Neon}
@@ -106,48 +202,61 @@ Motivation: we need updates of higher rank. Hence, F* (why? regularization?)
 \subsection{F2-Muon}
 Motivation: if the spectral norm (Muon) is dual to the nuclear norm (Neon), then what is dual to F*? F2-Muon! Derivation.
 
-\section{Matrix speedup}
+\section{Matrix side of updates}
 \subsection{Theory}
 Not only formulas, but also citations!
 Solutions to efficiently find some parts of SVD:
-- Basic SVD (complexity asymptotic!)
-- Newton-Schulz (complexity asymptotic!)
-- Our job: Power iterations, Randomized SVD and Lanczos
+\begin{itemize}
+    \item Basic SVD (complexity asymptotic!)
+    \item Newton-Schulz (complexity asymptotic!)
+    \item Our job: Power iterations, Randomized SVD and Lanczos
+\end{itemize}
 \subsection{Experiments}
 Nikolay's task: SVD, RSVD, Lanczos, Newton-Schulz. We use torch and cupy to test it.
 Options: all possible on torch, or additionally to compare all on cupy. The goal: to find how much do we lose due to cupy
 
 \section{"Smooth" theory via Trust Region bounds}
-* Probably statement of the trust region problem
-* Assumption on unbiasedness and limited variance of stoch. grad.
-* Assumption on L-smoothness as in the Kovalev's article.
-* Assumption on rho. To be more precise, the statement of lemmas on rho for all 4 norms.
-* We utilize the Kovalev's corollary to derive convergence
-* Bonus: convert all the norms into a common sense (L2?) norm to get the true dependency on dimensionality
+\begin{itemize}
+    \item Probably statement of the trust region problem
+    \item Assumption on unbiasedness and limited variance of stoch. grad.
+    \item Assumption on L-smoothness as in the Kovalev's article.
+    \item Assumption on rho. To be more precise, the statement of lemmas on rho for all 4 norms.
+    \item We utilize the Kovalev's corollary to derive convergence
+    \item Bonus: convert all the norms into a common sense (L2?) norm to get the true dependency on dimensionality
+\end{itemize}
 
 
 \section{Experiments}
 \subsection{Synthetic quadratics}
-Description of how to construct L-smooth functions in a given norm, and how to estimate variance of the gradient. Then check of the 
+Description of how to construct L-smooth functions in a given norm, and how to estimate variance of the gradient. Then check of the theory.
+It must be the only experiment where we might beat vanilla Muon.
 \subsection{MLP}
 Deep learning?
 \subsection{Benchmarks}
 CNN benchmark
 NanoGPT benchmark
 
-\section{Conclusion}
-* Future work: (L0, L1)-smoothness, probably extrapolation (to make dependency on eps milder)
+%related work
+
+    \section{Conclusion}
+\begin{itemize}
+    \item Future work: (L0, L1)-smoothness, probably extrapolation (to make dependency on eps milder, but we don't to spend memory here so never mind), hyperparameter-free (Bernstein2023)
+\end{itemize}
 \section{Appendix}
 \subsection{Proofs}
 \subsection{Norm derivations}
-* Dual to F* norm
-* Bounds on rho for all 4 norms (with their tighness if possible)
+\begin{itemize}
+    \item Dual to F* norm
+    \item Bounds on rho for all 4 norms (with their tighness if possible)
+\end{itemize}
 \subsection{Updates derivations}
 %yep, many KKT and so on
-- Neon
-- F*-Neon
-- F2-Muon
-* F* choice from KKT
+\begin{itemize}
+    \item Neon
+    \item F*-Neon
+    \item F2-Muon
+    \item F* choice from KKT
+\end{itemize}
 \subsection{}
 ~ Note: nuSAM and their update. They had no Lanczos
 Technical details on experiments
@@ -177,7 +286,7 @@ where $m$ is the input dimension of the layer, $n$ is the output dimension, and 
 
 Motivated by the recent achievements of the Muon optimizer (e.g., \cite{liu2025muon}), we consider alternative choices of norms, specifically the nuclear norm $\norm{\cdot}_*$ and a custom $F*$ norm, given by 
 \begin{equation}\label{eqn:F_star}
-    \norm{X}_{F*}^2 = \frac{\norm{X}_F + \norm{X}_*}{2}\,,
+    \norm{X}_{F*}^2 = \frac{\norm{X}_F^2 + \norm{X}_*^2}{2}\,,
 \end{equation}
 where $\norm{\cdot}_F$ denotes the Frobenius norm.
 
