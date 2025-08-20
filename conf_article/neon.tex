@@ -62,10 +62,13 @@ AIRI, Skoltech \\
 %\icompfinalcopy % Uncomment for camera-ready version, but NOT for submission.
 
 %------------------------------------------------------------------------------------
+% \epsilon is predefined; override to use \varepsilon
+\renewcommand{\epsilon}{\varepsilon}
 \newcommand{\Rmn}{\R^{m\times n}}
-\newcommand{\cD}{\mathcal{D}}
-\newcommand{\cS}{\mathcal{S}}
 \newcommand{\cB}{\mathcal{B}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\cO}{\mathcal{O}}
+\newcommand{\cS}{\mathcal{S}}
 \newcommand{\Ed}[2]{\mathbb{E}_{#1}\left[#2\right]}
 \usepackage{mathtools}
 \DeclarePairedDelimiter{\sqne}{\|}{\|_2^2}
@@ -105,11 +108,11 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
 
 \section{Introduction}
- Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam and AdamW (citations), recently proposed Muon has shown promising results on different benchmarks (CIFAR, NanoGPT, citations). Its key difference from earlier algorthims is that it has been constructed specifically for optimizing functions of weight matrices. Such functions are common in modern machine learning (citations), so it does not significantly restrict Muon's applicability to modern problems.
+ Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam and AdamW \cite{kingma2014adam}, \cite{loshchilov2017decoupled}, recently proposed Muon has shown promising results on different benchmarks (CIFAR, NanoGPT, citations). Its key difference from earlier algorthims is that it has been constructed specifically for optimizing functions of weight matrices. Such functions are common in modern machine learning (citations), so it does not significantly restrict Muon's applicability to modern problems.
 
- That is what can be said from a practical point of view. From the perspective of theory, Muon's main innovation was an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update (cite Deriving Muon). Several other attempts have been since made to construct new algorithms, mainly generalizations of Muon's paradigm (cite Scion and Gluon).
+ That is what can be said from a practical point of view. From the perspective of theory, Muon's main innovation was an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update (cite Deriving Muon). Several other attempts have been since made to construct new algorithms, mainly generalizations of Muon's paradigm (\cite{pethick2025training} and \cite{riabinin2025gluon}).
 
- Based upon recent theoretical advances that explain some theory behind Muon, Scion and Gluon (cite), we explore application of other matrix norms to optimization of functions of matrices. As it has been done with Muon, we stipulate that our algorithms' updates be fast to compute.
+ Based upon recent theoretical advances that explain some theory behind Muon, Scion and Gluon (\cite{bernstein2025deriving,kovalev2025understanding,pethick2025training,riabinin2025gluon}), we explore application of other matrix norms to optimization of functions of matrices. As it has been done with Muon, we stipulate that our algorithms' updates be fast to compute.
 \iffalse
 \begin{itemize}
     \item Hype of Muon and others:
@@ -164,7 +167,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 {\bf Non-Euclidean norm setting and Lipschitz continuous gradient.}
     We assume that matrix space $\Rmn$ is equipped with a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius, norm $\normf{\cdot}$. In addition, we assume that the gradient $\nabla f(\cdot)$ is Lipschitz continuous with respect to the norm $\norm{\cdot}$, that is, the following inequality holds:
     \begin{aequation}\label{eq:L}
-    \norm{\nabla f(\mX) - \nabla f(\mX')}_* \leq L \norm{\mX-\mX'}
+    \norm{\nabla f(\mX) - \nabla f(\mX')}^\dagger \leq L \norm{\mX-\mX'}
     \quad\text{for all}\;
     \mX, \mX' \in \Rmn,
     \end{aequation}
@@ -210,30 +213,33 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
     {\bf $\normf{\mM^{k}}$ and NSGD}
 
-        Lemma. When $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
+        \begin{lemma}\label{lemma:nsgd_update}
+            When $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
 
-        \begin{equation}\label{eq:nsgd_update}
-            \mX^{k+1} = \mX^{k} - \eta \frac{\mM^k}{\normf{\mM^k}}
-        \end{equation}
+            \begin{equation}\label{eq:nsgd_update}
+                \mX^{k+1} = \mX^{k} - \eta \frac{\mM^k}{\normf{\mM^k}}
+            \end{equation}
 
+        \end{lemma}
         It is an interesting observation, because in other works (\cite{pethick2025training}), $\normf{\cdot}$ was used to recover SGD. The difference is in how one states the problem.
 
     {\bf $\norms{\mM^{k}}$ and Muon}
-
-        Lemma. When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
+    \begin{lemma}\label{lemma:muon_update}
+        When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
 
         \begin{equation}\label{eq:muon_update}
             \mX^{k+1} = \mX^{k} - \eta U V^\top
         \end{equation}
+    \end{lemma}    
 
     {\bf $\normn{\mM^{k}}$ and Neon}
-
-        Lemma. When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
+    \begin{lemma}\label{lemma:neon_update}
+        When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
 
         \begin{equation}\label{eq:neon_update}
             \mX^{k+1} = \mX^{k} - \eta u_1 v_1^\top
         \end{equation}
-
+    \end{lemma}
         We name the derived algorithm \emph{Neon}. In the section Matrix side of updates, we will discuss how to compute an update efficiently.
 
     {\bf $\normfstar{\mM^{k}}^\dagger$ and F-Muon}
@@ -245,11 +251,13 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
         where $\alpha \in [0, 1]$ defines a specific norm of $F*$-family.
 
-        Lemma. When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+    \begin{lemma}\label{lemma:nsgd_muon_update}
+        When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
 
         \begin{equation}\label{eq:nsgd_muon_update}
             \mX^{k+1} = \mX^{k} - \eta (\alpha U V^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
         \end{equation}
+    \end{lemma}
 
         We name the derived algorithm \emph{F-Muon}. It turns out that F-Muon is a convex combination of Normalized SGD and Muon, which is curious. The implications are significant and discussed in the following sections.
 
@@ -262,11 +270,13 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
         where $\alpha \in [0, 1]$ defines a specific norm of F2-family.
 
-        Lemma. When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+    \begin{lemma}\label{lemma:nsgd_neon_update}    
+        When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
 
         \begin{equation}\label{eq:nsgd_neon_update}
             \mX^{k+1} = \mX^{k} - \eta (\alpha u_1 v_1^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
         \end{equation}
+    \end{lemma}
 
         We name the derived algorithm \emph{F-Neon}. It turns out that F-Neon is a convex combination of Normalized SGD and Neon, which is curious. The implications are significant and discussed in the following sections.
 
@@ -280,38 +290,61 @@ Motivation: we need updates of higher rank. Hence, F* (why? regularization?)
 %Motivation: if the spectral norm (Muon) is dual to the nuclear norm (Neon), then what is dual to F*? F-Muon! Derivation.
 
 \section{Matrix side of updates}
-\subsection{Theory}
-Not only formulas, but also citations!
-Solutions to efficiently find some parts of SVD:
-\begin{itemize}
-    \item Basic SVD (complexity asymptotic!)
-    \item Newton-Schulz (complexity asymptotic!)
-    \item Our job: Power iterations, Randomized SVD and Lanczos
-\end{itemize}
-\subsection{Experiments}
-Nikolay's task: SVD, RSVD, Lanczos, Newton-Schulz. We use torch and cupy to test it.
-Options: all possible on torch, or additionally to compare all on cupy. The goal: to find how much do we lose due to cupy
+    \subsection{Theory}
+        Not only formulas, but also citations!
+        Solutions to efficiently find some parts of SVD:
+        \begin{itemize}
+            \item Basic SVD (complexity asymptotic!)
+            \item Newton-Schulz (complexity asymptotic!)
+            \item Our job: Power iterations, Randomized SVD and Lanczos
+        \end{itemize}
+    \subsection{Experiments}
+        Nikolay's task: SVD, RSVD, Lanczos, Newton-Schulz. We use torch and cupy to test it.
+        Options: all possible on torch, or additionally to compare all on cupy. The goal: to find how much do we lose due to cupy
 
-\section{"Smooth" theory via Trust Region bounds}
-\begin{itemize}
-    \item Probably statement of the trust region problem
-    \item Assumption on unbiasedness and limited variance of stoch. grad.
-    \item Assumption on L-smoothness as in the Kovalev's article.
-    \item Assumption on rho. To be more precise, the statement of lemmas on rho for all 4 norms.
-    \item We utilize the Kovalev's corollary to derive convergence
-    \item Bonus: convert all the norms into a common sense (L2?) norm to get the true dependency on dimensionality
-\end{itemize}
+\section{Trust Region Bounds for L-smooth functions}
+    First, we analyze the problem in the unstochastic case. From Corollary 1 of \cite{kovalev2025understanding}, we directly get the following result that matches lower bounds, as was noted in \cite{kovalev2025understanding}.
+
+
+    \begin{lemma}\label{lemma:no_noise_tr}
+    To reach the precision $\min_{k=1\ldots K} \norm{\nabla f(\mX_k)}^\dagger \leq \epsilon$ by the iterations~\eqref{eq:our_update} under the conditions of \Cref{eq:L}, it is sufficient to choose the stepsize $\eta$ and the number of iterations $K$ as follows:
+    \begin{equation}
+      \eta = \cO\left(\frac{\epsilon}{L}\right),\qquad K = \cO\left(\frac{L\Delta_0}{\epsilon^2}\right).
+      % \eta = \frac{\epsilon}{3L},\qquad K = \ceil*{\frac{6L\Delta_0}{\epsilon^2}}.
+    \end{equation}
+    \end{lemma}
+
+    In the stochastic case, from Corollary of 2 of \cite{kovalev2025understanding}, we directly get the following result that matches lower bounds, as was noted in \cite{kovalev2025understanding}:
+
+    \begin{lemma}\label{lemma:stoch_tr}
+    To reach the precision $\E{\min_{k=1\ldots K} \norm{\nabla f(\mX_k)}^\dagger} \leq \epsilon$ by ~\eqref{eq:our_update} under the assumptions \Cref{eq:variance}, \Cref{eq:L}, \Cref{eq:norm}, it is sufficient to choose the parameters as follows:
+    \begin{align}
+        \eta &= \cO\left(\min\left\{\frac{\epsilon}{L}, \frac{\epsilon^3}{\rho^2\sigma^2L}\right\}\right),
+        \qquad
+        \alpha = \cO\left(\min\left\{1, \frac{\epsilon^2}{\rho^2\sigma^2}\right\}\right),
+        \\
+        \label{eq:str_K_nonconvex}
+        K &= \cO\left(\max\left\{
+            \frac{\rho\sigma}{\epsilon},
+            \frac{\rho^3\sigma^3}{\epsilon^3},
+            \frac{L\Delta_0}{\epsilon^2},
+            \frac{L\Delta_0\rho^2\sigma^2}{\epsilon^4}
+        \right\}\right).
+    \end{align}
+    \end{lemma}
+
+    As the norms $\normf{\cdot}$, $\normn{\cdot}$, $\normf{\cdot}$ are almost proportional to each other when $m, n \rightarrow \infty$ (with high probability for random matrices), the expected convergence guarantees in terms of $\normf{\cdot}$ are the same (it can be easily shown by noting that $\norm{\mX}\sim\alpha\normf{\mX}$, $\norm{\nabla f(\mX)}^\dagger \sim \frac{1}{\alpha} \normf{\nabla f(\mX)}$, and expressing $L$-constant via $L_F$-constant for the Frobenius norm).
 
 
 \section{Experiments}
-\subsection{Synthetic quadratics}
-Description of how to construct L-smooth functions in a given norm, and how to estimate variance of the gradient. Then check of the theory.
-It must be the only experiment where we might beat vanilla Muon.
-\subsection{MLP}
-Deep learning?
-\subsection{Benchmarks}
-CNN benchmark
-NanoGPT benchmark
+    \subsection{Synthetic quadratics}
+    Description of how to construct L-smooth functions in a given norm, and how to estimate variance of the gradient. Then check of the theory.
+    It must be the only experiment where we might beat vanilla Muon.
+    \subsection{MLP}
+    Deep learning?
+    \subsection{Benchmarks}
+    CNN benchmark
+    NanoGPT benchmark
 
 %related work
 
@@ -345,7 +378,7 @@ Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\norm
 \subsection{}
 ~ Note: nuSAM and their update. They had no Lanczos
 Technical details on experiments
-
+\iffalse
 
 \section{Idea}
 \iffalse
@@ -640,11 +673,13 @@ This matches the derived lower bound. Thus, $\delta W^*$ minimizes $f(\delta W)$
     \end{table}
 \end{enumerate}
 
-\bibliography{icomp2024_conference}
-\bibliographystyle{icomp2024_conference}
 
 \appendix
 \section{Old Appendix}
 You may include other additional sections here.
+
+\fi
+\bibliography{icomp2024_conference}
+\bibliographystyle{icomp2024_conference}
 
 \end{document}
