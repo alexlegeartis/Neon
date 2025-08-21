@@ -325,7 +325,7 @@ def run_optimization_comparison(m=64, n=128, num_iterations=1000, plot_interval=
     
     # Initialize starting point
     # X should be m x n to match the function structure fi = 1/2 <X-Si, Mi (X-Si) Ni>
-    X_init = torch.randn(m, n, dtype=torch.float32, device=device)
+    X_init = torch.randn(m, n, dtype=torch.float32, device=device) * 100
     X_init.requires_grad_(False)
     
     # Perform comprehensive variance analysis
@@ -758,8 +758,8 @@ if __name__ == "__main__":
     results = run_optimization_comparison(
         m=1000,           # Matrix rows
         n=100,          # Matrix columns
-        num_nodes=20,
-        num_iterations=200000,  # Number of optimization iterations
+        num_nodes=1,
+        num_iterations=200,  # Number of optimization iterations
         plot_interval=100,     # Plot data every 50 iterations
     )
     
