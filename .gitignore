@@ -13,3 +13,10 @@
 *.synctex
 cifar10/*
 data/*
+Nano_gpt_exp/*
+Nano_gpt_exp/data/tiny_stories/
+Nano_gpt_exp/data/tiny_stories/input.txt
+Nano_gpt_exp/data/tiny_stories/train.bin
+Nano_gpt_exp/data/tiny_stories/val.bin
+Nano_gpt_exp/out-tiny_stories/
+Nano_gpt_exp/out/

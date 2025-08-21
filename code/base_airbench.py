@@ -141,6 +141,7 @@ class NormalizedMuon(torch.optim.Optimizer):
                 update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
                 update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
                 p.data.add_(update, alpha=-lr) # take a step
+
 class Muon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
         if lr < 0.0:
