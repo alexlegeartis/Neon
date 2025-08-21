@@ -181,3 +181,37 @@ class Neon(torch.optim.Optimizer):
                 update2 = 2 * b * b / den / den * update + 2 * a * a / den / den * g_resh / (b + 1e-12)
                 '''
                 p.data.add_(update2.view(g.shape), alpha=-lr)# * math.sqrt(n / m))
+
+
+class NormalizedMuon(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+        self.sgd_coeff = sgd_coeff
+
+    def step(self):
+        for group in self.param_groups:
+            lr = group["lr"]
+            momentum = group["momentum"]
+            for p in group["params"]:
+                g = p.grad
+                if g is None:
+                    continue
+                state = self.state[p]
+
+                if "momentum_buffer" not in state.keys():
+                    state["momentum_buffer"] = torch.zeros_like(g)
+                buf = state["momentum_buffer"]
+                buf.mul_(momentum).add_(g)
+                g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
+
+                p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
+                # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
+                eps = 1e-12
+                g_normalized = g / (g.norm() + eps)
+                if self.sgd_coeff != 1:
+                    update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
+                    update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
+                else:
+                    update = self.sgd_coeff * g_normalized
+                p.data.add_(update, alpha=-lr) # take a step
