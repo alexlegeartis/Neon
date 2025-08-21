@@ -109,11 +109,23 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
 
 \section{Introduction}
- Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam and AdamW \cite{kingma2014adam}, \cite{loshchilov2017decoupled}, recently proposed Muon has shown promising results on different benchmarks (CIFAR, NanoGPT, citations). Its key difference from earlier algorthims is that it has been constructed specifically for optimizing functions of weight matrices. Such functions are common in modern machine learning (citations), so it does not significantly restrict Muon's applicability to modern problems.
+ Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam and AdamW \cite{kingma2014adam}, \cite{loshchilov2017decoupled}, recently proposed Muon has shown promising results on training very large models \cite{jordan2024muon,ahn2025dioncommunicationefficientoptimizerlarge}. Its key difference from earlier algorthims is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
 
- That is what can be said from a practical point of view. From the perspective of theory, Muon's main innovation was an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update (cite Deriving Muon). Several other attempts have been since made to construct new algorithms, mainly generalizations of Muon's paradigm (\cite{pethick2025training} and \cite{riabinin2025gluon}).
+ That is what can be said from a practical point of view. From the perspective of theory, Muon's main innovation was an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update \cite{bernstein2025deriving}. Several other attempts have been since made to construct new algorithms, mainly generalizations of Muon's paradigm, like Scion (\cite{pethick2025training} and Gluon \cite{riabinin2025gluon}).
 
  Based upon recent theoretical advances that explain some theory behind Muon, Scion and Gluon (\cite{bernstein2025deriving,kovalev2025understanding,pethick2025training,riabinin2025gluon}), we explore application of other matrix norms to optimization of functions of matrices. As it has been done with Muon, we stipulate that our algorithms' updates be fast to compute.
+
+ In this article, we focus on the two most common matrix norms akin to the spectral, namely, the Nuclear Norm and the Frobenius norm. Working in the linear minimization oracle (lmo) approach, which is equivalent to a factor to the trust region and the steepest descent under norm constraint approaches, we derive Neon, our algorithm based on the nuclear norm. In the section {\it Matrix side of the updates}, we explain how Neon updates can be computed asymptotically faster than Muon updates by the Newton-Schulz iterations.
+
+ Noticing that Neon and Muon are diametrical in terms of the rank of the update matrix, we bridge the space by "regularizing" them by NormalizedSGD, which is derived in lmo with the Frobenius norm. We do this in the same lmo approach by considering a norm that is dual to the convex combination of the Frobenius norm and the spectral or the nuclear norms respectively. So we derive the algorithms we name F-Neon and F-Muon respectively.
+
+ Table that compares methods, updates, and sends to the proofs?
+
+ Having faced the array of different Muon-like optimizers, according to the upper bounds from \cite{kovalev2025understanding,riabinin2025gluon}, with similar convergence behavior, we painstakingly compare them on a synthetic linear least squares problem with known Lipschitz constant. The efforts results in comparison of the algorithms by their convergence not in terms of the dual norms of their gradient, but in terms of the common spectral norm, which may strongly differ, especially in large matrices, from the initial dual norms. Thus, we compare the algorithms in a unified fashion.
+
+ Finally, we test Muon, Neon, NSGD, F-Muon and F-Neon on deep-learning tasks: training convolutional network on CIFAR-10 and fine-tuning NanoGPT. The results support the supremacy of Muon, but the most striking result of the tests is that F-Muon, only half of which is Muon, surpasses Muon's accuracy on the CIFAR tasks by a margin. The case of F-Muon answers in the affirmative to the question of feasibility of constructing a mixture of optimization algorithms to increase robustness of the composite algorithm.
+
+
 \iffalse
 \begin{itemize}
     \item Hype of Muon and others:
@@ -345,7 +357,7 @@ Table that compares Muons and Neons to vector algorithms (NSGD).
 
 
 \section{Experiments}
-    \subsection{Randomized Linear Least Squared}
+    \subsection{Randomized Linear Least Squares}
     Since the provided by other authors \cite{kovalev2025understanding,riabinin2025gluon} theoretical guarantees are almost norm-independent, we have to test them in practice.
 
     To test the bounds from \cite{kovalev2025understanding} in practice, we construct the following L-smooth problem:
@@ -386,18 +398,22 @@ Table that compares Muons and Neons to vector algorithms (NSGD).
     CNN benchmark
     NanoGPT benchmark
 
-%related work
+\section{Related Work}
+What to include: Muon and its upgrades (say that the same can be done with Neon), alternatives to Newton-Schulz, nuSAM and so on. 
 
 \section{Conclusion}
 \begin{itemize}
     \item Future work: (L0, L1)-smoothness, probably extrapolation (to make dependency on eps milder, but we don't to spend memory here so never mind), hyperparameter-free (Bernstein2023)
 \end{itemize}
+
+
+\bibliography{icomp2024_conference}
+\bibliographystyle{icomp2024_conference}
+
+
 \section{Appendix}
-\subsection{Norm derivations}
-% \begin{itemize}
-%    \item Dual to F* norm
-%    \item Bounds on rho for all 4 norms (with their tighness if possible)
-% \end{itemize}
+\subsection{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
+Here we provide the derivation of these norms and plot them in the case of $2\times2$ matrices.
 \subsection{Updates derivations}
 
 Derivation of \cref{eq:muon_update} follows from \cref{eq:nsgd_muon_update} with $\alpha=1$. Indeed, $\norms{\cdot}^\dagger=1\cdot\normn{\cdot} + 0 \cdot \normf{\cdot} $.
@@ -415,9 +431,9 @@ Since $\norm{\cdot}^\dagger = \normftwo{\cdot}^{\dagger\dagger} = \normftwo{\cdo
 Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha u_1 v_1^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \diag({\sigma_1, 0, \dots, 0}) + (1-\alpha) \normf{\mM^k} = \normftwo{\mM^k}$, which completes the proof.
 
 
-\subsection{}
+\subsection{Technical details of the experiments}
 ~ Note: nuSAM and their update. They had no Lanczos
-Technical details on experiments
+
 \iffalse
 
 \section{Idea}
@@ -719,7 +735,5 @@ This matches the derived lower bound. Thus, $\delta W^*$ minimizes $f(\delta W)$
 You may include other additional sections here.
 
 \fi
-\bibliography{icomp2024_conference}
-\bibliographystyle{icomp2024_conference}
 
 \end{document}
