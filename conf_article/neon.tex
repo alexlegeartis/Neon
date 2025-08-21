@@ -67,6 +67,7 @@ AIRI, Skoltech \\
 \newcommand{\Rmn}{\R^{m\times n}}
 \newcommand{\cB}{\mathcal{B}}
 \newcommand{\cD}{\mathcal{D}}
+\newcommand{\cN}{\mathcal{N}}
 \newcommand{\cO}{\mathcal{O}}
 \newcommand{\cS}{\mathcal{S}}
 \newcommand{\Ed}[2]{\mathbb{E}_{#1}\left[#2\right]}
@@ -280,14 +281,11 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
         We name the derived algorithm \emph{F-Neon}. It turns out that F-Neon is a convex combination of Normalized SGD and Neon, which is curious. The implications are significant and discussed in the following sections.
 
-        TO-DO: F*-neon? (it would be hard to do it)
 
 
+\subsection{Algorithms for Matrices $\leftrightarrow$ Algorithms for Vectors}
+Table that compares Muons and Neons to vector algorithms (NSGD).
 
-\subsection{F*-Neon}
-Motivation: we need updates of higher rank. Hence, F* (why? regularization?)
-%\subsection{F-Muon}
-%Motivation: if the spectral norm (Muon) is dual to the nuclear norm (Neon), then what is dual to F*? F-Muon! Derivation.
 
 \section{Matrix side of updates}
     \subsection{Theory}
@@ -308,7 +306,7 @@ Motivation: we need updates of higher rank. Hence, F* (why? regularization?)
 
     \begin{lemma}\label{lemma:no_noise_tr}
     To reach the precision $\min_{k=1\ldots K} \norm{\nabla f(\mX_k)}^\dagger \leq \epsilon$ by the iterations~\eqref{eq:our_update} under the conditions of \Cref{eq:L}, it is sufficient to choose the stepsize $\eta$ and the number of iterations $K$ as follows:
-    \begin{equation}
+    \begin{equation}\label{eq:unstoch_tr}
       \eta = \cO\left(\frac{\epsilon}{L}\right),\qquad K = \cO\left(\frac{L\Delta_0}{\epsilon^2}\right).
       % \eta = \frac{\epsilon}{3L},\qquad K = \ceil*{\frac{6L\Delta_0}{\epsilon^2}}.
     \end{equation}
@@ -335,13 +333,55 @@ Motivation: we need updates of higher rank. Hence, F* (why? regularization?)
 
     As the norms $\normf{\cdot}$, $\normn{\cdot}$, $\normf{\cdot}$ are almost proportional to each other when $m, n \rightarrow \infty$ (with high probability for random matrices), the expected convergence guarantees in terms of $\normf{\cdot}$ are the same (it can be easily shown by noting that $\norm{\mX}\sim\alpha\normf{\mX}$, $\norm{\nabla f(\mX)}^\dagger \sim \frac{1}{\alpha} \normf{\nabla f(\mX)}$, and expressing $L$-constant via $L_F$-constant for the Frobenius norm).
 
+    From the theory of random martices and the Marchenko-Pastur law, we get that random $\mM \in \Rmn: \mM \sim \cN(0, \sigma^2 \Rmn)$ has the following asymptotics of its norms:
+
+    Nuclear: $\sigma n \sqrt{m}$
+
+    Frobenius: $\sigma \sqrt{m n}$
+    
+    Spectral: $\sigma(\sqrt{m} + \sqrt{n})$
+
+    This means that for square random matrices $n \times n$  the following asymptotics take place: $\normf{\cdot} \sim \frac{\sqrt{n}}{2}\norms{\cdot}$ and $\normn{\cdot} \sim \frac{n}{2}\norms{\cdot}$.
+
 
 \section{Experiments}
-    \subsection{Synthetic quadratics}
-    Description of how to construct L-smooth functions in a given norm, and how to estimate variance of the gradient. Then check of the theory.
-    It must be the only experiment where we might beat vanilla Muon.
-    \subsection{MLP}
-    Deep learning?
+    \subsection{Randomized Linear Least Squared}
+    Since the provided by other authors \cite{kovalev2025understanding,riabinin2025gluon} theoretical guarantees are almost norm-independent, we have to test them in practice.
+
+    To test the bounds from \cite{kovalev2025understanding} in practice, we construct the following L-smooth problem:
+
+    \begin{equation}\label{eq:lls}
+        F(\mX) = \frac{1}{2} \<(\mX-\mS), \mM (\mX - \mS) \mN>
+    \end{equation}
+
+    where $\mX \in \Rmn$, $m=10$, $n=10$, $S \in \Rmn$, $\mM \in \mathbb{S}^m_{+}$ and $\mN \in \mathbb{S}^n_{+}$ are positive-semidefinite matrices. Spectra of $\mM$ and $\mN$ are uniformly distributed in (0, 1) interval.
+
+    It it easy to derive the gradient
+    \begin{equation}\label{eq:grad_lls}
+        \nabla F(\mX) = \mM (\mX - \mS) \mN,
+    \end{equation}
+
+    Let us define $\gamma$ as $\norm{\cdot} \sim \gamma \normf{\cdot}$, which is asymptotics from the previous section. Then $\norm{\cdot}^\dagger \sim \frac{1}{\gamma}\normf{\cdot}$, as $\normf{\cdot}^\dagger = \normf{\cdot}$. Hence, $\norm{\cdot} \sim \gamma^2 \norm{\cdot}^\dagger$
+
+    Then $\norm{\nabla f(\mX) - \nabla f(\mY)}^\dagger = \norm{\mM (\mX - \mY) \mN}^\dagger \leq \norm{\mM}^\dagger \norm{\mN}^\dagger \norm{\mX - \mY}^\dagger \sim \norm{\mM}^\dagger \norm{\mN}^\dagger \gamma^2 \norm{\mX - \mY}$, and $L \sim \gamma^2 \norm{\mM}^\dagger \norm{\mN}^\dagger$.
+    
+    Now for the known norms:
+
+    Frobenius (NSGD): $L = \normf{M} \normf{N}$
+
+    Spectral (Muon): $\gamma \sim \frac{2}{\sqrt{n}} \implies L \sim \frac{2}{n}\normn{M}\normn{N}$
+    
+    Nuclear (Neon): $\gamma \sim \sqrt{n} \implies L \sim n\norms{M}\norms{N}$
+
+    We take learning rate $\eta$ and iteration number $K$ from \cref{eq:unstoch_tr}.
+
+
+    We are interested to get $\epsilon_2=$ 1e-1 precision in $\norms{\cdot}$. Hence, we target $\epsilon = \epsilon_2$ for the nuclear norm (Neon), $\epsilon = \frac{n}{2}$ for the spectral norm (Muon), and $\epsilon = \frac{\sqrt{n}}{2}$ for the Frobenius norm (NSGD).
+
+    {\bf An independent experiment}
+    To make the problem more real-world, we do not use known information about smoothness. We run NormalizedSGD, Muon, F-Muon with $\alpha=1/2$, Neon, and F-Neon with $\alpha=1/2$ for 100 000 iterations with learning rate = 1e-3.
+    
+    \subsection{Logistic Regression}
     \subsection{Benchmarks}
     CNN benchmark
     NanoGPT benchmark
@@ -372,7 +412,7 @@ Derivation of \cref{eq:neon_update} follows from \cref{eq:nsgd_neon_update} with
 Derivation of \cref{eq:nsgd_neon_update}:
 Since $\norm{\cdot}^\dagger = \normftwo{\cdot}^{\dagger\dagger} = \normftwo{\cdot}$, the goal is to reach $\normftwo{\mM^k} = \alpha \sigma_1 + (1-\alpha) \normf{\mM^k}$.
 
-Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha u_1 v_1^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \diag({\sigma_1, 0, \dots, 0}), + (1-\alpha) \normf{\mM^k} = \normftwo{\mM^k}$, which completes the proof.
+Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha u_1 v_1^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \diag({\sigma_1, 0, \dots, 0}) + (1-\alpha) \normf{\mM^k} = \normftwo{\mM^k}$, which completes the proof.
 
 
 \subsection{}
