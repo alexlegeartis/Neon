@@ -166,16 +166,6 @@ In this article, we explore the use of matrix norms for optimizing functions of 
     To make the theoretical analysis possible in the future, we make three reasonable non-restrictive assumptions.
     Idea: move gradient assumptions and smoothness to the L-smooth part. Here we need only custom norm and their relation to the Frobenius norm.
 
-{\bf Stochastic gradient estimator.}
-    We assume access to a stochastic estimator $g(\cdot\,;\xi)\colon \Rmn \to \Rmn$ of the gradient $\nabla f(\cdot)$, where $\xi \sim \cD$ is a random variable sampled from a probability distribution $\cD$. We assume that the stochastic gradient estimator $g(\cdot;\xi)$ is unbiased and has bounded variance, that is, the following relations hold:
-    \begin{aequation}\label{eq:variance}
-    \Ed{\xi \sim \cD}{g(\mX;\xi)} = \nabla f(\mX)
-    \quad\text{and}\quad
-    \Ed{\xi \sim \cD}{\sqnf{g(\mX;\xi) - \nabla f(\mX)}} \leq \sigma^2
-    \quad\text{for all}\;
-    \mX \in \Rmn,
-    \end{aequation}
-    where $\sigma > 0$ is a positive variance parameter, and $\normf{\cdot}$ is the standard Euclidean, i.e. Frobenius, norm induced by the inner product $\<\cdot,\cdot>$, i.e., $\normf{\mX} = \sqrt{\<\mX,\mX>}=\sqrt{\tr(\mX^\top \mX)}$. These assumptions have been widely adopted for the analysis of many stochastic gradient optimization algorithms \citep{ghadimi2013stochastic,ghadimi2016accelerated,cutkosky2020momentum,sun2023momentum,horvath2023stochastic,gorbunov2020linearly}.
 
 {\bf Non-Euclidean norm setting and Lipschitz continuous gradient.}
     We assume that matrix space $\Rmn$ is equipped with a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius, norm $\normf{\cdot}$. In addition, we assume that the gradient $\nabla f(\cdot)$ is Lipschitz continuous with respect to the norm $\norm{\cdot}$, that is, the following inequality holds:
@@ -184,14 +174,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
     \quad\text{for all}\;
     \mX, \mX' \in \Rmn,
     \end{aequation}
-    where $L > 0$ is the gradient Lipschitz constant, and $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ is the dual norm associated with $\norm{\cdot}$, i.e., $\norm{\mX}^\dagger = \sup_{\norm{\mX'}\leq 1} \<\mX,\mX'>$ for all $\mX \in \Rmn$. The assumption of gradient Lipschitz continuity is also widespread in the analysis of first-order optimization methods \citep{ghadimi2013stochastic,gower2019sgd,cutkosky2020momentum,horvath2023stochastic,gorbunov2020linearly}. It is important to highlight that while \Cref{eq:L} uses the dual norm $\norm{\cdot}^\dagger$ to measure the difference between the gradients, the variance in \Cref{eq:variance} is measured with respect to the Frobenius norm $\sqnf{\cdot}$, which is necessary to properly utilize the unbiasedness property of the stochastic gradient estimator $g(\cdot;\xi)$. Therefore, we need to provide a connection between these norms using the following inequality:
-    \begin{aequation}\label{eq:norm}
-    \norm{\mX}^\dagger \leq \rho\cdot\normf{\mX}
-    \quad\text{for all}\;
-    \mX \in \Rmn,
-    \end{aequation}
-    where $\rho > 0$ is a positive constant. Note that such a constant always exists due to the norm equivalence theorem, which always holds in the finite-dimensional space $\Rmn$. We recount $\rho$ for different norms $\norm{\cdot}$ in the appendix.
-
+    where $L > 0$ is the gradient Lipschitz constant, and $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ is the dual norm associated with $\norm{\cdot}$, i.e., $\norm{\mX}^\dagger = \sup_{\norm{\mX'}\leq 1} \<\mX,\mX'>$ for all $\mX \in \Rmn$.
 
 \subsection{Linear Minimization Oracle and Trust Region}
     Let us look at the problem from the perspective of linear minimization oracle (lmo) and unconstrained stochastic conditional gradient descent (uSCG) (\cite{pethick2025training}). lmo is defined as:
@@ -412,6 +395,27 @@ What to include: Muon and its upgrades (say that the same can be done with Neon)
 
 
 \section{Appendix}
+\subsection{Formal assumptions}
+{\bf Stochastic gradient estimator.}
+    We assume access to a stochastic estimator $g(\cdot\,;\xi)\colon \Rmn \to \Rmn$ of the gradient $\nabla f(\cdot)$, where $\xi \sim \cD$ is a random variable sampled from a probability distribution $\cD$. We assume that the stochastic gradient estimator $g(\cdot;\xi)$ is unbiased and has bounded variance, that is, the following relations hold:
+    \begin{aequation}\label{eq:variance}
+    \Ed{\xi \sim \cD}{g(\mX;\xi)} = \nabla f(\mX)
+    \quad\text{and}\quad
+    \Ed{\xi \sim \cD}{\sqnf{g(\mX;\xi) - \nabla f(\mX)}} \leq \sigma^2
+    \quad\text{for all}\;
+    \mX \in \Rmn,
+    \end{aequation}
+    where $\sigma > 0$ is a positive variance parameter, and $\normf{\cdot}$ is the standard Euclidean, i.e. Frobenius, norm induced by the inner product $\<\cdot,\cdot>$, i.e., $\normf{\mX} = \sqrt{\<\mX,\mX>}=\sqrt{\tr(\mX^\top \mX)}$. These assumptions have been widely adopted for the analysis of many stochastic gradient optimization algorithms \citep{ghadimi2013stochastic,ghadimi2016accelerated,cutkosky2020momentum,sun2023momentum,horvath2023stochastic,gorbunov2020linearly}.
+
+    It is important to highlight that while \Cref{eq:L} uses the dual norm $\norm{\cdot}^\dagger$ to measure the difference between the gradients, the variance in \Cref{eq:variance} is measured with respect to the Frobenius norm $\sqnf{\cdot}$, which is necessary to properly utilize the unbiasedness property of the stochastic gradient estimator $g(\cdot;\xi)$. Therefore, we need to provide a connection between these norms using the following inequality:
+    \begin{aequation}\label{eq:norm}
+    \norm{\mX}^\dagger \leq \rho\cdot\normf{\mX}
+    \quad\text{for all}\;
+    \mX \in \Rmn,
+    \end{aequation}
+    where $\rho > 0$ is a positive constant. Note that such a constant always exists due to the norm equivalence theorem, which always holds in the finite-dimensional space $\Rmn$. We recount $\rho$ for different norms $\norm{\cdot}$ in the appendix.
+
+
 \subsection{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
 Here we provide the derivation of these norms and plot them in the case of $2\times2$ matrices.
 \subsection{Updates derivations}
