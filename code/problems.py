@@ -1,3 +1,4 @@
+from math import sqrt
 from typing import Optional, Tuple
 
 import torch
@@ -83,14 +84,23 @@ class RandomQuadraticPSDProblem(MatrixProblem):
         Xs = X - self.S
         return self.M @ Xs @ self.N
 
-    def lipschitz_constant(self) -> float:
+    def lipschitz_constant(self, norm) -> float:
         """
         Lipschitz constant of the gradient w.r.t. Frobenius norm.
-        For ∇f(X) = M (X - S) N, L = ||M||_2 · ||N||_2.
+        For ∇f(X) = M (X - S) N, L = ||M||_F · ||N||_F.
         """
-        L_M = torch.linalg.matrix_norm(self.M, ord=2)
-        L_N = torch.linalg.matrix_norm(self.N, ord=2)
-        return (L_M * L_N).item()
+        if norm == 2:
+            L_M = torch.linalg.matrix_norm(self.M, ord='nuc')
+            L_N = torch.linalg.matrix_norm(self.N, ord='nuc')
+            return (L_M * L_N).item() * 2 / sqrt(self.n)
+        if norm == 'nuc':
+            L_M = torch.linalg.matrix_norm(self.M, ord=2)
+            L_N = torch.linalg.matrix_norm(self.N, ord=2)
+            return (L_M * L_N).item() * self.n
+        if norm == 'fro':  
+            L_M = torch.linalg.matrix_norm(self.M, ord=norm)
+            L_N = torch.linalg.matrix_norm(self.N, ord=norm)
+            return (L_M * L_N).item()
 
 
 class AXBLeastSquaresProblem(MatrixProblem):
@@ -196,3 +206,81 @@ class RidgeShiftedQuadraticProblem(MatrixProblem):
         return 1.0 + float(self.lam)
 
 
+
+class LogisticRegressionProblem(MatrixProblem):
+    """
+    Binary logistic regression over a matrix of weights X ∈ R^{m×n}.
+
+    Data:
+    - Features A ∈ R^{N×m}
+    - Labels Y ∈ {0,1}^{N×n}
+
+    Model:
+    - Logits Z = A X, Probabilities P = sigmoid(Z)
+
+    Objective:
+    - f(X) = (1/N) * sum_i BCE(P_i, Y_i) = mean over all entries
+
+    Gradient:
+    - ∇f(X) = (1/N) * A^T (sigmoid(A X) - Y)
+    """
+
+    def __init__(
+        self,
+        m: int,
+        n: int,
+        num_samples: int = 1024,
+        data_scale: float = 1.0,
+        device: Optional[torch.device] = None,
+        seed: Optional[int] = None,
+    ) -> None:
+        self.m = m
+        self.n = n
+        self.N = int(num_samples)
+        self.device = device or torch.device("cpu")
+        if seed is not None:
+            torch.manual_seed(seed)
+            if self.device.type == "cuda":
+                torch.cuda.manual_seed_all(seed)
+
+        # Generate synthetic dataset
+        self.A = data_scale * torch.randn(self.N, m, device=self.device)
+        # Ground-truth weights to generate labels
+        W_true = torch.randn(m, n, device=self.device)
+        logits = self.A @ W_true
+        probs = torch.sigmoid(logits)
+        self.Y = torch.bernoulli(probs)
+
+    def objective(self, X: torch.Tensor) -> torch.Tensor:
+        # Move data to the same device as X if needed
+        target = X.device
+        if self.A.device != target:
+            self.A = self.A.to(target)
+        if self.Y.device != target:
+            self.Y = self.Y.to(target)
+
+        Z = self.A @ X
+        P = torch.sigmoid(Z)
+        eps = 1e-8
+        bce = -(self.Y * torch.log(P + eps) + (1.0 - self.Y) * torch.log(1.0 - P + eps))
+        return bce.mean()
+
+    def gradient(self, X: torch.Tensor) -> torch.Tensor:
+        target = X.device
+        if self.A.device != target:
+            self.A = self.A.to(target)
+        if self.Y.device != target:
+            self.Y = self.Y.to(target)
+
+        Z = self.A @ X
+        P = torch.sigmoid(Z)
+        residual = P - self.Y
+        return (self.A.T @ residual) / float(self.N)
+
+    def lipschitz_constant(self, norm=2) -> float:
+        """
+        Lipschitz constant of ∇f w.r.t. Frobenius norm.
+        For logistic loss: L ≤ (1/4) * ||A||_2^2.
+        """
+        L_A = torch.linalg.matrix_norm(self.A, ord=norm)
+        return float(0.25 * (L_A * L_A))
