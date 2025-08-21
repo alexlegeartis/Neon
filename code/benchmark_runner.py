@@ -21,13 +21,14 @@ class MatrixProblem:
 
 
 def run_optimizer_on_problem(
+    name: str,
     optimizer_class: Callable[..., torch.optim.Optimizer],
     optimizer_kwargs: Dict[str, Any],
     problem: MatrixProblem,
     X_init: torch.Tensor,
     num_iterations: int = 500,
     record_interval: int = 1,
-    verbose: bool = False,
+    verbose: bool = False
 ) -> Dict[str, Any]:
     """
     Run an optimizer on a matrix problem and record metrics.
@@ -38,7 +39,7 @@ def run_optimizer_on_problem(
       - losses: list[float]
       - grad_frobenius_norms: list[float]  (||∇f(X)||_F)
     """
-
+    print(f"Testing {name}")
     X = X_init.clone()
 
     optimizer = optimizer_class([X], **optimizer_kwargs)
@@ -46,7 +47,7 @@ def run_optimizer_on_problem(
     iterations: list[int] = []
     cumulative_time: list[float] = []
     losses: list[float] = []
-    grad_fro_norms: list[float] = []
+    grad_fro_norms: list[float] = [] # now spectral norms
 
     start_time = time.time()
     
@@ -62,14 +63,14 @@ def run_optimizer_on_problem(
                 cumulative_time.append(cur_time)
                 losses.append(problem.objective(X).item())
                 grad_now = problem.gradient(X)
-                grad_fro_norms.append(torch.linalg.norm(grad_now, ord="fro").item())
+                grad_fro_norms.append(torch.linalg.norm(grad_now, ord=2).item())
 
         # Optional progress
         if verbose and (t % max(1, (num_iterations // 10)) == 0):
             with torch.no_grad():
                 loss_val = problem.objective(X).item()
-                grad_norm_val = torch.linalg.norm(grad, ord="fro").item()
-                print(f"Iter {t}: loss={loss_val:.6f}, ||∇f(X)||_F={grad_norm_val:.6f}")
+                grad_norm_val = torch.linalg.norm(grad, ord=2).item()
+                print(f"Iter {t}: loss={loss_val:.6f}, ||∇f(X)||_2={grad_norm_val:.6f}")
 
         # Optimizer step
         optimizer.step()
