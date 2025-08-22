@@ -17,7 +17,9 @@
 
 
 %\title{From Muon to Neon: Introducing Nuclear Norm to Large Matrices}
-\title{The Nuclear Norm and Beyond: Dual Norms and Combinations for Matrix Optimization}
+% \title{The Nuclear Norm and Beyond: Dual Norms and Combinations for Matrix Optimization}
+
+\title{The Ky Fan Norms and Beyond: Dual Norms and Combinations for Matrix Optimization}
 
 % Authors must not appear in the submitted version. They should be hidden
 % as long as the \icompfinalcopy macro remains commented out below.
@@ -105,18 +107,19 @@ AIRI, Skoltech \\
 \maketitle
 
 \begin{abstract}
-In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the nuclear norm, its affine combinations with other norms, and their corresponding duals to develop a new family of Muon-like algorithms. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
+\iffalse
+    In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the nuclear norm, its affine combinations with other norms, and their corresponding duals to develop a new family of Muon-like algorithms. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
+\fi
+In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norm, its affine combinations with other norms, and their corresponding duals to develop a new family of Muon-like algorithms. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
 \end{abstract}
 
 
 \section{Introduction}
- Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam and AdamW \cite{kingma2014adam}, \cite{loshchilov2017decoupled}, recently proposed Muon has shown promising results on training very large models \cite{jordan2024muon,liu2025muon}. Its key difference from earlier algorthims is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
+ Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam and AdamW \cite{kingma2014adam}, \cite{loshchilov2017decoupled}, recently proposed Muon has shown promising results on training very large models \cite{jordan2024muon,liu2025muon}. Its key difference from Adam and AdamW is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
+ 
+ That is what can be said from a practical point of view. From the perspective of theory, Muon's main innovation was an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update \cite{bernstein2025deriving}. Based upon recent theoretical advances that explain some theory behind Muon, Scion and Gluon (\cite{bernstein2025deriving,kovalev2025understanding,pethick2025training,riabinin2025gluon}), we explore application of other matrix norms to optimization of functions of matrices. As it has been done with Muon, we stipulate that our algorithms' updates be fast to compute.
 
- That is what can be said from a practical point of view. From the perspective of theory, Muon's main innovation was an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update \cite{bernstein2025deriving}. Several other attempts have been since made to construct new algorithms, mainly generalizations of Muon's paradigm, like Scion (\cite{pethick2025training} and Gluon \cite{riabinin2025gluon}).
-
- Based upon recent theoretical advances that explain some theory behind Muon, Scion and Gluon (\cite{bernstein2025deriving,kovalev2025understanding,pethick2025training,riabinin2025gluon}), we explore application of other matrix norms to optimization of functions of matrices. As it has been done with Muon, we stipulate that our algorithms' updates be fast to compute.
-
- In this article, we focus on the two most common matrix norms akin to the spectral, namely, the Nuclear Norm and the Frobenius norm. Working in the linear minimization oracle (lmo) approach, which is equivalent to a factor to the trust region and the steepest descent under norm constraint approaches, we derive Neon, our algorithm based on the nuclear norm. In the section {\it Matrix side of the updates}, we explain how Neon updates can be computed asymptotically faster than Muon updates by the Newton-Schulz iterations.
+ In this article, we focus on the two most common matrix norms akin to the spectral, namely, the nuclear Norm and the Frobenius norm. Working in the linear minimization oracle (lmo) framework, which is equivalent to a factor to the trust region approach and the steepest descent under norm constraint, we derive Neon, our algorithm based on the nuclear norm. In the section {\it Matrix side of the updates}, we explain how Neon updates can be computed asymptotically faster than Muon updates by the Newton-Schulz iterations.
 
  Noticing that Neon and Muon are diametrical in terms of the rank of the update matrix, we bridge the space by "regularizing" them by NormalizedSGD, which is derived in lmo with the Frobenius norm. We do this in the same lmo approach by considering a norm that is dual to the convex combination of the Frobenius norm and the spectral or the nuclear norms respectively. So we derive the algorithms we name F-Neon and F-Muon respectively.
 
@@ -198,7 +201,6 @@ In this article, we explore the use of matrix norms for optimizing functions of 
     Let us set $\gamma_k = 1$. This transforms algorithm defined by \cref{eq:almost_trust_update} into Algorithm 1 from \cite{kovalev2025understanding}. Therefore, we can view \cref{eq:almost_trust_update} both as an lmo-based algorithm and as a trust-region algorithm.
 
 \section{Different Norms $\norm{\cdot}$ imply different updates}
-    % As we have stated in Introduction, we are interested foremost in matrix norms, so we'll start right with them, skipping RMS-RMS norm and others.
 
     Based on different norms $\norm{\cdot}$, we simplify the update defined by the aforementioned equation:
 
@@ -312,7 +314,7 @@ Table that compares Muons and Neons to vector algorithms (NSGD).
         Options: all possible on torch, or additionally to compare all on cupy. The goal: to find how much do we lose due to cupy
 
 \section{Trust Region Bounds for L-smooth functions}
-    First, we analyze the problem in the unstochastic case. From Corollary 1 of \cite{kovalev2025understanding}, we directly get the following result that matches lower bounds, as was noted in \cite{kovalev2025understanding}.
+    First, we analyze the problem in the unstochastic case. From Corollary 1 of \cite{kovalev2025understanding}, we directly get the following result that matches lower bounds, as was noted in that article.
 
 
     \begin{lemma}\label{lemma:no_noise_tr}
@@ -323,7 +325,7 @@ Table that compares Muons and Neons to vector algorithms (NSGD).
     \end{equation}
     \end{lemma}
 
-    In the stochastic case, from Corollary of 2 of \cite{kovalev2025understanding}, we directly get the following result that matches lower bounds, as was noted in \cite{kovalev2025understanding}:
+    In the stochastic case, from Corollary of 2 of \cite{kovalev2025understanding}, we directly get the following result that pnce more matches lower bounds:
 
     \begin{lemma}\label{lemma:stoch_tr}
     To reach the precision $\E{\min_{k=1\ldots K} \norm{\nabla f(\mX_k)}^\dagger} \leq \epsilon$ by ~\eqref{eq:our_update} under the assumptions \Cref{eq:variance}, \Cref{eq:L}, \Cref{eq:norm}, it is sufficient to choose the parameters as follows:
@@ -398,21 +400,24 @@ Table that compares Muons and Neons to vector algorithms (NSGD).
     NanoGPT benchmark
 
 \section{Related Work}
-As Muon \cite{jordan2024muon} is a very successful and popular optimizer for functions of weight matrices, a lot of reseach has been put into explaining its success and further improving its performance.
+As Muon \cite{jordan2024muon} is a very successful and popular optimizer for functions of weight matrices, a lot of reseach has been put into, first, further improving its performance, and, second, in explaining its success.
 
-Regarding the second point, in less than a year, a large number of applications and improvements of Muon has been proposed. \cite{liu2025muon} adapted the algorthm for training language models larger than NanoGPT. \cite{shah2025practical} organized efficient hyperparameter transfer by combining Muon with maximal update parametrization. \cite{chen2025cosmoshybridadaptive} applied computationally intensive updates of SOAP optimizer to a low-dimensional "leading eigensubspace" while using memory-efficient methods like Muon for the remaining parameters. \cite{amsel2025polar} proposed a more efficient alternative to Newton-Schulz operations. \cite{si2025adamuon} introduced AdaMuon which combines element-wise adaptivity with orthogonal updates.
+{\bf Improvements of Muon.} Regarding the first point, in less than a year, a large number of applications and improvements of Muon has been proposed. \cite{liu2025muon} adapted the algorthm for training language models larger than NanoGPT. \cite{shah2025practical} organized efficient hyperparameter transfer by combining Muon with maximal update parametrization. To construct their COSMOS optimizer, \cite{chen2025cosmoshybridadaptive} applied computationally intensive updates of SOAP optimizer to a low-dimensional "leading eigensubspace" while using memory-efficient methods like Muon for the remaining parameters. \cite{amsel2025polar} proposed a more efficient alternative to Newton-Schulz operations. \cite{si2025adamuon} introduced AdaMuon which combines element-wise adaptivity with orthogonal updates. We suppose that the described above or similar techniques can be applied to our optimizers as well. For example, F-Muon also benefits from faster alternatives to Newton-Schulz iterations, and Neon may be a great substitute to Muon in COSMOS, because, as we have shown in {\it the Matrix side of the updates}, Lanczos algorithms is much faster than Newton-Schulz iterations on large matrices.
 
-Regarding the first point, simplistic derivation of \cite{bernstein2025deriving} which is based on \cite{bernstein2024oldoptimizernewnorm} excluded, there has been a gap in theory behind Muon, which, as it seems to us, is not even now completely closed. \cite{kovalev2025understanding} has provided convergence guarantees of Muon in various settings, from which, however, Muon's supremacy cannot be recovered. Indeed, although the obtained bounds depend on the norm choice, the asymptotics of the convergence remain the same as for NSGD and other optimizers, $K = \cO(\epsilon^{-4})$ in a L-smooth stochastic case.
+{\bf Theory behind Muon.} Regarding the second point, there has been a prolonged gap in theory behind Muon, simplistic derivation of \cite{bernstein2025deriving} based on \cite{bernstein2024oldoptimizernewnorm} excluded. This gap, as it seems to us, is not even now completely closed. For example, \cite{kovalev2025understanding} has provided convergence guarantees of Muon in various settings, from which, however, Muon's supremacy cannot be recovered. Indeed, although the obtained bounds depend on the norm choice, the asymptotics of the convergence remain the same as for NSGD and other optimizers, $K = \cO(\epsilon^{-4})$ in a L-smooth stochastic case.
 
 Similar drawback has a recent article \cite{riabinin2025gluon}, where L-smoothness assumption is replaced with a more practical $(L_0, L_1)$-smoothness. The authors derived from their theorems optimal stepsizes for Muon and Scion that match fine-tuned stepsizes reported by \cite{pethick2025training}. But still, they did not explain why, for instance, NSGD is inferior to Muon in training large-language models.
+
+We suppose that the reason for the recorded by us discrepancy between Neon and Muon performance, both of which are described by Scion or Gluon frameworks, lies in the structure of the norm ball, which must be an object of further research.
+
+{\bf The nuclear norm in lmo.} As we found out only when writing this article, the nuclear norm has been already explored in the context of the linear minimization oracle. \cite{pethick2025sam} applied it to create $\nu$SAM, a new sharpness-aware minimization technique. The update from their lemma 3.1 coincides with the update of Neon, but is used for completely different purposes. In addition, \cite{pethick2025sam} use power iterations to find $u_1$ and $v_1^\top$, while we suggest utilizing much more efficient and precise Lanczos algorithm.
+
+{\bf The Ky Fan Norm and Dion.} Rank-$k$ Centralized Dion, Algorithm 1 from \cite{ahn2025dioncommunicationefficientoptimizerlarge}, without an error feedback and scaling of the update, turns out to be an lmo-based algorithm under the $\normkfk{\cdot}^\dagger$ norm, which we described in {\it Different norms imply different updates}. Reported by the authors necessity of using error feedback to obtain satisfactory accuracy may take place in the cases of our algorithms as well, for example, F-Neon. This we leave to future research.
 
 
 
 \section{Conclusion}
-\begin{itemize}
-    \item Future work: (L0, L1)-smoothness, probably extrapolation (to make dependency on eps milder, but we don't to spend memory here so never mind), hyperparameter-free (Bernstein2023)
-\end{itemize}
-
+In this article, we have generalized several successful algorithms, like Muon and Dion, to the lmo-based algorithms in the $\normkfk{\cdot}^\dagger$ norm. Also we have proposed the technique of ``regularizing'' the updates with NSGD, a trick to increase the robustness of the algorithms and motivated by the consideration of the $\normfstar{\cdot}$ and $\normftwo{\cdot}$ norms. Generalizations of well-known norms and subsequent combination of them may further improve performance of lmo-based algorithms. If a theory is developed that explains the discrepancy between performance of different algorithms based on the matrix norms, one will probably be able to apply it to the generalizations and combinations of the norms as well, which leaves an open space to construct norms specific for given architectures and probably even their parameters.
 
 \bibliography{icomp2024_conference}
 \bibliographystyle{icomp2024_conference}
