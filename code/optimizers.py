@@ -221,7 +221,7 @@ class NormalizedMuon(torch.optim.Optimizer):
 
 
 class Dion(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, rank=1, momentum_decay=0.9):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, rank=1, momentum_decay=0.9, sgd_coeff=0):
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -237,6 +237,7 @@ class Dion(torch.optim.Optimizer):
         super().__init__(params, defaults)
         self.rank = rank
         self.momentum_decay = momentum_decay
+        self.sgd_coeff = sgd_coeff
     '''
     def power_iter1(self, B, Q):
         """
@@ -331,9 +332,9 @@ class Dion(torch.optim.Optimizer):
                 # Step 8: Xt ← Xt−1 − η√(m/n) PtQ⊤t (scaled orthonormal update)
                 update = u @ vt # Pt @ Qt.T
                 # scaled_update = update * math.sqrt(m / n)
-                
+                update2 = (1-self.sgd_coeff) * update + self.sgd_coeff * g_reshaped / (g_reshaped.norm() + 1e-12)
                 # Update the parameter
-                p.data.add_(update.view(g.shape), alpha=-lr)
+                p.data.add_(update2.view(g.shape), alpha=-lr)
                 
                 # Store Q for next iteration
                 # state['Q'] = Qt

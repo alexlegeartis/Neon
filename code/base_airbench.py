@@ -3,6 +3,12 @@ airbench94_muon.py
 Runs in 2.59 seconds on a 400W NVIDIA A100
 Attains 94.004 mean accuracy (n=200 trials)
 Descends from https://github.com/tysam-code/hlb-CIFAR10/blob/main/main.py
+
+New Error Feedback Optimizers:
+- ErrorFeedbackMuon: Implements error feedback mechanism to accumulate and compensate for 
+  optimization errors, improving convergence stability
+- ErrorFeedbackQuantizedMuon: Extends error feedback with actual gradient quantization,
+  useful for distributed training with compressed gradients
 """
 
 #############################################
@@ -22,7 +28,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
 from matrix_functions import one_sv_svds_approximation
-from optimizers import Dion
+from optimizers import Dion, Neon
 
 torch.backends.cudnn.benchmark = True
 
@@ -30,7 +36,7 @@ torch.backends.cudnn.benchmark = True
 #               Muon optimizer              #
 #############################################
 
-@torch.compile
+# @torch.compile
 def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
     """
     Newton-Schulz iteration to compute the zeroth power / orthogonalization of G. We opt to use a
@@ -203,6 +209,134 @@ class RankOneNeon(torch.optim.Optimizer):
                 update = one_sv_svds_approximation(g_resh, 50)
                 # p.data.add_(update, alpha=-lr) # take a step
                 p.data.add_(update.view(g.shape), alpha=-lr)
+
+class ErrorFeedbackMuon(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, error_feedback_decay=0.9):
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+        self.sgd_coeff = sgd_coeff
+        self.error_feedback_decay = error_feedback_decay
+
+    def step(self):
+        for group in self.param_groups:
+            lr = group["lr"]
+            momentum = group["momentum"]
+            for p in group["params"]:
+                g = p.grad
+                if g is None:
+                    continue
+                state = self.state[p]
+
+                # Initialize error feedback buffer if not exists
+                if "error_feedback_buffer" not in state.keys():
+                    state["error_feedback_buffer"] = torch.zeros_like(g)
+                
+                # Initialize momentum buffer if not exists
+                if "momentum_buffer" not in state.keys():
+                    state["momentum_buffer"] = torch.zeros_like(g)
+                
+                # Add accumulated error feedback to current gradient
+                g = g + state["error_feedback_buffer"]
+                
+                # Apply momentum
+                buf = state["momentum_buffer"]
+                buf.mul_(momentum).add_(g)
+                g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
+
+                # Normalize the weight
+                p.data.mul_(len(p.data)**0.5 / p.data.norm())
+                
+                # Compute the update using zeropower approximation
+                eps = 1e-12
+                g_normalized = g / (g.norm() + eps)           
+                update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
+                update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
+                
+                # Apply the update
+                p.data.add_(update, alpha=-lr)
+                
+                # Compute quantization error (difference between intended and actual update)
+                # The error is the difference between the original gradient and the computed update
+                quantization_error = g - update
+                
+                # Update error feedback buffer with decay
+                state["error_feedback_buffer"].mul_(self.error_feedback_decay).add_(
+                    quantization_error, alpha=(1 - self.error_feedback_decay)
+                )
+
+class ErrorFeedbackQuantizedMuon(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, 
+                 error_feedback_decay=0.9, quantization_bits=8):
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+        self.sgd_coeff = sgd_coeff
+        self.error_feedback_decay = error_feedback_decay
+        self.quantization_bits = quantization_bits
+        
+    def quantize_gradient(self, grad, bits=8):
+        """Quantize gradient to specified number of bits"""
+        if bits == 32:
+            return grad
+        
+        # Calculate quantization scale
+        grad_max = grad.abs().max()
+        if grad_max == 0:
+            return grad
+            
+        scale = (2**(bits-1) - 1) / grad_max
+        
+        # Quantize and dequantize
+        quantized = torch.round(grad * scale) / scale
+        return quantized
+
+    def step(self):
+        for group in self.param_groups:
+            lr = group["lr"]
+            momentum = group["momentum"]
+            for p in group["params"]:
+                g = p.grad
+                if g is None:
+                    continue
+                state = self.state[p]
+
+                # Initialize error feedback buffer if not exists
+                if "error_feedback_buffer" not in state.keys():
+                    state["error_feedback_buffer"] = torch.zeros_like(g)
+                
+                # Initialize momentum buffer if not exists
+                if "momentum_buffer" not in state.keys():
+                    state["momentum_buffer"] = torch.zeros_like(g)
+                
+                # Add accumulated error feedback to current gradient
+                g_with_feedback = g + state["error_feedback_buffer"]
+                
+                # Apply momentum
+                buf = state["momentum_buffer"]
+                buf.mul_(momentum).add_(g_with_feedback)
+                g_momentum = g_with_feedback.add(buf, alpha=momentum) if group["nesterov"] else buf
+
+                # Normalize the weight
+                p.data.mul_(len(p.data)**0.5 / p.data.norm())
+                
+                # Compute the update using zeropower approximation
+                eps = 1e-12
+                g_normalized = g_momentum / (g_momentum.norm() + eps)           
+                update_part = zeropower_via_newtonschulz5(g_momentum.reshape(len(g_momentum), -1)).view(g_momentum.shape)
+                update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
+                
+                # Quantize the update (simulating communication/compression)
+                quantized_update = self.quantize_gradient(update, self.quantization_bits)
+                
+                # Apply the quantized update
+                p.data.add_(quantized_update, alpha=-lr)
+                
+                # Compute quantization error (difference between intended and actual update)
+                quantization_error = update - quantized_update
+                
+                # Update error feedback buffer with decay
+                state["error_feedback_buffer"].mul_(self.error_feedback_decay).add_(
+                    quantization_error, alpha=(1 - self.error_feedback_decay)
+                )
 
 #############################################
 #                DataLoader                 #
@@ -478,11 +612,14 @@ def main(run, model):
     param_configs = [dict(params=[model.whiten.bias], lr=bias_lr, weight_decay=wd/bias_lr),
                      dict(params=norm_biases, lr=bias_lr, weight_decay=wd/bias_lr),
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
-    optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
-    # optimizer2 = NormalizedMuon(filter_params, lr=0.24, momentum=0.5, nesterov=True, sgd_coeff=-0.15) # important
-    optimizer2 = Dion(filter_params, lr=0.24, momentum=0.6, rank=5, momentum_decay=0.6)
+    optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6) # important
+    optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6)
+    optimizer2 = Dion(filter_params, lr=0.24, momentum=0.6, rank=10, momentum_decay=0.9, sgd_coeff=0.5)
     # optimizer2 = SignSGDMuon(filter_params, lr=0.45, momentum=0.7, nesterov=True, sgd_coeff=0.5)
     # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True)
+    # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6, error_feedback_decay=0)
+    # optimizer2 = ErrorFeedbackQuantizedMuon(filter_params, lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6, error_feedback_decay=0.9, quantization_bits=8)
     optimizers = [optimizer1, optimizer2]
     for opt in optimizers:
         for group in opt.param_groups:
@@ -567,7 +704,7 @@ if __name__ == "__main__":
 
     # We re-use the compiled model between runs to save the non-data-dependent compilation time
     model = CifarNet().cuda().to(memory_format=torch.channels_last)
-    model.compile(mode='max-autotune')
+    # model.compile(mode='max-autotune')
 
     print_columns(logging_columns_list, is_head=True)
     main('warmup', model)
