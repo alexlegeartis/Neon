@@ -136,7 +136,6 @@ class Neon(torch.optim.Optimizer):
                 if g is None:
                     continue
                 state = self.state[p]
-
                 if 'momentum_buffer' not in state.keys():
                     state['momentum_buffer'] = torch.zeros_like(g)
                 buf = state['momentum_buffer']
@@ -172,7 +171,11 @@ class Neon(torch.optim.Optimizer):
                         # s[1] = 0
                         update = u @ torch.diag(s) @ vt
                         '''
-                        # update, self.tau, self.k = svd_full_approximation(g_resh, self.tau) -- too slow
+
+                    elif self.type == 'kyfan': # no EF here, so it won't work!
+                        u, s, vt = several_sv_svds_approximation(g_resh, self.k)
+                        update = u @ vt
+                        error = u @ torch.diag(s) @ vt
                 update2 = (1-self.sgd_coeff) * update + self.sgd_coeff * g_resh / (g_resh.norm() + 1e-12)
                 '''
                 b = float(g_resh.norm())
@@ -215,3 +218,122 @@ class NormalizedMuon(torch.optim.Optimizer):
                 else:
                     update = self.sgd_coeff * g_normalized
                 p.data.add_(update, alpha=-lr) # take a step
+
+
+class Dion(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, rank=1, momentum_decay=0.9):
+        if lr < 0.0:
+            raise ValueError(f"Invalid learning rate: {lr}")
+        if momentum < 0.0:
+            raise ValueError(f"Invalid momentum value: {momentum}")
+        if nesterov and momentum <= 0:
+            raise ValueError("Nesterov momentum requires a momentum")
+        if momentum_decay < 0.0 or momentum_decay > 1.0:
+            raise ValueError(f"Invalid momentum decay value: {momentum_decay}")
+        if rank < 1:
+            raise ValueError(f"Invalid rank value: {rank}")
+        
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+        self.rank = rank
+        self.momentum_decay = momentum_decay
+    '''
+    def power_iter1(self, B, Q):
+        """
+        Single power iteration (from Q)
+        B: gradient matrix (m x n)
+        Q: right factor from previous iteration (n x r)
+        Returns: P (m x r), R (n x r) where P is orthonormal
+        """
+        # P ← BQ
+        P = B @ Q
+        
+        # P ← Orthogonalize(P) using QR decomposition
+        P, _ = torch.linalg.qr(P)
+        
+        # R ← B^T P
+        R = B.T @ P
+        
+        return P, R
+
+    def column_normalize(self, R):
+        """Normalize columns of R to unit norm"""
+        norms = torch.norm(R, dim=0, keepdim=True)
+        # Add small epsilon for numerical stability
+        norms = torch.clamp(norms, min=1e-8)
+        return R / norms
+    '''
+    def step(self):
+        for group in self.param_groups:
+            lr = group['lr']
+            momentum = group['momentum']
+            for p in group['params']:
+                g = p.grad
+                if g is None:
+                    continue
+                
+                state = self.state[p]
+                
+                # Initialize state variables if not present
+                if 'momentum_buffer' not in state:
+                    state['momentum_buffer'] = torch.zeros_like(g)
+                '''
+                if 'Q' not in state:
+                    # Initialize Q randomly with correct shape
+                    n = p.numel()
+                    m = g.numel()
+                    if m > n:
+                        state['Q'] = torch.randn(n, self.rank, device=p.device, dtype=p.dtype)
+                    else:
+                        state['Q'] = torch.randn(m, self.rank, device=p.device, dtype=p.dtype)
+                
+                Q = state['Q']
+                '''
+                buf = state['momentum_buffer']
+                
+                # Apply momentum
+                buf.mul_(momentum).add_(g)
+                g = g.add(buf, alpha=momentum) if group['nesterov'] else buf
+                
+                # Add numerical stability
+                norm = p.data.norm()
+                if norm < 1e-8:
+                    continue
+                p.data.mul_(len(p.data)**0.5 / norm)
+                
+                # Reshape gradient to matrix form
+                g_reshaped = g.reshape(len(g), -1)
+                m, n = g_reshaped.shape
+                
+                # Ensure Q has correct shape for current gradient
+                '''
+                if Q.shape[0] != n:
+                    Q = torch.randn(n, self.rank, device=p.device, dtype=p.dtype)
+                    state['Q'] = Q
+                '''
+                # Algorithm 1: Dion implementation
+                # Step 3: Bt ← Mt−1 + Gt (in this case, just the gradient)
+                Bt = g_reshaped
+                
+                # Step 4: Pt, Rt ← PowerIter1(Bt; Qt−1)
+                # Pt, Rt = self.power_iter1(Bt, Q)
+                u, s, vt = several_sv_svds_approximation(g_reshaped, self.rank)
+                # Step 5: ∆t = Bt − PtR⊤t (approximation error)
+                Delta_t = Bt - u @ torch.diag(s) @ vt
+                
+                # Step 6: Mt ← μBt + (1 − μ)∆t (error feedback)
+                # This is equivalent to: Mt ← Bt − (1 − μ)PtR⊤t
+                Mt = self.momentum_decay * Bt + (1 - self.momentum_decay) * Delta_t
+                
+                # Step 7: Qt ← ColumnNormalize(Rt)
+                # Qt = self.column_normalize(Rt)
+                
+                # Step 8: Xt ← Xt−1 − η√(m/n) PtQ⊤t (scaled orthonormal update)
+                update = u @ vt # Pt @ Qt.T
+                # scaled_update = update * math.sqrt(m / n)
+                
+                # Update the parameter
+                p.data.add_(update.view(g.shape), alpha=-lr)
+                
+                # Store Q for next iteration
+                # state['Q'] = Qt

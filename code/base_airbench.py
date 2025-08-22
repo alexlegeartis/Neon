@@ -22,6 +22,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
 from matrix_functions import one_sv_svds_approximation
+from optimizers import Dion
 
 torch.backends.cudnn.benchmark = True
 
@@ -479,7 +480,8 @@ def main(run, model):
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
     # optimizer2 = NormalizedMuon(filter_params, lr=0.24, momentum=0.5, nesterov=True, sgd_coeff=-0.15) # important
-    optimizer2 = SignSGDMuon(filter_params, lr=0.45, momentum=0.7, nesterov=True, sgd_coeff=0.5)
+    optimizer2 = Dion(filter_params, lr=0.24, momentum=0.6, rank=5, momentum_decay=0.6)
+    # optimizer2 = SignSGDMuon(filter_params, lr=0.45, momentum=0.7, nesterov=True, sgd_coeff=0.5)
     # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True)
     optimizers = [optimizer1, optimizer2]
     for opt in optimizers:

@@ -69,6 +69,8 @@ def k_sv_svds_approximation_dlpack(W_torch, k, tau, num_iter=30):
     # print(opt_tau)
     return approx_torch, opt_tau, k
 
+    
+
 
 def svd_full_approximation(A, tau=0):
     k = 0
@@ -251,22 +253,32 @@ def randomized_svd_torch(G, n_components=1, n_oversamples=5, n_iter=2):
 
 def several_sv_svds_approximation(W_torch, k, num_iter=50):
     """SVD approximation using the top k singular values and corresponding vectors."""
+    # Store original device and dtype
+    original_device = W_torch.device
+    original_dtype = W_torch.dtype
+    
     W = cp.from_dlpack(thd.to_dlpack(W_torch)).astype(cp.float32)
     U, S, Vt = cupyx_svds(W, k=min([k, W.shape[0] - 1, W.shape[1] - 1]), maxiter=num_iter, which='LM')
 
-    # approx = U @ Vt #cp.diag(S) - we don't need this!
-    approx_torch_U = thd.from_dlpack(U.toDlpack()) 
-    approx_torch_Vt = thd.from_dlpack(Vt.toDlpack())
-    return approx_torch_U, thd.from_dlpack(S.toDlpack()), approx_torch_Vt
+    # Convert back to torch tensors and ensure they're on the correct device
+    approx_torch_U = thd.from_dlpack(U.toDlpack()).to(device=original_device, dtype=original_dtype)
+    approx_torch_S = thd.from_dlpack(S.toDlpack()).to(device=original_device, dtype=original_dtype)
+    approx_torch_Vt = thd.from_dlpack(Vt.toDlpack()).to(device=original_device, dtype=original_dtype)
+    
+    return approx_torch_U, approx_torch_S, approx_torch_Vt
 
 def one_sv_svds_approximation(W_torch, num_iter=30):
     """SVD approximation using the top k singular values and corresponding vectors."""
     k = 1
+    # Store original device and dtype
+    original_device = W_torch.device
+    original_dtype = W_torch.dtype
+    
     W = cp.from_dlpack(thd.to_dlpack(W_torch)).astype(cp.float32)
     U, S, Vt = cupyx_svds(W, k=min([k, W.shape[0] - 1, W.shape[1] - 1]), maxiter=num_iter, which='LM')
 
     approx = U @ Vt #cp.diag(S) - we don't need this!
-    approx_torch = thd.from_dlpack(approx.toDlpack()) 
+    approx_torch = thd.from_dlpack(approx.toDlpack()).to(device=original_device, dtype=original_dtype)
     return approx_torch, float(S[0]) # sigma1
 
     '''
@@ -295,11 +307,15 @@ def one_sv_svds_approximation(W_torch, num_iter=30):
 def lanczos_svdt(W_torch, k, num_iter=50):
     """SVD approximation using the top k singular values and corresponding vectors."""
     
+    # Store original device and dtype
+    original_device = W_torch.device
+    original_dtype = W_torch.dtype
+    
     # assert (W.shape[0] > 3 and W.shape[1] > 3), "Dimensions of W must be greater than 3"
     W = cp.from_dlpack(thd.to_dlpack(W_torch))
     U, S, Vt = cupyx_svds(W, k=k, maxiter=num_iter, which='LM')
     approx = U @ cp.diag(S) @ Vt
-    approx_torch = thd.from_dlpack(approx.toDlpack()) 
+    approx_torch = thd.from_dlpack(approx.toDlpack()).to(device=original_device, dtype=original_dtype)
     return approx_torch
 
 def main():
