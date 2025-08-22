@@ -17,7 +17,6 @@
 
 
 %\title{From Muon to Neon: Introducing Nuclear Norm to Large Matrices}
-% \title{The Nuclear Norm and Beyond: Dual Norms and Combinations for Matrix Optimization}
 
 \title{The Ky Fan Norms and Beyond: Dual Norms and Combinations for Matrix Optimization}
 
@@ -107,12 +106,8 @@ AIRI, Skoltech \\
 \maketitle
 
 \begin{abstract}
-\iffalse
-    In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the nuclear norm, its affine combinations with other norms, and their corresponding duals to develop a new family of Muon-like algorithms. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
-\fi
-In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norm, its affine combinations with other norms, and their corresponding duals to develop a new family of Muon-like algorithms. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
+In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms, their affine combinations with the Frobenius norms, and corresponding duals to develop a new family of Muon-like algorithms. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
 \end{abstract}
-
 
 \section{Introduction}
  Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam and AdamW \cite{kingma2014adam}, \cite{loshchilov2017decoupled}, recently proposed Muon has shown promising results on training very large models \cite{jordan2024muon,liu2025muon}. Its key difference from Adam and AdamW is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
@@ -130,58 +125,17 @@ In this article, we explore the use of matrix norms for optimizing functions of 
  Finally, we test Muon, Neon, NSGD, F-Muon and F-Neon on deep-learning tasks: training convolutional network on CIFAR-10 and fine-tuning NanoGPT. The results support the supremacy of Muon, but the most striking result of the tests is that F-Muon, only half of which is Muon, surpasses Muon's accuracy on the CIFAR tasks by a margin. The case of F-Muon answers in the affirmative to the question of feasibility of constructing a mixture of optimization algorithms to increase robustness of the composite algorithm.
 
 
-\iffalse
-\begin{itemize}
-    \item Hype of Muon and others:
-    \begin{itemize}
-        \item Importance of the functions of a matrix weight. Special structure.
-        \item Write the equation
-        \item Memory efficiency and hyperparameter transferability
-        \item Proven efficient computing (cite benchmarks and Dion and Cosmos)
-    \end{itemize}
-    \item Comparison:
-    \begin{itemize}
-        \item Shampoo (very compute intensive for large layers, we need asymptotics!), second order
-        \item LMO has produced several effective algorithms: Muon, Dion, Scion, Gluon (citations)
-        \item generalization is better for Muon and others (citations!). Possibly nuSAM here (definitely)
-        \item Scion and Gluon for multilayer
-        \item Gluon for (L0, L1)-smooth problems, which is more realistic (low L0, faster convergence - no impractically small stepsizes)
-    \end{itemize}
-    \item Analyis:
-    \begin{itemize}
-        \item Several generalizations have been already presented by the community: Old Optimizer and New Norm (idea and evidence that it explains famous algorithms); Pethick (LMO and different layers); Kovalev (as trust region and arbitrary norm); Gluon (generalized smoothness model).
-        \item However, to the best of our knowledge, no attempt has been made to try other norms. Here we come in.
-        \item No attempt to mitigate high computation cost of matrix computation has been made. Here again we come in.
-        \item It has been shown that $O(1/esp^4)$ bounds for Muon, Scion, Gluon and even Adam for L-smooth functions (citations). Some bounds depend on the dimensionality of space (cite Kovalev), which for spectral norm gives much more iterations (cite Kovalev)
-        \item This motivates us to try new norms
-    \end{itemize}
-\end{itemize}
-\fi
-
-
 \section{Problem Statement}
-\subsection{Function of a matrix and Assumptions}
-    Warning: the text was copied, while formulas were adapted. We need to rephrase the subsection! 
+\subsection{Function of a matrix}
     We consider the problem of minimizing a differentiable matrix function $F(\cdot)\colon \Rmn \to \R$
     \begin{equation}\label{eq:mat}
         \min_{\mX \in \Rmn} f(\mX).
     \end{equation}
 
-    To make the theoretical analysis possible in the future, we make three reasonable non-restrictive assumptions.
-    Idea: move gradient assumptions and smoothness to the L-smooth part. Here we need only custom norm and their relation to the Frobenius norm.
-
-
-{\bf Non-Euclidean norm setting and Lipschitz continuous gradient.}
-    We assume that matrix space $\Rmn$ is equipped with a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius, norm $\normf{\cdot}$. In addition, we assume that the gradient $\nabla f(\cdot)$ is Lipschitz continuous with respect to the norm $\norm{\cdot}$, that is, the following inequality holds:
-    \begin{aequation}\label{eq:L}
-    \norm{\nabla f(\mX) - \nabla f(\mX')}^\dagger \leq L \norm{\mX-\mX'}
-    \quad\text{for all}\;
-    \mX, \mX' \in \Rmn,
-    \end{aequation}
-    where $L > 0$ is the gradient Lipschitz constant, and $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ is the dual norm associated with $\norm{\cdot}$, i.e., $\norm{\mX}^\dagger = \sup_{\norm{\mX'}\leq 1} \<\mX,\mX'>$ for all $\mX \in \Rmn$.
-
+    We equip the matrix space $\Rmn$ with a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius norm $\normf{\cdot}$. $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ is the dual norm associated with $\norm{\cdot}$, i.e., $\norm{\mX}^\dagger = \sup_{\norm{\mX'}\leq 1} \<\mX,\mX'>$ for all $\mX \in \Rmn$.
+ 
 \subsection{Linear Minimization Oracle and Trust Region}
-    Let us look at the problem from the perspective of linear minimization oracle (lmo) and unconstrained stochastic conditional gradient descent (uSCG) (\cite{pethick2025training}). lmo is defined as:
+    We analyze the problem from the perspective of linear minimization oracle (lmo) and unconstrained stochastic conditional gradient descent (uSCG) (\cite{pethick2025training}). lmo is defined as:
     \begin{equation}\label{eq:lmo}
         \mathrm{lmo}(\mS) \in \arg\min_{\mX \in \cS} \<\mS, \mX>,
     \end{equation}
@@ -202,13 +156,13 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
 \section{Different Norms $\norm{\cdot}$ imply different updates}
 
-    Based on different norms $\norm{\cdot}$, we simplify the update defined by the aforementioned equation:
+    Based on different norms $\norm{\cdot}$, we will simplify the update defined by the aforementioned equation:
 
     \begin{equation}\label{eq:our_update}
         \mX^{k+1} = \mX^{k} - \eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}
     \end{equation}
 
-    In all the work, we define $\mU$, $\mSigma$, $\mV^\top$ as components of the singular value decomposition of $\mM^k$: $\mM^k = \mU \mSigma \mV^\top$. We use common notations: $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and  $\mV = [v_1, v_2, \dots, v_r]$.
+    Throughout this work, we denote the singular value decomposition (SVD) of $\mM^k$ as $\mM^k = \mU \mSigma \mV^\top$, where $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and  $\mV = [v_1, v_2, \dots, v_r]$.
 
     {\bf $\normf{\mM^{k}}$ and NSGD}
 
@@ -220,7 +174,8 @@ In this article, we explore the use of matrix norms for optimizing functions of 
             \end{equation}
 
         \end{lemma}
-        It is an interesting observation, because in other works (\cite{pethick2025training}), $\normf{\cdot}$ was used to recover SGD. The difference is in how one states the problem.
+
+        The result is the same as in (Table 1, \cite{pethick2025training}), but here we use the Euclidean norm as $\normf{\mM^k} = \sqrt{\sum_{i=1}^{\min\{m,n\}}\sigma_i^2}$, which clearly is a matrix norm.
 
     {\bf $\norms{\mM^{k}}$ and Muon}
     \begin{lemma}\label{lemma:muon_update}
@@ -229,7 +184,9 @@ In this article, we explore the use of matrix norms for optimizing functions of 
         \begin{equation}\label{eq:muon_update}
             \mX^{k+1} = \mX^{k} - \eta U V^\top
         \end{equation}
-    \end{lemma}    
+    \end{lemma}
+
+    Though the update is well-known, we provide a much simpler proof in the appendix, when compared to \cite{bernstein2024oldoptimizernewnorm}.
 
     {\bf $\normn{\mM^{k}}$ and Neon}
     \begin{lemma}\label{lemma:neon_update}
@@ -239,7 +196,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
             \mX^{k+1} = \mX^{k} - \eta u_1 v_1^\top
         \end{equation}
     \end{lemma}
-        We name the derived algorithm \emph{Neon}. In the section Matrix side of updates, we will discuss how to compute an update efficiently.
+        We name the derived algorithm \emph{Neon}. In the section {\it The Matrix side of updates}, we will discuss how to compute the update efficiently.
 
     {\bf $\normfstar{\mM^{k}}^\dagger$ and F-Muon}
         We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
@@ -258,7 +215,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
         \end{equation}
     \end{lemma}
 
-        We name the derived algorithm \emph{F-Muon}. It turns out that F-Muon is a convex combination of Normalized SGD and Muon, which is curious. The implications are significant and discussed in the following sections.
+        We name the derived algorithm \emph{F-Muon}. It turns out that F-Muon is a convex combination of Normalized SGD and Muon. The implications are significant and discussed in the following sections.
 
     {\bf $\normftwo{\mM^{k}}^\dagger$ and F-Neon}
         We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
@@ -277,11 +234,11 @@ In this article, we explore the use of matrix norms for optimizing functions of 
         \end{equation}
     \end{lemma}
 
-        We name the derived algorithm \emph{F-Neon}. It turns out that F-Neon is a convex combination of Normalized SGD and Neon, which is curious. The implications are significant and discussed in the following sections.
+        We name the derived algorithm \emph{F-Neon}. It turns out that F-Neon is a convex combination of Normalized SGD and Neon. The implications are significant and discussed in the following sections.
 
     
-    {\bf $\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Dion without error feedback}
-        We remind the reader that the Ky Fan k-norm \cite{fan1951maximum}, which we denote as $\normkfk{\cdot}$, is the sum of the k largest singular values of the matrix. It can be proven that $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see Appendix). Special cases of Ky Fan k-norm are the Ky Fan 1-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
+    {\bf $\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}
+        We remind the reader that the Ky Fan k-norm (\cite{bhatia2013matrix}, p. 92), which we denote as $\normkfk{\cdot}$, is the sum of the k largest singular values of the matrix. It can be proved that $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \cite{bhatia2013matrix}, p. 96). Special cases of the Ky Fan k-norm are the Ky Fan 1-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
 
         \begin{lemma}\label{lemma:ky_fan_update}    
             When $\norm{\cdot} = \normkfk{\mM^k}^\dagger$, \cref{eq:our_update} turns into:
@@ -414,17 +371,26 @@ We suppose that the reason for the recorded by us discrepancy between Neon and M
 
 {\bf The Ky Fan Norm and Dion.} Rank-$k$ Centralized Dion, Algorithm 1 from \cite{ahn2025dioncommunicationefficientoptimizerlarge}, without an error feedback and scaling of the update, turns out to be an lmo-based algorithm under the $\normkfk{\cdot}^\dagger$ norm, which we described in {\it Different norms imply different updates}. Reported by the authors necessity of using error feedback to obtain satisfactory accuracy may take place in the cases of our algorithms as well, for example, F-Neon. This we leave to future research.
 
-
-
 \section{Conclusion}
 In this article, we have generalized several successful algorithms, like Muon and Dion, to the lmo-based algorithms in the $\normkfk{\cdot}^\dagger$ norm. Also we have proposed the technique of ``regularizing'' the updates with NSGD, a trick to increase the robustness of the algorithms and motivated by the consideration of the $\normfstar{\cdot}$ and $\normftwo{\cdot}$ norms. Generalizations of well-known norms and subsequent combination of them may further improve performance of lmo-based algorithms. If a theory is developed that explains the discrepancy between performance of different algorithms based on the matrix norms, one will probably be able to apply it to the generalizations and combinations of the norms as well, which leaves an open space to construct norms specific for given architectures and probably even their parameters.
 
 \bibliography{icomp2024_conference}
 \bibliographystyle{icomp2024_conference}
 
-
 \section{Appendix}
 \subsection{Formal assumptions}
+Warning: the text was copied, while formulas were adapted. We need to rephrase the subsection and probably contract it.
+
+
+{\bf Non-Euclidean norm setting and Lipschitz continuous gradient.}
+    In addition, we assume that the gradient $\nabla f(\cdot)$ is Lipschitz continuous with respect to the norm $\norm{\cdot}$, that is, the following inequality holds:
+    \begin{aequation}\label{eq:L}
+    \norm{\nabla f(\mX) - \nabla f(\mX')}^\dagger \leq L \norm{\mX-\mX'}
+    \quad\text{for all}\;
+    \mX, \mX' \in \Rmn,
+    \end{aequation}
+    where $L > 0$ is the gradient Lipschitz constant.
+
 {\bf Stochastic gradient estimator.}
     We assume access to a stochastic estimator $g(\cdot\,;\xi)\colon \Rmn \to \Rmn$ of the gradient $\nabla f(\cdot)$, where $\xi \sim \cD$ is a random variable sampled from a probability distribution $\cD$. We assume that the stochastic gradient estimator $g(\cdot;\xi)$ is unbiased and has bounded variance, that is, the following relations hold:
     \begin{aequation}\label{eq:variance}
@@ -445,8 +411,12 @@ In this article, we have generalized several successful algorithms, like Muon an
     where $\rho > 0$ is a positive constant. Note that such a constant always exists due to the norm equivalence theorem, which always holds in the finite-dimensional space $\Rmn$. We recount $\rho$ for different norms $\norm{\cdot}$ in the appendix.
 
 
-\subsection{Norms $\normfstar{\cdot}^\dagger$, $\normftwo{\cdot}^\dagger$, and $\normkfk{\cdot}^\dagger$}
+\subsection{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
 Here we provide the derivation of these norms and plot them in the case of $2\times2$ matrices.
+
+\subsection{Visualization of different matrix norms}
+
+TO-DO: Vibe-code F2, F* norm plots and their duals. Add 3D plot of Ky Fan and its dual.
 
 \subsection{Updates derivations}
 
@@ -471,7 +441,7 @@ Since $\norm{\cdot}^\dagger = \normkfk{\cdot}^{\dagger\dagger} = \normkfk{\cdot}
 Let us note that $\Delta = \sum_{i=1}^{k} u_i v_i^\top$ delivers the value. Indeed, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \sum_{i=1}^{k} u_i v_i^\top> = \sum_{i,j=1}^{r, k}\<u_i \sigma_i v_i^\top, u_j v_j^\top> = \sum_{i=1}^{k}\sigma_i = \normkfk{\mM^k}$, which completes the proof. 
 
 \subsection{Technical details of the experiments}
-~ Note: nuSAM and their update. They had no Lanczos
+
 
 \iffalse
 
