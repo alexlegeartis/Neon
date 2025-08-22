@@ -98,6 +98,8 @@ AIRI, Skoltech \\
 \DeclareMathOperator{\tr}{tr}
 \DeclareMathOperator{\diag}{diag}
 
+\usepackage{arydshln} % dashed lines
+
 %------------------------------------------------------------------------------------
 
 \begin{document}
@@ -118,7 +120,6 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
  Noticing that Neon and Muon are diametrical in terms of the rank of the update matrix, we bridge the space by "regularizing" them by NormalizedSGD, which is derived in lmo with the Frobenius norm. We do this in the same lmo approach by considering a norm that is dual to the convex combination of the Frobenius norm and the spectral or the nuclear norms respectively. So we derive the algorithms we name F-Neon and F-Muon respectively.
 
- Table that compares methods, updates, and sends to the proofs?
 
  Having faced the array of different Muon-like optimizers, according to the upper bounds from \cite{kovalev2025understanding,riabinin2025gluon}, with similar convergence behavior, we painstakingly compare them on a synthetic linear least squares problem with known Lipschitz constant. The efforts results in comparison of the algorithms by their convergence not in terms of the dual norms of their gradient, but in terms of the common spectral norm, which may strongly differ, especially in large matrices, from the initial dual norms. Thus, we compare the algorithms in a unified fashion.
 
@@ -254,7 +255,40 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
 
 \subsection{Algorithms for Matrices $\leftrightarrow$ Algorithms for Vectors}
-Table that compares Muons and Neons to vector algorithms (NSGD).
+
+lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms with common $p$ may be analogous to each other, as is illustrated by Table \ref{tbl:mat_vs_vec_lmo}. The analogies go beyond similarities in the updates. SignSGD is very close to Adam, as noted in \cite{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well in training large models. NSGD is the same for both matrix and vector cases. Greedy Coordinate Descent methods are not applied to high-dimensional problems, from this perspective, it is not surprising that Neon underperforms on such problems.
+
+Despite such similarities, no theory has been yet proposed that would reduce the matrix case to the optimization of a function of a singular numbers vector. If such a theory is developed, analysis of matrix algorithms like Muon will be greatly simplified.
+
+\begin{table*}[t]
+    \caption{lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms. $g$ is the gradient. When it is a matrix, $g = \mU \mSigma \mV^\top$}
+    \label{tbl:mat_vs_vec_lmo}
+    \bgroup
+    \def\arraystretch{1.2}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{|l|c|c|c|}
+    \hline
+    Method & lmo constraint set $\mathcal D$ & lmo & Reference \\
+    \hline
+    \hline
+    Normalized SGD & $l_2$-ball, $S_2$-ball & $-\eta \tfrac{g}{\norm{g}_2} = -\eta \tfrac{g}{\norm{g}_F}$ & \citep{hazan2015beyond} \\
+    Momentum Normalized SGD & Ball in $l_2$, or Ball in $S_2$ & $-\eta \tfrac{g}{\norm{g}_2} = -\eta\tfrac{g}{\norm{g}_F}$ & \citep{cutkosky2020momentum}\\
+    \hline
+    SignSGD & Ball in Max-norm $l_\infty$ & $-\eta \sign(g)$ & \citep[Thm. 1]{bernstein2018signsgd} \\
+    Signum  & Ball in Max-norm $l_\infty$ & $-\eta \sign(g)$ & \citep[Thm. 3]{bernstein2018signsgd} \\
+    \hdashline
+    Muon & Ball in Spectral $S_\infty$ & $-\eta UV^\top$ & \citep{jordan2024muon} \\
+    \hline
+    Gauss-Southwell Coordinate Descent & Ball in $l_1$ & $-\eta \{i: g_i \geq g_k \forall k\}$ & \citep[p. 19]{shi2016primer}\\
+    \hdashline 
+    Neon & Ball in Nuclear $S_1$ & $-\eta u_1 v_1^\top$ & This work\\
+    \hline
+    \end{tabular}
+    }
+    \egroup
+    \end{table*}
+    
+
 
 
 \section{Matrix side of updates}
