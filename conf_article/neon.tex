@@ -207,7 +207,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
             \normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
         \end{equation}
 
-        where $\alpha \in [0, 1]$ defines a specific norm from the $F*$-family.
+        where $\alpha \in [0, 1]$ defines a specific norm from the $F*$-family. $\normfstar{\cdot}^\dagger$ can be expressed as in \ref{eq:normfstardual}. However, its norm ball is a simple Minkowski sum of $\alpha \normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \ref{fig:fstardual}.
 
     \begin{lemma}\label{lemma:nsgd_muon_update}
         When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
@@ -226,7 +226,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
             \normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
         \end{equation}
 
-        where $\alpha \in [0, 1]$ defines a specific norm from the F2-family.
+        where $\alpha \in [0, 1]$ defines a specific norm from the F2-family.$\normftwo{\cdot}^\dagger$ can be expressed as in \ref{eq:normftwodual}. However, its norm ball is a simple Minkowski sum of $\alpha \norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \ref{fig:ftwodual}.
 
     \begin{lemma}\label{lemma:nsgd_neon_update}    
         When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
@@ -259,7 +259,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
 lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms with common $p$ may be analogous to each other, as is illustrated by Table \ref{tbl:mat_vs_vec_lmo}. The analogies go beyond similarities in the updates. SignSGD is very close to Adam, as noted in \cite{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well in training large models. NSGD is the same for both matrix and vector cases. Greedy Coordinate Descent methods are not applied to high-dimensional problems, from this perspective, it is not surprising that Neon underperforms on such problems.
 
-Despite such similarities, no theory has been yet proposed that would reduce the matrix case to the optimization of a function of a singular numbers vector. If such a theory is developed, analysis of matrix algorithms like Muon will be greatly simplified.
+Despite such similarities, no theory has been yet proposed that would reduce the matrix case to the optimization of a function of a singular values vector. If such a theory is developed, analysis of matrix algorithms like Muon will be greatly simplified.
 
 \begin{table*}[t]
     \caption{lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms. $g$ is the gradient. When it is a matrix, $g = \mU \mSigma \mV^\top$}
@@ -452,13 +452,96 @@ Warning: the text was copied, while formulas were adapted. We need to rephrase t
 
 
 \subsection{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
-From \cite[p. 2]{yu2012arithmetic} it follows that the norm ball in $\normfstar{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$. The norm could be reconstructed from this geometric observation.
+First, we need a well-known fact mentioned, for example, in \cite[Table 1]{yu2012arithmetic}. For the sake of completeness, we provide a proof of the fact.
 
-Similarly, the norm ball in $\normftwo{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$.
+\begin{lemma}\label{lem:dual_to_conv_comb}
+    Let $\norm{\cdot}_{(1)}$ and $\norm{\cdot}_{(2)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha,\beta \geq 0$. Define 
+    $$
+    \norm{x} := \alpha \norm{x}_{(1)} + \beta \norm{x}_{(2)}.
+    $$
+    Then the dual unit ball of $\norm{\cdot}$ satisfies
+    $$
+    B_{\norm{\cdot}^\dagger} 
+    = \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger},
+    $$
+    where $+$ denotes the Minkowski sum and $B_{\norm{\cdot}_{(i)}^\dagger}$ is the unit ball of the dual norm $\norm{\cdot}_{(i)}^\dagger$.
+\end{lemma}
+    
+    \begin{proof}
+    Write $f(x) = \alpha \norm{x}_{(1)}$ and $g(x) = \beta \norm{x}_{(2)}$, so 
+    $$
+    \norm{x} = f(x)+g(x).
+    $$
+    Recall two standard facts:
+    \begin{enumerate}
+        \item For any norm $\norm{\cdot}$ and $\lambda>0$, 
+        $$
+        (\lambda \norm{\cdot})^*(y) = 
+        \sup_{x}\bigl( \langle y,x \rangle - \lambda \norm{x}\bigr)
+        = \delta_{\lambda B_{\norm{\cdot}^\dagger}}(y),
+        $$
+        i.e., the indicator function of the scaled dual ball.
+        \item The Fenchel conjugate of a sum satisfies
+        $$
+        (f+g)^*(y) = \inf_{u+v=y} \bigl(f^*(u) + g^*(v)\bigr).
+        $$
+    \end{enumerate}
+    Applying these to $f$ and $g$, we have 
+    $$
+    f^*(u) = \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u), 
+    \quad 
+    g^*(v) = \delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v).
+    $$
+    Thus
+    $$
+    \norm{\cdot}^*(y) 
+    = (f+g)^*(y)
+    = \inf_{u+v=y}
+    \bigl(
+    \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u)
+    +
+    \delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v)
+    \bigr)
+    = 
+    \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}+\beta B_{\norm{\cdot}_{(2)}^\dagger}}(y).
+    $$
+    But by definition, the conjugate of a norm is exactly the indicator of its dual unit ball:
+    $$
+    \norm{\cdot}^*(y) = \delta_{B_{\norm{\cdot}^\dagger}}(y).
+    $$
+    Therefore,
+    $$
+    B_{\norm{\cdot}^\dagger} = \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}.
+    $$
+    \end{proof}
+
+Consequently,
+\begin{equation}\label{eq:dual_to_conv_comb}
+\norm{y}^\dagger
+= \inf\bigl\{ t \ge 0 : y \in t\bigl(\alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}\bigr) \bigr\}
+= \inf_{z,t}\bigl\{t \ge 0: z \in t \alpha B_{\norm{\cdot}_{(1)}^\dagger}, y - z \in t \beta B_{\norm{\cdot}_{(1)}^\dagger}\bigr\}
+\end{equation}
+
+Thus, we immediately find $\normfstar{\cdot}^\dagger$, which is related to F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we get 
+\begin{equation}\label{eq:normfstardual}
+\normfstar{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \norms{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
+\end{equation}
+
+If $\alpha = 1$, then $\mZ = \mY$, and we get $\normfstar{\mY}^\dagger = \norms{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normfstar{\mY}^\dagger = \normf{\mY}$.
+
+Similarly, we find $\normftwo{\cdot}^\dagger$, which is related to F-Neon update:
+\begin{equation}\label{eq:normftwodual}
+\normftwo{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \normn{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
+\end{equation}
+
+If $\alpha = 1$, then $\mZ = \mY$, and we get $\normftwo{\mY}^\dagger = \normn{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normftwo{\mY}^\dagger = \normf{\mY}$.
 
 
 \subsection{Visualization of different matrix norms}
 \subsubsection{Duals to F* and F2 norms}
+    
+ It follows from \ref{lem:dual_to_conv_comb} that the norm ball in $\normfstar{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ and the norm ball in $\normftwo{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$.
+
 In \ref{fig:fduals} we plot these norms. On x-axis and y-axis, there are singular values $\sigma_1$, $\sigma_2$ respectively of a matrix from $\Rmn$ with $\min\{m,n\}=2$.
 
 \begin{figure}[h!]
@@ -466,24 +549,24 @@ In \ref{fig:fduals} we plot these norms. On x-axis and y-axis, there are singula
     \begin{subfigure}[b]{0.48\linewidth}
         \centering
         \includegraphics[width=\linewidth]{fstardualball.pdf}
-        \caption{The dual to F* norm for different $\alpha$}
+        \caption{lmo balls for F-Muon for different $\alpha$}
         \label{fig:fstardual}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\linewidth}
         \centering
         \includegraphics[width=\linewidth]{ftwodualball.pdf}
-        \caption{The dual to F2 norm for different $\alpha$}
+        \caption{lmo ball for F-Neon for different $\alpha$}
         \label{fig:ftwodual}
     \end{subfigure}
-    \caption{The duals to F* and F2 norms for different $\alpha$}
+    \caption{Balls in the duals to F* and F2 norms for different $\alpha$}
     \label{fig:fduals}
 \end{figure}
 
 \subsubsection{The Ky Fan norm and its dual}
 1-balls in $l_\infty$, $l_1$ and $l_2$ norms are well-known from textbooks. But what about the Ky Fan $k$-norm? How can it be represented?
 
-To showcase the complex structure of the Ky Fan $k$-norm and its dual, we suggest the illustrations \ref{fig:kyfan_combined} with the ball in the Ky Fan $2$-norm in \ref{fig:kyfan} and its dual in \ref{fig:kyfandual}. On x-, y-, and z-axes, there are singular values $\sigma_1$, $\sigma_2$, and $\sigma_3$ respectively of a matrix from $\Rmn$ with $\min\{m,n\}=3$. In this particular case, we do not sort the singular values. In the proposed representation, we actually plot balls Top-$2$ norm $\max\{\abs{x}+\abs{y}, \abs{x}+\abs{z}, \abs{y}+\abs{z}\}$ and its dual norm $\max\{\max(\abs(x),\abs{y},\abs{z}), \frac{1}{2} (\abs{x}+\abs{y}+\abs{z})\}$. The resulting balls are much more complex than balls in $l_\infty$, $l_1$ and $l_2$ norms.
+To showcase the complex structure of the Ky Fan $k$-norm and its dual, we suggest the illustrations \ref{fig:kyfan_combined} with the ball in the Ky Fan $2$-norm in \ref{fig:kyfan} and its dual in \ref{fig:kyfandual}. On x-, y-, and z-axes, there are singular values $\sigma_1$, $\sigma_2$, and $\sigma_3$ respectively of a matrix from $\Rmn$ with $\min\{m,n\}=3$. In this particular case, we do not sort the singular values. In the proposed representation, we actually plot balls in the Top-$2$ norm $\max\{\abs{x}+\abs{y}, \abs{x}+\abs{z}, \abs{y}+\abs{z}\}$ and its dual norm $\max\{\max(\abs(x),\abs{y},\abs{z}), \frac{1}{2} (\abs{x}+\abs{y}+\abs{z})\}$. The resulting balls are much more complex than balls in $l_\infty$, $l_1$ and $l_2$ norms.
 
 In fact, those balls can be described easier if we use the results from \cite{yu2012arithmetic}. The Ky Fan $2$-norm ball is an intersection of three $l_1$ balls in $(x,y)$, $(x, z)$, and $(y,z)$ spaces. The 1-ball in the dual Ky Fan $2$-norm is an intersection of 1-ball the in $l_\infty$ norm and $\frac{1}{2}$-ball in the $l_1$ norm.
 
