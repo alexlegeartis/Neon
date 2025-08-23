@@ -109,7 +109,7 @@ AIRI, Skoltech \\
 \maketitle
 
 \begin{abstract}
-In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms, their affine combinations with the Frobenius norms, and corresponding duals to develop a new family of Muon-like algorithms. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
+In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms, their affine combinations with the Frobenius norms, and corresponding duals to develop a new family of Muon-like algorithms we name {\it Fanions}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
 \end{abstract}
 
 \section{Introduction}
@@ -166,7 +166,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
     Throughout this work, we denote the singular value decomposition (SVD) of $\mM^k$ as $\mM^k = \mU \mSigma \mV^\top$, where $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and  $\mV = [v_1, v_2, \dots, v_r]$.
 
-    {\bf $\normf{\mM^{k}}$ and NSGD}
+    \subsection{\texorpdfstring{$\normf{\mM^{k}}$ and Normalized SGD}{NSGD}}
 
         \begin{lemma}\label{lemma:nsgd_update}
             When $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
@@ -179,7 +179,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
         The result is the same as in (Table 1, \cite{pethick2025training}), but here we use the Euclidean norm as $\normf{\mM^k} = \sqrt{\sum_{i=1}^{\min\{m,n\}}\sigma_i^2}$, which clearly is a matrix norm.
 
-    {\bf $\norms{\mM^{k}}$ and Muon}
+    \subsection{\texorpdfstring{$\norms{\mM^{k}}$ and Muon}{Muon}}
     \begin{lemma}\label{lemma:muon_update}
         When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
 
@@ -190,7 +190,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
     Though the update is well-known, we provide a much simpler proof in the appendix, when compared to \cite{bernstein2024oldoptimizernewnorm}.
 
-    {\bf $\normn{\mM^{k}}$ and Neon}
+    \subsection{\texorpdfstring{$\normn{\mM^{k}}$ and Neon}{Neon}}
     \begin{lemma}\label{lemma:neon_update}
         When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
 
@@ -200,14 +200,14 @@ In this article, we explore the use of matrix norms for optimizing functions of 
     \end{lemma}
         We name the derived algorithm \emph{Neon}. In the section {\it The Matrix side of updates}, we will discuss how to compute the update efficiently.
 
-    {\bf $\normfstar{\mM^{k}}^\dagger$ and F-Muon}
+    \subsection{\texorpdfstring{$\normfstar{\mM^{k}}^\dagger$ and F-Muon}{F-Muon}}
         We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
 
         \begin{equation}\label{eq:fstar_norm}
             \normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
         \end{equation}
 
-        where $\alpha \in [0, 1]$ defines a specific norm of $F*$-family.
+        where $\alpha \in [0, 1]$ defines a specific norm from the $F*$-family.
 
     \begin{lemma}\label{lemma:nsgd_muon_update}
         When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
@@ -219,14 +219,14 @@ In this article, we explore the use of matrix norms for optimizing functions of 
 
         We name the derived algorithm \emph{F-Muon}. It turns out that F-Muon is a convex combination of Normalized SGD and Muon. The implications are significant and discussed in the following sections.
 
-    {\bf $\normftwo{\mM^{k}}^\dagger$ and F-Neon}
+    \subsection{\texorpdfstring{$\normftwo{\mM^{k}}^\dagger$ and F-Neon}{F-Neon}}
         We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
 
         \begin{equation}\label{eq:ftwo_norm}
             \normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
         \end{equation}
 
-        where $\alpha \in [0, 1]$ defines a specific norm of F2-family.
+        where $\alpha \in [0, 1]$ defines a specific norm from the F2-family.
 
     \begin{lemma}\label{lemma:nsgd_neon_update}    
         When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
@@ -239,7 +239,7 @@ In this article, we explore the use of matrix norms for optimizing functions of 
         We name the derived algorithm \emph{F-Neon}. It turns out that F-Neon is a convex combination of Normalized SGD and Neon. The implications are significant and discussed in the following sections.
 
     
-    {\bf $\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}
+    \subsection{\texorpdfstring{$\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}{Muon, Neon, and Centralized Dion without error feedback}}
         We remind the reader that the Ky Fan k-norm (\cite{bhatia2013matrix}, p. 92), which we denote as $\normkfk{\cdot}$, is the sum of the k largest singular values of the matrix. It can be proved that $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \cite{bhatia2013matrix}, p. 96). Special cases of the Ky Fan k-norm are the Ky Fan 1-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
 
         \begin{lemma}\label{lemma:ky_fan_update}    
@@ -249,11 +249,11 @@ In this article, we explore the use of matrix norms for optimizing functions of 
                 \mX^{k+1} = \mX^{k} - \eta \sum_{i=1}^{k}u_i v_i^\top
             \end{equation}
         \end{lemma}
-    
-        This lemma recovers the updates of Muon, when $k=\min\{m, n\}$, of Neon, when $k=1$, and of Dion \cite{ahn2025dioncommunicationefficientoptimizerlarge} without the error feedback.
+        In the section {\it The Matrix side of updates}, we will discuss how to compute the updates efficiently.
 
-        Moreover, one can consider F-KF-k-norm = $\alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}$, the dual to which will produce algorithms like F-Dion without the error feedback.
-
+        We introduce the family of {\it Fanions}, which consists of {\it $k$-Fanions}, lmo-based algorithms under the $\normkfk{\mM^k}^\dagger$ norms. By this terminology and the lemma, Muon is a $\min\{n,m\}$-Fanion, while Neon is an 1-Fanion. Moreover, the centralized version of rank-$r$ Dion \cite{ahn2025dioncommunicationefficientoptimizerlarge} without the error feedback and without scaling of the update, from the perspective of lmo, is actually a $r$-Fanion.      
+        
+        In addition, one can consider F-KF-k-norm = $\alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}$, the dual to which will produce algorithms like F-Dion without the error feedback. The resulting family can be named {\it F-Fanions}.
 
 \subsection{Algorithms for Matrices $\leftrightarrow$ Algorithms for Vectors}
 
@@ -289,7 +289,6 @@ Despite such similarities, no theory has been yet proposed that would reduce the
     \egroup
     \end{table*}
     
-
 
 
 \section{Matrix side of updates}
@@ -457,13 +456,32 @@ From \cite[p. 2]{yu2012arithmetic} it follows that the norm ball in $\normfstar{
 
 Similarly, the norm ball in $\normftwo{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$.
 
-Here we provide the derivation of these norms and plot them in the case of $2\times2$ matrices.
 
 \subsection{Visualization of different matrix norms}
+\subsubsection{Duals to F* and F2 norms}
+In \ref{fig:fduals} we plot these norms. On x-axis and y-axis, there are singular values $\sigma_1$, $\sigma_2$ respectively of a matrix from $\Rmn$ with $\min\{m,n\}=2$.
 
-TO-DO: Vibe-code F2, F* norm plots and their duals.
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[b]{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{fstardualball.pdf}
+        \caption{The dual to F* norm for different $\alpha$}
+        \label{fig:fstardual}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{ftwodualball.pdf}
+        \caption{The dual to F2 norm for different $\alpha$}
+        \label{fig:ftwodual}
+    \end{subfigure}
+    \caption{The duals to F* and F2 norms for different $\alpha$}
+    \label{fig:fduals}
+\end{figure}
 
-1-balls in $l_\infty$, $l_1$ and $l_2$ norms are well-known from textbooks. But what about Ky Fan $k$-norm? How can it be represented?
+\subsubsection{The Ky Fan norm and its dual}
+1-balls in $l_\infty$, $l_1$ and $l_2$ norms are well-known from textbooks. But what about the Ky Fan $k$-norm? How can it be represented?
 
 To showcase the complex structure of the Ky Fan $k$-norm and its dual, we suggest the illustrations \ref{fig:kyfan_combined} with the ball in the Ky Fan $2$-norm in \ref{fig:kyfan} and its dual in \ref{fig:kyfandual}. On x-, y-, and z-axes, there are singular values $\sigma_1$, $\sigma_2$, and $\sigma_3$ respectively of a matrix from $\Rmn$ with $\min\{m,n\}=3$. In this particular case, we do not sort the singular values. In the proposed representation, we actually plot balls Top-$2$ norm $\max\{\abs{x}+\abs{y}, \abs{x}+\abs{z}, \abs{y}+\abs{z}\}$ and its dual norm $\max\{\max(\abs(x),\abs{y},\abs{z}), \frac{1}{2} (\abs{x}+\abs{y}+\abs{z})\}$. The resulting balls are much more complex than balls in $l_\infty$, $l_1$ and $l_2$ norms.
 
