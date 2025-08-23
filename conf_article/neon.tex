@@ -14,6 +14,7 @@
 \usepackage{subcaption}
 \newtheorem{lemma}{Lemma}
 \newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\abs}[1]{\lvert #1 \rvert}
 
 
 %\title{From Muon to Neon: Introducing Nuclear Norm to Large Matrices}
@@ -292,7 +293,13 @@ Despite such similarities, no theory has been yet proposed that would reduce the
 
 
 \section{Matrix side of updates}
-    \subsection{Theory}
+To compute the algorithms' updates, we use thick-restarted Lanczos method for singular value problem (TRLan) on $A^TA$ or $AA^T$ matrices (the one with less size is picked), implemented in cupy lSibrary [https://docs.cupy.dev/en/stable/reference/generated/cupyx.scipy.sparse.linalg.svds.html] and described in \cite{simonz1998thick}.
+
+This method is designed for efficiently approximating the largest singular values and vectors of large matrices. Its thick-restart strategy retains the most informative Ritz vectors at each cycle, which accelerates convergence while avoiding excessive memory growth. We are specifically interested in this algorithm because it allows us to extract several largest singular values and related singular vectors of the matrix to make a Neon step. Moreover, TRLan is stable GPU-friendly algorithm because it mainly operates with matrix-vector multiplications (MVs), which are higly-parallel, and does not require full reorthogonalization against the whole Krylov basis by managing  short recurrent formulas and incorparating thick restarting. 
+
+Per-cycle complexity is $O(mn^2 + n^2k + nk^2)$, where m and n are dimensions of target matrix and n is the smallest one, k is retained subspace's size.
+
+\subsection{Theory}
         Not only formulas, but also citations!
         Solutions to efficiently find some parts of SVD:
         \begin{itemize}
@@ -446,11 +453,41 @@ Warning: the text was copied, while formulas were adapted. We need to rephrase t
 
 
 \subsection{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
+From \cite[p. 2]{yu2012arithmetic} it follows that the norm ball in $\normfstar{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$. The norm could be reconstructed from this geometric observation.
+
+Similarly, the norm ball in $\normftwo{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$.
+
 Here we provide the derivation of these norms and plot them in the case of $2\times2$ matrices.
 
 \subsection{Visualization of different matrix norms}
 
-TO-DO: Vibe-code F2, F* norm plots and their duals. Add 3D plot of Ky Fan and its dual.
+TO-DO: Vibe-code F2, F* norm plots and their duals.
+
+1-balls in $l_\infty$, $l_1$ and $l_2$ norms are well-known from textbooks. But what about Ky Fan $k$-norm? How can it be represented?
+
+To showcase the complex structure of the Ky Fan $k$-norm and its dual, we suggest the illustrations \ref{fig:kyfan_combined} with the ball in the Ky Fan $2$-norm in \ref{fig:kyfan} and its dual in \ref{fig:kyfandual}. On x-, y-, and z-axes, there are singular values $\sigma_1$, $\sigma_2$, and $\sigma_3$ respectively of a matrix from $\Rmn$ with $\min\{m,n\}=3$. In this particular case, we do not sort the singular values. In the proposed representation, we actually plot balls Top-$2$ norm $\max\{\abs{x}+\abs{y}, \abs{x}+\abs{z}, \abs{y}+\abs{z}\}$ and its dual norm $\max\{\max(\abs(x),\abs{y},\abs{z}), \frac{1}{2} (\abs{x}+\abs{y}+\abs{z})\}$. The resulting balls are much more complex than balls in $l_\infty$, $l_1$ and $l_2$ norms.
+
+In fact, those balls can be described easier if we use the results from \cite{yu2012arithmetic}. The Ky Fan $2$-norm ball is an intersection of three $l_1$ balls in $(x,y)$, $(x, z)$, and $(y,z)$ spaces. The 1-ball in the dual Ky Fan $2$-norm is an intersection of 1-ball the in $l_\infty$ norm and $\frac{1}{2}$-ball in the $l_1$ norm.
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{KyFan.pdf}
+        \caption{Ky Fan 2-norm}
+        \label{fig:kyfan}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{KyFanDual.pdf}
+        \caption{Dual to Ky Fan 2-norm}
+        \label{fig:kyfandual}
+    \end{subfigure}
+    \caption{Ky Fan 2-norm and its dual}
+    \label{fig:kyfan_combined}
+\end{figure}
+
 
 \subsection{Updates derivations}
 
