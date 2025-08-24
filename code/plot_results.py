@@ -45,7 +45,7 @@ def plot_results(sgd_coeffs, mean_accs, std_accs):
     #for coeff, mean, std in zip(sgd_coeffs, mean_accs, std_accs):
     #    plt.text(1 - coeff, max(ymin, mean + std), f'{100 * mean:.2f}', 
     #            ha='center', va='bottom', fontweight='bold', fontsize=15)
-    plt.xticks(np.arange(-0.2, 1.3, 0.2))
+    plt.xticks(np.arange(0, 1.7, 0.2))
     plt.tight_layout()
     plt.savefig('sgd_coeff_results.pdf', dpi=300, bbox_inches='tight')
     plt.show()
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     
     if available_files:
         # Try to plot the main results file first
-        if 'sgd_coeff_experiment_results.pt' in available_files:
+        if 'muon_alphas.pt' in available_files:
             print("\nPlotting main experiment results...")
             plot_results_from_file('sgd_coeff_experiment_results.pt')
         elif 'quick_test_results.pt' in available_files:
