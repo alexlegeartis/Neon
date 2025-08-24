@@ -645,7 +645,8 @@ def main(run, model):
                      dict(params=norm_biases, lr=bias_lr, weight_decay=wd/bias_lr),
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
-    optimizer2 = NormalizedMuon(filter_params, lr=0.5, momentum=0.6, sgd_coeff=0.5, nesterov=True) # important
+    optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # important
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.6, nesterov=True) # important
     # optimizer2 = DistrMuonNormalized(filter_params, lr=0.05, momentum=0.95, sgd_coeff=0.5) # important
     
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6)
@@ -658,6 +659,7 @@ def main(run, model):
     for opt in optimizers:
         for group in opt.param_groups:
             group["initial_lr"] = group["lr"]
+            group["target_momentum"] = group.get("momentum", 0)  # default to 0 if not set
 
     # For accurately timing GPU code
     starter = torch.cuda.Event(enable_timing=True)
@@ -704,6 +706,12 @@ def main(run, model):
                 group["lr"] = group["initial_lr"] * (1 - step / whiten_bias_train_steps)
             for group in optimizer1.param_groups[1:]+optimizer2.param_groups:
                 group["lr"] = group["initial_lr"] * (1 - step / total_train_steps)
+            for group in optimizer2.param_groups:
+                eta = (step / total_train_steps) # percentage of training
+                # group["lr"] = (0.45 * eta + 0.3 * (1 - eta)) * (1-eta)
+            for group in optimizer2.param_groups:
+                eta = (step / total_train_steps) # percentage of training
+                group["momentum"] = (group["target_momentum"] - 0.1) * eta + group["target_momentum"] * (1 - eta)
             for opt in optimizers:
                 opt.step()
             model.zero_grad(set_to_none=True)
@@ -742,7 +750,7 @@ if __name__ == "__main__":
 
     print_columns(logging_columns_list, is_head=True)
     main('warmup', model)
-    accs = torch.tensor([main(run, model) for run in range(5)]) # important!
+    accs = torch.tensor([main(run, model) for run in range(25)]) # important!
     print('Mean: %.4f    Std: %.4f' % (accs.mean(), accs.std()))
 
     log_dir = os.path.join('logs', str(uuid.uuid4()))
