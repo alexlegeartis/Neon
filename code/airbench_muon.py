@@ -84,6 +84,39 @@ class Muon(torch.optim.Optimizer):
                 update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 p.data.add_(update, alpha=-lr) # take a step
 
+class NormalizedMuon(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+        self.sgd_coeff = sgd_coeff
+
+    def step(self):
+        for group in self.param_groups:
+            lr = group["lr"]
+            momentum = group["momentum"]
+            for p in group["params"]:
+                g = p.grad
+                if g is None:
+                    continue
+                state = self.state[p]
+
+                if "momentum_buffer" not in state.keys():
+                    state["momentum_buffer"] = torch.zeros_like(g)
+                buf = state["momentum_buffer"]
+                buf.mul_(momentum).add_(g)
+                g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
+
+                p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
+                # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
+                eps = 1e-12
+                g_normalized = g / (g.norm() + eps)
+                if self.sgd_coeff != 1:
+                    update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
+                    update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
+                else:
+                    update = self.sgd_coeff * g_normalized
+                p.data.add_(update, alpha=-lr) # take a step
+
 #############################################
 #                DataLoader                 #
 #############################################
@@ -359,11 +392,12 @@ def main(run, model):
                      dict(params=norm_biases,         lr=bias_lr, weight_decay=wd/bias_lr),
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
-    optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True)
+    optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5)
     optimizers = [optimizer1, optimizer2]
     for opt in optimizers:
         for group in opt.param_groups:
             group["initial_lr"] = group["lr"]
+            group["target_momentum"] = group.get("momentum", 0)  # default to 0 if not set
 
     # For accurately timing GPU code
     starter = torch.cuda.Event(enable_timing=True)
@@ -401,6 +435,10 @@ def main(run, model):
                 group["lr"] = group["initial_lr"] * (1 - step / whiten_bias_train_steps)
             for group in optimizer1.param_groups[1:]+optimizer2.param_groups:
                 group["lr"] = group["initial_lr"] * (1 - step / total_train_steps)
+            for group in optimizer2.param_groups:
+                eta = (step / total_train_steps) # percentage of training
+                # group["momentum"] = (group["target_momentum"] - 0.1) * eta + group["target_momentum"] * (1 - eta)
+        
             for opt in optimizers:
                 opt.step()
             model.zero_grad(set_to_none=True)
