@@ -411,7 +411,7 @@ During the research it was noted that RSVD can give good and fast approximation 
 
     % add figure
 
-    Then, we tune F-Muon with $\alpha = 0.5$. Tuned parameters are {\tt lr=0.4(1 - step/total\_steps), momentum=0.65 - 0.1(1 - step/total\_steps), nesterov = True}. While Muon reaches $94.00 \pm 0.13$\% accuracy after 8 epochs, tuned F-Muon reaches $93.97 \pm 0.14\%$ after 8 epochs.
+    Then, we tune F-Muon with $\alpha = 0.5$. Tuned parameters are {\tt lr=0.4(1 - step/total\_steps), momentum=0.65, nesterov = True}. While Muon reaches $94.00 \pm 0.13$\% accuracy after 8 epochs, tuned F-Muon reaches $94.01 \pm 0.14\%$ after 8 epochs.
 
     Finally, we take the set of tuned parameters and test on different $\alpha$. We notice that even when $\alpha=0.1$, the accuracy is much higher than in case of the pure NSGD.
 
@@ -425,7 +425,9 @@ During the research it was noted that RSVD can give good and fast approximation 
     \end{figure}
 
     \subsection{Modded NanoGPT speedrun}
-    We test F-Muon on NanoGPT speedrun \citep{modded_nanogpt_2024}.
+    We test F-Muon on NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.5$, the optimal parameters are {\tt lr=0.07, momentum=0.95}, while for Muon they were  {\tt lr=0.05, momentum=0.95}. After testing for 1750 steps, as has been done on the speedruns, we get 3.281 cross-entropy loss, while on Muon, it falls below the target threshold 3.28 reaching 3.279.
+
+    TO-DO: more discussions of experiments.
 
 \section{Related Work}
 As Muon \citep{jordan2024muon} is a very successful and popular optimizer for functions of weight matrices, a lot of reseach has been put into, first, further improving its performance, and, second, in explaining its success.

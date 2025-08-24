@@ -496,3 +496,191 @@ class DistrMuonNormalized(torch.optim.Optimizer):
                 )
 
         torch.futures.collect_all(all_reduce_futures).wait()
+
+# does not work
+class FastNormMuon(torch.optim.Optimizer):
+    """
+    Muon - MomentUm Orthogonalized by Newton-schulz
+
+    https://kellerjordan.github.io/posts/muon/
+
+    Muon internally runs standard SGD-momentum, and then performs an orthogonalization post-
+    processing step, in which each 2D parameter's update is replaced with the nearest orthogonal
+    matrix. To efficiently orthogonalize each update, we use a Newton-Schulz iteration, which has
+    the advantage that it can be stably run in bfloat16 on the GPU.
+
+    Warning: This optimizer should not be used for the embedding layer, the final fully connected layer,
+    or any {0,1}-D parameters; those should all be optimized by a standard method (e.g., AdamW).
+    """
+    def __init__(self, params, lr=0.02, weight_decay=0.01, momentum=0.95, sgd_coeff=0):
+        defaults = dict(lr=lr, weight_decay=weight_decay, momentum=momentum, sgd_coeff=sgd_coeff)
+        params = list(params)
+        sizes = {p.shape for p in params}
+        # create one buffer per unique parameter-size
+        param_groups = []
+        for size in sizes:
+            group_params = [p for p in params if p.shape == size]
+            param_groups.append(dict(params=group_params))
+        super().__init__(param_groups, defaults)
+        self.sgd_coeff = sgd_coeff
+
+    @torch.no_grad()
+    def step(self):
+        # Efficient systems-wise implementation of step developed by @YouJiacheng,
+        # @KonstantinWilleke, @alexrgilbert, @adricarda, @tuttyfrutyee, @vdlad,
+        # @ryanyang0, and @vagrawal.
+        rank = dist.get_rank()
+        world_size = dist.get_world_size()
+        reduce_scatter_futures: list[torch.Future] = []
+        all_reduce_futures: list[torch.Future] = []
+        for group in self.param_groups:
+            params: list[Tensor] = group["params"]
+            grad = torch.empty_like(params[-1])
+            grad_pad = [param.grad for param in params] + [torch.zeros_like(params[-1])] * world_size
+            for base_i in range(0, len(params), world_size):
+                if base_i + rank < len(params):
+                    grad = params[base_i + rank].grad
+                # This gives strange dynamo warnings
+                reduce_scatter_futures.append(dist.reduce_scatter(grad, grad_pad[base_i:base_i + world_size], op=dist.ReduceOp.AVG, async_op=True).get_future())
+
+        idx = 0
+        for group in self.param_groups:
+            params: list[Tensor] = group["params"]
+            params_pad = params + [torch.empty_like(params[-1])] * world_size
+            momentum = group["momentum"]
+            sgd_coeff = group["sgd_coeff"]
+            for base_i in range(0, len(params), world_size):
+                reduce_scatter_futures[idx].wait()
+                if base_i + rank < len(params):
+                    p = params[base_i + rank]
+                    grad = p.grad
+                    eff_lr = group["lr"] * max(1, p.size(-2) / p.size(-1)) ** 0.5 * getattr(p, "lr_mul", 1.0)
+                    eff_weight_decay = group["lr"] * group["weight_decay"] * getattr(p, "wd_mul", 1.0)
+                    state = self.state[p]
+                    if len(state) == 0:
+                        state["momentum_buffer"] = torch.zeros_like(grad)
+                    momentum_buffer = state["momentum_buffer"]
+                    p.mul_(1 - eff_weight_decay)
+                    # assume: grad is a Tensor, momentum_buffer exists, momentum, sgd_coeff, eps, eff_lr are defined
+                    with torch.no_grad():
+                        # inplace blend with momentum (keeps original semantic: grad becomes the lerped tensor)
+                        grad.lerp_(momentum_buffer, momentum)
+
+                        # compute zeropower part from the (post-lerp) grad, in bfloat16 to match the original code
+                        if sgd_coeff != 1:
+                            # create update_part in bfloat16 (may allocate once per call; unavoidable if zeropower expects bfloat16)
+                            update_part = zeropower_via_newtonschulz5(grad.to(torch.bfloat16), 5)
+
+                            # upcast update_part to grad dtype to do mixed-dtype blending without extra temporaries later
+                            if update_part.dtype != grad.dtype:
+                                update_part = update_part.to(grad.dtype)
+
+                        # compute inverse norm scalar efficiently (no large temp tensors)
+                        # - view(-1) is cheap (no copy)
+                        # - dot(view, view) is a single reduction
+                        norm_sq = grad.view(-1).dot(grad.view(-1))
+                        inv_norm = (norm_sq + eps).rsqrt()  # stable rsqrt on the scalar
+
+                        # normalize grad in-place (so we avoid allocating g_normalized)
+                        grad.mul_(inv_norm)   # now grad == g_normalized (in-place)
+
+                        # build final update (reuse update_part buffer if available)
+                        if sgd_coeff != 1:
+                            # update_part := (1 - sgd_coeff) * update_part + sgd_coeff * grad
+                            # do it in-place on update_part to avoid creating another temp
+                            update_part.mul_(1 - sgd_coeff)    # in-place scale
+                            update_part.lerp_(grad, sgd_coeff) # in-place linear interpolation
+                            update = update_part
+                        else:
+                            # if sgd_coeff == 1 we can use grad directly (already normalized in-place)
+                            update = grad
+
+                        # apply update (same as original)
+                        p.add_(other=update, alpha=-eff_lr)
+                    '''
+                    momentum_buffer.lerp_(grad, 1 - momentum)
+                    grad = grad.lerp_(momentum_buffer, momentum)
+                    eps = 1e-12
+                    g_normalized = grad / (grad.norm() + eps)
+                    if sgd_coeff != 1:
+                        update_part = zeropower_via_newtonschulz5(grad.bfloat16(), 5)
+                        update = (1 - sgd_coeff) * update_part + sgd_coeff * g_normalized
+                    else:
+                        update = sgd_coeff * g_normalized
+                    p.add_(other=update, alpha=-eff_lr)
+                    '''
+                idx += 1
+                all_reduce_futures.append(dist.all_gather(params_pad[base_i:base_i + world_size], params_pad[base_i + rank], async_op=True).get_future())
+        torch.futures.collect_all(all_reduce_futures).wait()
+
+
+
+class NormNeon(torch.optim.Optimizer):
+    """
+    Muon - MomentUm Orthogonalized by Newton-schulz
+
+    https://kellerjordan.github.io/posts/muon/
+
+    Muon internally runs standard SGD-momentum, and then performs an orthogonalization post-
+    processing step, in which each 2D parameter's update is replaced with the nearest orthogonal
+    matrix. To efficiently orthogonalize each update, we use a Newton-Schulz iteration, which has
+    the advantage that it can be stably run in bfloat16 on the GPU.
+
+    Warning: This optimizer should not be used for the embedding layer, the final fully connected layer,
+    or any {0,1}-D parameters; those should all be optimized by a standard method (e.g., AdamW).
+    """
+    def __init__(self, params, lr=0.02, weight_decay=0.01, momentum=0.95):
+        defaults = dict(lr=lr, weight_decay=weight_decay, momentum=momentum)
+        params = list(params)
+        sizes = {p.shape for p in params}
+        # create one buffer per unique parameter-size
+        param_groups = []
+        for size in sizes:
+            group_params = [p for p in params if p.shape == size]
+            param_groups.append(dict(params=group_params))
+        super().__init__(param_groups, defaults)
+
+    @torch.no_grad()
+    def step(self):
+        # Efficient systems-wise implementation of step developed by @YouJiacheng,
+        # @KonstantinWilleke, @alexrgilbert, @adricarda, @tuttyfrutyee, @vdlad,
+        # @ryanyang0, and @vagrawal.
+        rank = dist.get_rank()
+        world_size = dist.get_world_size()
+        reduce_scatter_futures: list[torch.Future] = []
+        all_reduce_futures: list[torch.Future] = []
+        for group in self.param_groups:
+            params: list[Tensor] = group["params"]
+            grad = torch.empty_like(params[-1])
+            grad_pad = [param.grad for param in params] + [torch.zeros_like(params[-1])] * world_size
+            for base_i in range(0, len(params), world_size):
+                if base_i + rank < len(params):
+                    grad = params[base_i + rank].grad
+                # This gives strange dynamo warnings
+                reduce_scatter_futures.append(dist.reduce_scatter(grad, grad_pad[base_i:base_i + world_size], op=dist.ReduceOp.AVG, async_op=True).get_future())
+
+        idx = 0
+        for group in self.param_groups:
+            params: list[Tensor] = group["params"]
+            params_pad = params + [torch.empty_like(params[-1])] * world_size
+            momentum = group["momentum"]
+            for base_i in range(0, len(params), world_size):
+                reduce_scatter_futures[idx].wait()
+                if base_i + rank < len(params):
+                    p = params[base_i + rank]
+                    grad = p.grad
+                    eff_lr = group["lr"] * max(1, p.size(-2) / p.size(-1)) ** 0.5 * getattr(p, "lr_mul", 1.0)
+                    eff_weight_decay = group["lr"] * group["weight_decay"] * getattr(p, "wd_mul", 1.0)
+                    state = self.state[p]
+                    if len(state) == 0:
+                        state["momentum_buffer"] = torch.zeros_like(grad)
+                    momentum_buffer = state["momentum_buffer"]
+                    p.mul_(1 - eff_weight_decay)
+                    momentum_buffer.lerp_(grad, 1 - momentum)
+                    grad = grad.lerp_(momentum_buffer, momentum)
+                    # v = zeropower_via_newtonschulz5(grad.bfloat16(), 5)
+                    u, s, vt = several_sv_svds_approximation(grad.bfloat16(), 5)
+                    p.add_(other=u@vt, alpha=-eff_lr)
+                idx += 1
+                all_reduce_futures.append(dist.all_gather(params_pad[base_i:base_i + world_size], params_pad[base_i + rank], async_op=True).get_future())
+        torch.futures.collect_all(all_reduce_futures).wait()
