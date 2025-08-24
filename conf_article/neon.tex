@@ -111,23 +111,23 @@ AIRI, Skoltech \\
 \begin{abstract}
 % In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms, their affine combinations with the Frobenius norms, and corresponding duals to develop a new family of Muon-like algorithms we name {\it Fanions}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
 
-In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms to introduce a new family of Muon-like algorithms we name {\it Fanions}. Then, we consider their convex combinations with the Frobenius norm and corresponding duals to develop a new family of algorithms we name {\it F-Fanions}, one of them being {\it F-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that properly-tuned F-Muon is on par with Muon, which raises the question about Muon's optimality.
+In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms to introduce a new family of Muon-like algorithms we name {\it Fanions}. Then, we consider their convex combinations with the Frobenius norm and corresponding duals to develop a new family of algorithms we name {\it F-Fanions}, one of them being {\it F-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that properly-tuned F-Muon is almost on par with Muon, which questions the necessity of finding the exact solution to the problem in linear optimization oracle framework.
 
 \end{abstract}
 
 \section{Introduction}
- Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam \citep{kingma2014adam} and AdamW \citep{loshchilov2017decoupled}, recently proposed Muon has shown promising results on training very large models \citep{jordan2024muon,liu2025muon}. Its key difference from Adam and AdamW is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
+ Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam \citep{kingma2014adam} and AdamW \citep{loshchilov2017decoupled}, recently proposed Muon \citep{jordan2024muon} has shown promising results on training very large models \citep{liu2025muon}. Its key difference from Adam and AdamW is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
  
  That is what can be said from a practical point of view. From the perspective of theory, Muon's main innovation was an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update \citep{bernstein2025deriving}. Based upon recent theoretical advances that explain some theory behind Muon, Scion and Gluon \citep{bernstein2025deriving,kovalev2025understanding,pethick2025training,riabinin2025gluon}, we explore application of other matrix norms to optimization of functions of matrices. As it has been done with Muon, we stipulate that our algorithms' updates be fast to compute.
 
- In this article, we focus on the two most common matrix norms akin to the spectral, namely, the nuclear Norm and the Frobenius norm. Working in the linear minimization oracle (lmo) framework, which is equivalent to a factor to the trust region approach and the steepest descent under norm constraint, we derive Neon, our algorithm based on the nuclear norm. In the section {\it Matrix side of the updates}, we explain how Neon updates can be computed asymptotically faster than Muon updates by the Newton-Schulz iterations.
+ In this article, we focus on the two most common matrix norms akin to the spectral, namely, the nuclear norm and the Frobenius norm. Working in the linear minimization oracle (lmo) framework, which is equivalent to a factor to the trust region approach and the steepest descent under norm constraint, we derive Neon, our algorithm based on the nuclear norm. In the section {\it Matrix side of the updates}, we explain how Neon updates can be computed asymptotically with the same $\cO(m n \min\{m, n\})$ number of FLOPs as Muon updates are computed via Newton-Schulz iterations.
 
- Noticing that Neon and Muon are diametrical in terms of the rank of the update matrix, we bridge the space by "regularizing" them by NormalizedSGD, which is derived in lmo with the Frobenius norm. We do this in the same lmo approach by considering a norm that is dual to the convex combination of the Frobenius norm and the spectral or the nuclear norms respectively. So we derive the algorithms we name F-Neon and F-Muon respectively.
+ Noticing that Neon and Muon are diametrical in terms of the rank of the update matrix, we bridge the space by "regularizing" them by Normalized SGD, which is derived in lmo with the Frobenius norm. We do this in the same lmo approach by considering a norm that is dual to the convex combination of the Frobenius norm and the spectral or the nuclear norm respectively. So we derive the algorithms we name F-Neon and F-Muon respectively.
 
 
- Having faced the array of different Muon-like optimizers, according to the upper bounds from \citet{kovalev2025understanding,riabinin2025gluon}, with similar convergence behavior, we painstakingly compare them on a synthetic linear least squares problem with known Lipschitz constant. The efforts results in comparison of the algorithms by their convergence not in terms of the dual norms of their gradient, but in terms of the common spectral norm, which may strongly differ, especially in large matrices, from the initial dual norms. Thus, we compare the algorithms in a unified fashion.
+ Having faced the array of different Muon-like optimizers, according to the upper bounds from \citet{kovalev2025understanding,riabinin2025gluon}, with similar convergence behavior, we painstakingly compare them on a synthetic linear least squares problem with known Lipschitz constant. The efforts results in comparison of the algorithms by their convergence not in terms of the dual norms of their gradient, but in terms of the common spectral norm, which may strongly differ, especially in large matrices, from the initial dual norms. Thus, we compare the algorithms in a unified fashion and find that if an algorithm converges fast by the loss, it does not mean it converges fast by the norm of the gradient, and vice versa.
 
- Finally, we test Muon, Neon, NSGD, F-Muon and F-Neon on deep-learning tasks: training convolutional network on CIFAR-10 and fine-tuning NanoGPT. The results support the supremacy of Muon, but the most striking result of the tests is that F-Muon, only half of which is Muon, surpasses Muon's accuracy on the CIFAR tasks by a margin. The case of F-Muon answers in the affirmative to the question of feasibility of constructing a mixture of optimization algorithms to increase robustness of the composite algorithm.
+ Finally, we test Muon and F-Muon on two deep-learning tasks, training convolutional network on CIFAR-10 \citep{cifar2023airbench} and pre-training NanoGPT on FineWeb \citep{modded_nanogpt_2024}. The results support the supremacy of Muon, but the most striking result of the tests is that F-Muon, only half of which is Muon, surpasses Muon's accuracy on the CIFAR tasks by a margin. The case of F-Muon answers in the affirmative to the question of feasibility of constructing a mixture of optimization algorithms to increase robustness of the composite algorithm.
 
 
 \section{Problem Statement}
@@ -298,11 +298,13 @@ To compute the algorithms' updates, we use thick-restarted Lanczos method for si
 
 This method is designed for efficiently approximating the largest singular values and vectors of large matrices. Its thick-restart strategy retains the most informative Ritz vectors at each cycle, which accelerates convergence while avoiding excessive memory growth. We are specifically interested in this algorithm because it allows us to extract several largest singular values and related singular vectors of the matrix to make a Neon step. Moreover, TRLan is stable GPU-friendly algorithm because it mainly operates with matrix-vector multiplications (MVs), which are higly-parallel, and does not require full reorthogonalization against the whole Krylov basis by managing  short recurrent formulas and incorparating thick restarting. 
 
-Per-cycle complexity is $O(mn^2 + n^2k + nk^2)$, where m and n are dimensions of target matrix and n is the smallest one, k is retained subspace's size.
+Per-cycle complexity is $O(mn^2 + n^2k + nk^2)$, where m and n are dimensions of the target matrix and n is the smaller one, k is retained subspace's size.
 
 In \cref{tbl:matrix_methods}, we compare performance of TRLan, RSVD, and power iterations on calculating k-rank update, which is used in k-Fanion. The results highlight that TrLan is much faster that its competitors.
 
 During the research it was noted that RSVD can give good and fast approximation for singular values, but the matrix of approximation is far from the one given by truncated SVD, while TRLan gives good and fast approximation of a matrix, but not so good approximation for singular values. That means that TRLan may be not a perfect choice for algorithms like Dion, where $\sigma_i$ are required for error feedback.
+
+The practical drawback of the TRLAn is the absence of its implementation in PyTorch.
 \begin{table}[h!]
     \centering
     \begin{tabular}{c|c|c|c}
@@ -366,11 +368,10 @@ During the research it was noted that RSVD can give good and fast approximation 
 
 
 \section{Experiments}
-    \iffalse
     \subsection{Randomized Linear Least Squares}
     Since the provided by other authors \citep{kovalev2025understanding,riabinin2025gluon} theoretical guarantees are almost norm-independent, we have to test them in practice.
 
-    To test the bounds from \citet{kovalev2025understanding} in practice, we construct the following L-smooth problem:
+    To test the bounds from \citet{kovalev2025understanding}, we construct the following L-smooth problem:
 
     \begin{equation}\label{eq:lls}
         F(\mX) = \frac{1}{2} \<(\mX-\mS), \mM (\mX - \mS) \mN>
@@ -398,22 +399,63 @@ During the research it was noted that RSVD can give good and fast approximation 
     We take learning rate $\eta$ and iteration number $K$ from \cref{eq:unstoch_tr}.
 
 
-    We are interested to get $\epsilon_2=$ 1e-1 precision in $\norms{\cdot}$. Hence, we target $\epsilon = \epsilon_2$ for the nuclear norm (Neon), $\epsilon = \frac{n}{2}$ for the spectral norm (Muon), and $\epsilon = \frac{\sqrt{n}}{2}$ for the Frobenius norm (NSGD).
+    We are interested to get $\epsilon_2=$ 1e0 precision in $\norms{\cdot}$. Hence, we target $\epsilon = \epsilon_2$ for the nuclear norm (Neon), $\epsilon = \frac{n}{2}$ for the spectral norm (Muon), and $\epsilon = \frac{\sqrt{n}}{2}$ for the Frobenius norm (NSGD).
+    With that, we get the following lrs: Muon lr: 2.33E-04, Neon lr: 2.10e-02, Frobenius (NSGD) lr: 1.75e-02, and the following number of iterations: Muon iter: 68, Neon iter: 11919, Frobenius iter: 323. L-constants are 171.4, 47.7, and 16.2 respectively. As we will see, these results do not relate well to the practice.
 
-    {\bf An independent experiment}
-    To make the problem more real-world, we do not use known information about smoothness. We run NormalizedSGD, Muon, F-Muon with $\alpha=1/2$, Neon, and F-Neon with $\alpha=1/2$ for 100 000 iterations with learning rate = 1e-3.
+    To make the problem more real-world, we do not use known information about smoothness. We run NormalizedSGD, Muon, F-Muon with $\alpha=1/2$, Neon, and F-Neon with $\alpha=1/2$ for 5 000 iterations with learning rate = 1e-2, which has been close to computed theoretically above. The results are in \cref{fig:lls}.
+
+    Though Neon displays the worst convergence in terms of loss, it is a leader in terms of the norm of the gradient. This might signify that the known bounds are not sufficient even in the case of a convex optimization: lmo-based algorithms may converge well by these bounds, but be impractical like Neon.
+
+    This experiment may also show that F-Muon may be more robust under general conditions than Muon.
+
     
-    \subsection{Logistic Regression}
-    \fi
+    \begin{figure}[h!]
+        \centering
+        \begin{subfigure}[t]{0.48\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{figs/simple_lls/loss_vs_iteration_50x50.pdf}
+            \caption{Loss}
+            \label{fig:lls_loss}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[t]{0.48\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{figs/simple_lls/gradient_spectral_norm_vs_iteration_50x50.pdf}
+            \caption{Spectral norm of the gradient}
+            \label{fig:lls_grad_norm}
+        \end{subfigure}
+        \caption{Linear least squares problem for a 50 x 50 matrix}
+        \label{fig:lls}
+                
+    \end{figure}   
+    
+    
     \subsection{CIFAR-10 airbench}
     We adapt Keller Jordan's code to test F-Muon, Neon, and F-Neon on the CIFAR-10 airbench \citep{cifar2023airbench}.
-    First, we run F-Muon for different $\alpha$ with the same {\tt lr=0.24(1 - step/total\_steps), momentum=0.6, nesterov=True}, as have been finetuned by Jordan. We record the accuracy after 8 epochs of training.
+    First, we run F-Muon for different $\alpha$ with the same {\tt lr=0.24(1 - step/total\_steps), momentum=0.6, nesterov=True}, as have been finetuned by Jordan, 10 repetitions for each $\alpha$. We record the accuracy after 8 epochs of training. The results are in \cref{fig:muon_alphas}.
 
-    % add figure
+    Then we tune F-Muon with $\alpha = 0.5$. Tuned parameters are {\tt lr=0.4(1 - step/total\_steps), momentum=0.65, nesterov = True}. While Muon reaches $94.00 \pm 0.13$\% accuracy after 8 epochs, tuned F-Muon reaches $94.01 \pm 0.14\%$ after 8 epochs (average was done by 200 iterations).
 
-    Then, we tune F-Muon with $\alpha = 0.5$. Tuned parameters are {\tt lr=0.4(1 - step/total\_steps), momentum=0.65, nesterov = True}. While Muon reaches $94.00 \pm 0.13$\% accuracy after 8 epochs, tuned F-Muon reaches $94.01 \pm 0.14\%$ after 8 epochs.
+    Finally, we take this set of tuned parameters and test on different $\alpha$, 5 times for each $\alpha$. The results are in \cref{fig:fmuon_alphas}. We notice that even when $\alpha=0.1$, the accuracy is much higher than in case of the pure NSGD.
 
-    Finally, we take the set of tuned parameters and test on different $\alpha$. We notice that even when $\alpha=0.1$, the accuracy is much higher than in case of the pure NSGD.
+    \begin{figure}[h!]
+        \centering
+        \begin{subfigure}[b]{0.48\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{figs/muon_tuned_diff_alpha.pdf}
+            \caption{With parameters tuned for Muon}
+            \label{fig:muon_alphas}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.48\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{figs/fmuon_tuned_diff_alpha.pdf}
+            \caption{With parameters tuned for F-Muon}
+            \label{fig:fmuon_alphas}
+        \end{subfigure}
+        \caption{Mean accuracies for different $\alpha$ of F-Muon.}
+        \label{fig:diff_alphas}
+    \end{figure}   
 
     The results are curious and could be represented by \cref{fig:cifar_ball}: lmo ball, which we plotted in a 2D space of singular values, has drastically changed, but the observed convergence after tuning has not degraded. These observations raise the question of how much lmo-based algorithms are sensitive to the constraint area, i.e. what will happen if the ball is corrupted. In this particular example, we have had a blurred ball, which proved as robust as the original ball.
 
@@ -424,10 +466,12 @@ During the research it was noted that RSVD can give good and fast approximation 
         \label{fig:cifar_ball}
     \end{figure}
 
-    \subsection{Modded NanoGPT speedrun}
-    We test F-Muon on NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.5$, the optimal parameters are {\tt lr=0.07, momentum=0.95}, while for Muon they were  {\tt lr=0.05, momentum=0.95}. After testing for 1750 steps, as has been done on the speedruns, we get 3.281 cross-entropy loss, while on Muon, it falls below the target threshold 3.28 reaching 3.279.
+    The most pathological case is $\alpha < 0$, which corresponds to the lmo with an area that is not a norm ball! Despite this violation, the mixture of algorithms reaches almost the same accuracy as vanilla Muon.
 
-    TO-DO: more discussions of experiments.
+    \subsection{Modded NanoGPT speedrun}
+    We test F-Muon on NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.5$, the optimal parameters are {\tt lr=0.07, momentum=0.95}, while for Muon they were  {\tt lr=0.05, momentum=0.95}. After testing for 1750 steps, as it has been done on the speedruns, we get 3.281 cross-entropy loss, while on Muon, it falls below the target threshold 3.28 reaching 3.279.
+
+    Again, as on the CIFAR airbench, if we set $\alpha=-0.1$, F* to which is not a norm, we get a 3.2818 loss, which is not higher than for $\alpha=0.3$, for example.
 
 \section{Related Work}
 As Muon \citep{jordan2024muon} is a very successful and popular optimizer for functions of weight matrices, a lot of reseach has been put into, first, further improving its performance, and, second, in explaining its success.
@@ -457,6 +501,7 @@ IO suggested using the nuclear norm in the \citet{bernstein2024oldoptimizernewno
 
 \section{Formal assumptions}
 Here we restate assumptions from \citet{kovalev2025understanding} that are used in the theorems from the main part of the article.
+
 {\bf Lipschitz continuous gradient.}
     We assume that the gradient $\nabla f(\cdot)$ is Lipschitz continuous with respect to the norm $\norm{\cdot}$, that is, the following inequality holds:
     \begin{aequation}\label{eq:L}
