@@ -24,12 +24,12 @@ def plot_results(sgd_coeffs, mean_accs, std_accs):
         1 - sgd_coeffs[mask],       # x values
         mean_accs[mask],            # y values
         yerr=std_accs[mask],        # errors
-        fmt='o', markersize=8, capsize=5, capthick=2,
+        fmt='o', markersize=6, capsize=5, capthick=2,
         color='#440154', ecolor='#440154', alpha=0.8, linewidth=2 # deep purple
     )
     # Customize the plot
-    plt.xlabel('α', fontsize=16)
-    plt.ylabel('Accuracy', fontsize=16)
+    plt.xlabel('α', fontsize=18)
+    plt.ylabel('Accuracy, %', fontsize=18)
     plt.grid(True, alpha=0.3)
     
     # Set y-axis limits
@@ -38,12 +38,13 @@ def plot_results(sgd_coeffs, mean_accs, std_accs):
     # Add horizontal line at 94.01 (the original reported accuracy)
     plt.axhline(y=0.9401, color='gray', linestyle='--', alpha=0.7, 
                 label='Top Muon: 94.01%')
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=16)
     
     # Add value labels above points
-    for coeff, mean, std in zip(sgd_coeffs, mean_accs, std_accs):
-        plt.text(1 - coeff, max(ymin, mean + std), f'{mean:.4f}', 
-                ha='center', va='bottom', fontweight='bold', fontsize=10)
+    
+    #for coeff, mean, std in zip(sgd_coeffs, mean_accs, std_accs):
+    #    plt.text(1 - coeff, max(ymin, mean + std), f'{100 * mean:.2f}', 
+    #            ha='center', va='bottom', fontweight='bold', fontsize=15)
     plt.xticks(np.arange(-0.2, 1.3, 0.2))
     plt.tight_layout()
     plt.savefig('sgd_coeff_results.pdf', dpi=300, bbox_inches='tight')
@@ -52,8 +53,8 @@ def plot_results(sgd_coeffs, mean_accs, std_accs):
 def plot_results_from_file(filename='sgd_coeff_experiment_results.pt'):
     """Load and plot results from a saved .pt file."""
     try:
-        # Load the results
-        results = torch.load(filename)
+        # Load the results with weights_only=False to handle numpy arrays
+        results = torch.load(filename, weights_only=False)
         
         sgd_coeffs = results['sgd_coeffs']
         mean_accs = results['mean_accs']
@@ -70,21 +71,68 @@ def plot_results_from_file(filename='sgd_coeff_experiment_results.pt'):
         print(f"File {filename} not found. Run the experiment first.")
     except Exception as e:
         print(f"Error loading file: {e}")
+        print("\nTrying alternative loading method...")
+        try:
+            # Alternative loading method for newer PyTorch versions
+            results = torch.load(filename, map_location='cpu')
+            
+            sgd_coeffs = results['sgd_coeffs']
+            mean_accs = results['mean_accs']
+            std_accs = results['std_accs']
+            
+            print(f"Successfully loaded results using alternative method!")
+            print(f"Number of experiments: {len(sgd_coeffs)}")
+            print(f"Best accuracy: {results['best_acc']:.4f} ± {results['best_std']:.4f} at sgd_coeff = {results['best_coeff']}")
+            
+            # Create the plot
+            plot_results(sgd_coeffs, mean_accs, std_accs)
+            
+        except Exception as e2:
+            print(f"Alternative loading also failed: {e2}")
+            print("\nTrying pickle file as fallback...")
+            try:
+                # Try to load the corresponding pickle file
+                pickle_filename = filename.replace('.pt', '.pkl')
+                import pickle
+                with open(pickle_filename, 'rb') as f:
+                    results = pickle.load(f)
+                
+                sgd_coeffs = results['sgd_coeffs']
+                mean_accs = results['mean_accs']
+                std_accs = results['std_accs']
+                
+                print(f"Successfully loaded results from pickle file {pickle_filename}!")
+                print(f"Number of experiments: {len(sgd_coeffs)}")
+                print(f"Best accuracy: {results['best_acc']:.4f} ± {results['best_std']:.4f} at sgd_coeff = {results['best_coeff']}")
+                
+                # Create the plot
+                plot_results(sgd_coeffs, mean_accs, std_accs)
+                
+            except Exception as e3:
+                print(f"Pickle loading also failed: {e3}")
+                print("\nThis might be due to PyTorch version compatibility issues.")
+                print("Try updating your PyTorch version or check the file format.")
+                print("\nAvailable files in current directory:")
+                import glob
+                for f in glob.glob("*.*"):
+                    print(f"  - {f}")
 
 def list_available_files():
-    """List all available .pt result files."""
+    """List all available result files."""
     import os
     import glob
     
     pt_files = glob.glob("*.pt")
-    if pt_files:
+    pkl_files = glob.glob("*.pkl")
+    
+    if pt_files or pkl_files:
         print("Available result files:")
-        for file in pt_files:
+        for file in sorted(pt_files + pkl_files):
             print(f"  - {file}")
     else:
-        print("No .pt result files found in current directory.")
+        print("No result files found in current directory.")
     
-    return pt_files
+    return pt_files + pkl_files
 
 if __name__ == "__main__":
     # List available files

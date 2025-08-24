@@ -85,8 +85,15 @@ def quick_test():
         'note': 'Quick test with only 5 runs per coefficient'
     }
     
-    torch.save(results, 'quick_test_results.pt')
+    # Save in a more compatible format
+    torch.save(results, 'quick_test_results.pt', _use_new_zipfile_serialization=False)
     print(f"\nQuick test results saved to 'quick_test_results.pt'")
+    
+    # Also save as a pickle file for better compatibility
+    import pickle
+    with open('quick_test_results.pkl', 'wb') as f:
+        pickle.dump(results, f)
+    print(f"Results also saved to 'quick_test_results.pkl'")
 
 if __name__ == "__main__":
     quick_test()
