@@ -28,9 +28,40 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
 from matrix_functions import one_sv_svds_approximation
-from optimizers import Dion, Neon
+from optimizers import Dion, Neon, NormalizedMuon, DistrMuonNormalized
 
-torch.backends.cudnn.benchmark = True
+import torch.distributed as dist
+os.environ.setdefault("MASTER_ADDR", "localhost")
+os.environ.setdefault("MASTER_PORT", "12355")
+
+rank = int(os.environ.get("RANK", 0))
+world_size = int(os.environ.get("WORLD_SIZE", 1))
+
+if not dist.is_initialized():
+    dist.init_process_group(
+        backend="nccl",   # or "gloo" if no CUDA
+        init_method="env://",
+        rank=rank,
+        world_size=world_size
+    )
+
+device = torch.device("cuda", int(os.environ.get("LOCAL_RANK", 0)))
+torch.cuda.set_device(device)
+
+# For single-GPU, you can skip dist.init_process_group entirely.
+# But if you want to keep compatibility, init a dummy process group.
+#dist.init_process_group(
+#    backend="nccl",
+#    init_method="env://",
+#    rank=rank,
+#    world_size=world_size,
+#    device_id=device
+#)
+
+# No real need for barrier in single-GPU, but keep for API compatibility
+# dist.barrier()
+
+master_process = (rank == 0)  # still works
 
 #############################################
 #               Muon optimizer              #
@@ -118,7 +149,7 @@ class SignSGDMuon(torch.optim.Optimizer):
                 p.data.add_(update, alpha=-lr) # take a step
 
 
-
+'''
 class NormalizedMuon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
@@ -148,6 +179,7 @@ class NormalizedMuon(torch.optim.Optimizer):
                 update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
                 update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
                 p.data.add_(update, alpha=-lr) # take a step
+'''
 
 class Muon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
@@ -613,9 +645,11 @@ def main(run, model):
                      dict(params=norm_biases, lr=bias_lr, weight_decay=wd/bias_lr),
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
-    # optimizer2 = NormalizedMuon(filter_params, lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6) # important
-    optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6)
-    optimizer2 = Dion(filter_params, lr=0.24, momentum=0.6, rank=10, momentum_decay=0.9, sgd_coeff=0.5)
+    optimizer2 = NormalizedMuon(filter_params, lr=0.5, momentum=0.6, sgd_coeff=0.5, nesterov=True) # important
+    # optimizer2 = DistrMuonNormalized(filter_params, lr=0.05, momentum=0.95, sgd_coeff=0.5) # important
+    
+    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6)
+    # optimizer2 = Dion(filter_params, lr=0.24, momentum=0.6, rank=10, momentum_decay=0.9, sgd_coeff=0.5)
     # optimizer2 = SignSGDMuon(filter_params, lr=0.45, momentum=0.7, nesterov=True, sgd_coeff=0.5)
     # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True)
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6, error_feedback_decay=0)

@@ -1,9 +1,10 @@
 import math
 import torch
 import torch.nn.functional as F
-from torch import nn
+from torch import nn, Tensor
+import torch.distributed as dist
 from matrix_functions import k_sv_svds_approximation_dlpack, one_sv_svds_approximation, svd_full_approximation, several_sv_svds_approximation
-
+'''
 def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
     """Simplified Newton-Schulz iteration for whitening"""
     assert len(G.shape) == 2
@@ -22,6 +23,35 @@ def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
         X = a * X + B @ X
     if G.size(0) > G.size(1):
         X = X.T
+    return X
+'''
+@torch.compile
+def zeropower_via_newtonschulz5(G: Tensor, steps: int=5) -> Tensor:
+    """
+    Newton-Schulz iteration to compute the zeroth power / orthogonalization of G. We opt to use a
+    quintic iteration whose coefficients are selected to maximize the slope at zero. For the purpose
+    of minimizing steps, it turns out to be empirically effective to keep increasing the slope at
+    zero even beyond the point where the iteration no longer converges all the way to one everywhere
+    on the interval. This iteration therefore does not produce UV^T but rather something like US'V^T
+    where S' is diagonal with S_{ii}' ~ Uniform(0.5, 1.5), which turns out not to hurt model
+    performance at all relative to UV^T, where USV^T = G is the SVD.
+    """
+    assert G.ndim >= 2 # batched Muon implementation by @scottjmaddox, and put into practice in the record by @YouJiacheng
+    a, b, c = (3.4445, -4.7750,  2.0315)
+    X = G
+    if G.size(-2) > G.size(-1):
+        X = X.mT
+
+    # Ensure spectral norm is at most 1
+    X = X / (X.norm(dim=(-2, -1), keepdim=True) + 1e-7)
+    # Perform the NS iterations
+    for _ in range(steps):
+        A = X @ X.mT
+        B = b * A + c * A @ A # quintic computation strategy adapted from suggestion by @jxbz, @leloykun, and @YouJiacheng
+        X = a * X + B @ X
+
+    if G.size(-2) > G.size(-1):
+        X = X.mT
     return X
 
 def u1s1v1t_torch(W, num_iter=20, eps=1e-8):
@@ -218,7 +248,58 @@ class NormalizedMuon(torch.optim.Optimizer):
                 else:
                     update = self.sgd_coeff * g_normalized
                 p.data.add_(update, alpha=-lr) # take a step
+'''
+bad version
+class NormalizedMuon(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, eps=1e-12):
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+        self.sgd_coeff = sgd_coeff
+        self.eps = eps
 
+    @torch.no_grad()
+    def step(self):
+        for group in self.param_groups:
+            lr = group["lr"]
+            momentum = group["momentum"]
+            nesterov = group["nesterov"]
+
+            for p in group["params"]:
+                if p.grad is None:
+                    continue
+
+                grad = p.grad
+                state = self.state[p]
+
+                buf = state.get("momentum_buffer")
+                if buf is None:
+                    buf = torch.zeros_like(grad)
+                    state["momentum_buffer"] = buf
+
+                buf.mul_(momentum).add_(grad)
+                if nesterov:
+                    grad = grad.add(buf, alpha=momentum)
+                else:
+                    grad = buf
+
+                # Normalize the parameter
+                p_data = p.data
+                p_data.mul_(p_data.numel()**0.5 / (p_data.norm() + self.eps))
+
+                # Normalize the gradient
+                grad_norm = grad.norm() + self.eps
+                grad_normalized = grad / grad_norm
+
+                if self.sgd_coeff != 1:
+                    update_part = zeropower_via_newtonschulz5(
+                        grad.reshape(grad.shape[0], -1)
+                    ).view_as(grad)
+                    update = (1 - self.sgd_coeff) * update_part + self.sgd_coeff * grad_normalized
+                else:
+                    update = grad_normalized
+
+                p_data.add_(update, alpha=-lr)
+'''
 
 class Dion(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, rank=1, momentum_decay=0.9, sgd_coeff=0):
@@ -338,3 +419,80 @@ class Dion(torch.optim.Optimizer):
                 
                 # Store Q for next iteration
                 # state['Q'] = Qt
+
+# doesn't work either
+class DistrMuonNormalized(torch.optim.Optimizer):
+    def __init__(self, params, lr=0.02, weight_decay=0.01, momentum=0.95, sgd_coeff=0.0):
+        defaults = dict(lr=lr, weight_decay=weight_decay, momentum=momentum)
+        self.sgd_coeff = sgd_coeff
+        params = list(params)
+        sizes = {p.shape for p in params}
+        param_groups = []
+        for size in sizes:
+            group_params = [p for p in params if p.shape == size]
+            param_groups.append(dict(params=group_params))
+        super().__init__(param_groups, defaults)
+
+    @torch.no_grad()
+    def step(self):
+        rank = dist.get_rank()
+        world_size = dist.get_world_size()
+        reduce_scatter_futures: list[torch.Future] = []
+        all_reduce_futures: list[torch.Future] = []
+        eps = 1e-12
+
+        for group in self.param_groups:
+            params: list[Tensor] = group["params"]
+            grad_pad = [param.grad for param in params] + [torch.zeros_like(params[-1])] * world_size
+            for base_i in range(0, len(params), world_size):
+                if base_i + rank < len(params):
+                    grad = params[base_i + rank].grad
+                reduce_scatter_futures.append(
+                    dist.reduce_scatter(
+                        grad, grad_pad[base_i:base_i + world_size],
+                        op=dist.ReduceOp.AVG, async_op=True
+                    ).get_future()
+                )
+
+        idx = 0
+        for group in self.param_groups:
+            params: list[Tensor] = group["params"]
+            params_pad = params + [torch.empty_like(params[-1])] * world_size
+            momentum = group["momentum"]
+            lr = group["lr"]
+
+            for base_i in range(0, len(params), world_size):
+                reduce_scatter_futures[idx].wait()
+                if base_i + rank < len(params):
+                    p = params[base_i + rank]
+                    g = p.grad
+                    eff_lr = lr * max(1, p.size(-2) / p.size(-1)) ** 0.5 * getattr(p, "lr_mul", 1.0)
+                    eff_weight_decay = lr * group["weight_decay"] * getattr(p, "wd_mul", 1.0)
+                    state = self.state[p]
+                    if len(state) == 0:
+                        state["momentum_buffer"] = torch.zeros_like(g)
+                    buf = state["momentum_buffer"]
+                    buf.lerp_(g, 1 - momentum)
+                    g = g.lerp(buf, momentum)
+                    
+                    # Gradient normalization and mixing with whitening
+                    g_normalized = g / (g.norm() + eps)
+                    if self.sgd_coeff != 1:
+                        update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
+                        update = (1 - self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
+                    else:
+                        update = self.sgd_coeff * g_normalized
+
+                    # Weight decay and step
+                    p.mul_(1 - eff_weight_decay)
+                    p.add_(other=update, alpha=-eff_lr)
+
+                idx += 1
+                all_reduce_futures.append(
+                    dist.all_gather(
+                        params_pad[base_i:base_i + world_size],
+                        params_pad[base_i + rank], async_op=True
+                    ).get_future()
+                )
+
+        torch.futures.collect_all(all_reduce_futures).wait()
