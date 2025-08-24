@@ -17,7 +17,7 @@ def quick_test():
     
     # Test fewer coefficient values for quick testing
     # sgd_coeffs = [-0.1, 0.0, 0.5, 1.0, 1.1]
-    sgd_coeffs = np.arange(-0.2, 1.3, 0.1)
+    sgd_coeffs = np.arange(-0.5, 1.3, 0.1)
     print(f"Testing {len(sgd_coeffs)} different sgd_coeff values: {sgd_coeffs}")
     print()
     
@@ -42,7 +42,7 @@ def quick_test():
         modified_main("warmup", model)
         
         # Actual runs (fewer for quick testing)
-        num_runs = 5
+        num_runs = 10
         print(f"  Running {num_runs} experiments...")
         accs = torch.tensor([modified_main(run, model) for run in range(num_runs)])
         
