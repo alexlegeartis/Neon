@@ -38,7 +38,7 @@ def create_modified_main_function(sgd_coeff):
         
         # Import NormalizedMuon here to avoid circular imports
         from airbench_muon import NormalizedMuon
-        optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=sgd_coeff)
+        optimizer2 = NormalizedMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=sgd_coeff)
         optimizers = [optimizer1, optimizer2]
         for opt in optimizers:
             for group in opt.param_groups:
@@ -291,8 +291,15 @@ def main_experiment():
         'best_std': best_std
     }
     
-    torch.save(results, 'full_sgd_coeff_experiment_results.pt')
+    # Save in a more compatible format
+    torch.save(results, 'full_sgd_coeff_experiment_results.pt', _use_new_zipfile_serialization=False)
     print(f"\nResults saved to 'full_sgd_coeff_experiment_results.pt'")
+    
+    # Also save as a pickle file for better compatibility
+    import pickle
+    with open('full_sgd_coeff_experiment_results.pkl', 'wb') as f:
+        pickle.dump(results, f)
+    print(f"Results also saved to 'full_sgd_coeff_experiment_results.pkl'")
 
 if __name__ == "__main__":
     main_experiment()
