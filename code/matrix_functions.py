@@ -69,8 +69,6 @@ def k_sv_svds_approximation_dlpack(W_torch, k, tau, num_iter=30):
     # print(opt_tau)
     return approx_torch, opt_tau, k
 
-    
-
 
 def svd_full_approximation(A, tau=0):
     k = 0
@@ -89,8 +87,6 @@ def svd_full_approximation(A, tau=0):
     # print(f"condition {S[0]/S[-1]:.4e}")
     return A_reconstructed
 
-
-import torch
 
 def randomized_svd_torch_full(G, n_components=1, n_oversamples=5, n_iter=2):
     """
@@ -251,6 +247,7 @@ def randomized_svd_torch(G, n_components=1, n_oversamples=5, n_iter=2):
     
     return u1, sigma1, v1
 
+# used in k-Neon
 def several_sv_svds_approximation(W_torch, k, num_iter=50):
     """SVD approximation using the top k singular values and corresponding vectors."""
     # Store original device and dtype
@@ -267,6 +264,7 @@ def several_sv_svds_approximation(W_torch, k, num_iter=50):
     
     return approx_torch_U, approx_torch_S, approx_torch_Vt
 
+# used in Neon
 def one_sv_svds_approximation(W_torch, num_iter=30):
     """SVD approximation using the top k singular values and corresponding vectors."""
     k = 1
@@ -304,6 +302,7 @@ def one_sv_svds_approximation(W_torch, num_iter=30):
     '''
     # return torch.outer(u1, v1), sigma1 # * - we do not need this! Muon doesn't have this 
 
+# similar to several_sv_svds, but returns only a product
 def lanczos_svdt(W_torch, k, num_iter=50):
     """SVD approximation using the top k singular values and corresponding vectors."""
     
