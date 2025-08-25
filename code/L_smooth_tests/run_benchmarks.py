@@ -4,7 +4,7 @@ from math import sqrt
 import torch
 
 from optimizers import Muon, Neon, NormalizedMuon
-from benchmark_runner import MatrixProblem, run_optimizer_on_problem
+from optimizer_runner import MatrixProblem, run_optimizer_on_problem
 from benchmark_plotter import build_default_panels, plot_from_descriptions, plot_and_save_default_panels
 from problems import RandomQuadraticPSDProblem as SimpleQuadratic, LogisticRegressionProblem
 
@@ -49,14 +49,14 @@ def main() -> None:
     lr_nuc = grad_op_eps / beta_nuc / lipsch_const_nuc
     lr_fro = grad_op_eps / beta_fro / lipsch_const_fro
     print(f"Muon lr: {lr_op: .2E}, Neon iter: {lr_nuc: .2e}, Frobenius iter: {lr_fro:.2e}")
-    lr_op = lr_nuc = lr_fro = 0.01
 
     iter_num_op = int(lipsch_const_op * delta / grad_op_eps / grad_op_eps / beta_op / beta_op)
     iter_num_nuc = int(lipsch_const_nuc * delta / grad_op_eps / grad_op_eps / beta_nuc / beta_nuc)
     iter_num_fro = int(lipsch_const_fro * delta / grad_op_eps / grad_op_eps / beta_fro / beta_fro)
 
+    print(lr_op, lr_nuc, lr_fro)
     print(f"Muon iter: {iter_num_op}, Neon iter: {iter_num_nuc}, Frobenius iter: {iter_num_fro}")
-    iter_num_nuc = iter_num_op = iter_num_fro = 5000
+    iter_num_nuc = iter_num_op = iter_num_fro = 10000
     # iter_num = 100000
     X0 = 0.1 * torch.randn(m, n, dtype=torch.float32, device=device)
     # Define optimizers and settings
@@ -143,7 +143,7 @@ def main() -> None:
         verbose=True,
         name=sgd_name
     )
-    # experiments[sgd_name] = sgd_results
+    experiments[sgd_name] = sgd_results
     # experiments[sgd_name] = sgd_results
     # Build panels and plot
     panels = build_default_panels(experiments)
