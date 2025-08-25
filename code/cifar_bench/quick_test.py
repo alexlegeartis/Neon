@@ -6,7 +6,7 @@ Useful for testing the setup before running the full experiment.
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
-from run_sgd_coeff_experiment import create_modified_main_function
+from create_fmuon_testing import create_modified_main_function
 from plot_results import plot_results, plot_results_from_file
 
 def quick_test():
@@ -30,7 +30,7 @@ def quick_test():
         print(f"Running experiment with sgd_coeff = {sgd_coeff}")
         
         # Create and compile the model
-        from airbench_muon import CifarNet
+        from code.cifar_bench.airbench_muon import CifarNet
         model = CifarNet().cuda().to(memory_format=torch.channels_last)
         model.compile(mode="max-autotune")
         
