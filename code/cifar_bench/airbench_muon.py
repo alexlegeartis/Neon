@@ -1,10 +1,11 @@
 """
+This file reproduces 94.01% accuracy of training with F-Muon
 airbench94_muon.py
 Runs in 2.59 seconds on a 400W NVIDIA A100 using torch==2.4.1
 Attains 94.01 mean accuracy (n=200 trials)
 Descends from https://github.com/tysam-code/hlb-CIFAR10/blob/main/main.py
 """
-
+# we added: tuned NormalizedMuon and possibility of a momentum slowdown, which, however, is not useful
 #############################################
 #                  Setup                    #
 #############################################
