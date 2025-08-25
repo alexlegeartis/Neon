@@ -11,7 +11,7 @@
 *.fls
 *.fdb_latexmk
 *.synctex
-cifar10/*
+code/cifar_bench/cifar10/*
 data/*
 Nano_gpt_exp/*
 Nano_gpt_exp/data/tiny_stories/

@@ -3,7 +3,7 @@ from math import sqrt
 
 import torch
 
-from optimizers import Muon, Neon, NormalizedMuon
+from optimizers import Muon, Neon, NormalizedMuon # you must add optimizers to the same folder!
 from optimizer_runner import MatrixProblem, run_optimizer_on_problem
 from benchmark_plotter import build_default_panels, plot_from_descriptions, plot_and_save_default_panels
 from problems import RandomQuadraticPSDProblem as SimpleQuadratic, LogisticRegressionProblem

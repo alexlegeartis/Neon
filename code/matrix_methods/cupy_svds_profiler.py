@@ -1,3 +1,5 @@
+# this file shows that 99.5% of all time if spent on SVDS (and only 0.1% on conversion)
+# this means that the problem is with Lanczos or its implementation!
 import torch
 import cupy as cp
 import cupyx.scipy.sparse.linalg as cupyx_svds
