@@ -1,3 +1,4 @@
+# the code plots F-Muon and Muon optimal lmo balls for CIFAR airbench
 import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -39,12 +40,12 @@ plt.figure(figsize=(8, 8))
 
 # Plot Minkowski sums for each alpha
 for alpha, color in zip(alphas, colors):
-    sum_pts = 0.4 * minkowski_sum_boundary(alpha)
+    sum_pts = 0.4 * minkowski_sum_boundary(alpha) # 0.4 is for F-Muon lr, which is \eta in lmo
     plt.plot(sum_pts[:, 0], sum_pts[:, 1], label=f"F-Muon ball (α={alpha}, lr=0.4)", 
              linewidth=2, color=color)
 
 # Plot reference L1 and L2 balls
-x1, y1 = l1_ball_boundary(0.24)
+x1, y1 = l1_ball_boundary(0.24) # 0.24 is for Muon lr
 plt.plot(x1, y1, linestyle="--", label="Muon ball (lr=0.24)", color="black", alpha=0.9)
 
 # Configure plot

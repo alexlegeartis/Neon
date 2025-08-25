@@ -1,3 +1,4 @@
+# plots lmo norm for a 2-Fanion (=2-Dion without an error feedback)
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection

@@ -1,3 +1,5 @@
+# This file and .pngs are Cursor's gibberish
+
 # 1-Ball in R³: Geometric Analysis
 
 ## Norm Definition

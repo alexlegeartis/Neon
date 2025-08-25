@@ -1,3 +1,4 @@
+# different alphas lmos for F-Neon
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
