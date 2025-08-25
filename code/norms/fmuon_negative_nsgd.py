@@ -1,3 +1,5 @@
+# we are not sure that it is done correct here in terms of lmo: we do not understand such a Minkowski sum
+# and it does not work so, because duals work the way we wrote only for norms 
 import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
