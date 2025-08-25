@@ -5,9 +5,60 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import statistics
 
+import cupy as cp
+from cupyx.scipy.sparse.linalg import svds as cupyx_svds
+import torch.utils.dlpack as thd
+
+def several_sv_svds_approximation(W_torch, k, num_iter=50):
+    """SVD approximation using the top k singular values and corresponding vectors."""
+    # Store original device and dtype
+    original_device = W_torch.device
+    original_dtype = W_torch.dtype
+    
+    W = cp.from_dlpack(thd.to_dlpack(W_torch)).astype(cp.float32)
+    U, S, Vt = cupyx_svds(W, k=min([k, W.shape[0] - 1, W.shape[1] - 1]), maxiter=num_iter, which='LM')
+
+    # Convert back to torch tensors and ensure they're on the correct device
+    approx_torch_U = thd.from_dlpack(U.toDlpack()).to(device=original_device, dtype=original_dtype)
+    approx_torch_S = thd.from_dlpack(S.toDlpack()).to(device=original_device, dtype=original_dtype)
+    approx_torch_Vt = thd.from_dlpack(Vt.toDlpack()).to(device=original_device, dtype=original_dtype)
+    
+    return approx_torch_U, approx_torch_S, approx_torch_Vt
+
 # Import the functions to test
-from optimizers import zeropower_via_newtonschulz5
-from matrix_functions import one_sv_svds_approximation
+def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
+    """Simplified Newton-Schulz iteration for whitening"""
+    assert len(G.shape) == 2
+    a, b, c = (3.4445, -4.7750, 2.0315)
+    X = G.bfloat16()
+    # Add numerical stability
+    norm = X.norm() + eps
+    if norm < eps:
+        return torch.zeros_like(X)
+    X /= norm
+    if G.size(0) > G.size(1):
+        X = X.T
+    for _ in range(steps):
+        A = X @ X.T
+        B = b * A + c * A @ A
+        X = a * X + B @ X
+    if G.size(0) > G.size(1):
+        X = X.T
+    return X
+
+def one_sv_svds_approximation(W_torch, num_iter=30):
+    """SVD approximation using the top k singular values and corresponding vectors."""
+    k = 1
+    # Store original device and dtype
+    original_device = W_torch.device
+    original_dtype = W_torch.dtype
+    
+    W = cp.from_dlpack(thd.to_dlpack(W_torch)).astype(cp.float32)
+    U, S, Vt = cupyx_svds(W, k=min([k, W.shape[0] - 1, W.shape[1] - 1]), maxiter=num_iter, which='LM')
+
+    approx = U @ Vt #cp.diag(S) - we don't need this!
+    approx_torch = thd.from_dlpack(approx.toDlpack()).to(device=original_device, dtype=original_dtype)
+    return approx_torch, float(S[0]) # sigma1
 
 def generate_test_matrix(shape=(256, 2304), device='cuda', dtype=torch.float32, seed=42):
     """Generate a test matrix with specified shape and properties."""
@@ -38,33 +89,6 @@ def time_function(func, matrix, num_runs=10, warmup_runs=3, **kwargs):
     
     return times, result
 
-def calculate_accuracy_metrics(original, approx1, approx2):
-    """Calculate various accuracy metrics between the original and approximations."""
-    metrics = {}
-    
-    # Frobenius norm errors
-    frobenius_norm = torch.norm(original, 'fro')
-    error1 = torch.norm(original - approx1, 'fro') / frobenius_norm
-    error2 = torch.norm(original - approx2, 'fro') / frobenius_norm
-    
-    metrics['frobenius_error_newton'] = error1.item()
-    metrics['frobenius_error_svd'] = error2.item()
-    
-    # Spectral norm errors
-    spectral_norm = torch.norm(original, 2)
-    spectral_error1 = torch.norm(original - approx1, 2) / spectral_norm
-    spectral_error2 = torch.norm(original - approx2, 2) / spectral_norm
-    
-    metrics['spectral_error_newton'] = spectral_error1.item()
-    metrics['spectral_error_svd'] = spectral_error2.item()
-    
-    # Matrix properties comparison
-    metrics['original_frobenius_norm'] = frobenius_norm.item()
-    metrics['original_spectral_norm'] = spectral_norm.item()
-    metrics['newton_frobenius_norm'] = torch.norm(approx1, 'fro').item()
-    metrics['svd_frobenius_norm'] = torch.norm(approx2, 'fro').item()
-    
-    return metrics
 
 def run_comprehensive_test():
     """Run comprehensive performance and accuracy tests."""
@@ -74,7 +98,7 @@ def run_comprehensive_test():
     print("=" * 80)
     
     # Test parameters
-    shape = (10600, 10040)
+    shape = (1060, 1000)
     num_runs = 20
     warmup_runs = 5
     
@@ -106,16 +130,24 @@ def run_comprehensive_test():
         
         # Test SVD approximation method
         print("Testing one_sv_svds_approximation...")
+        # several_svd_svds
+        svd_times, svd_result = time_function(
+            several_sv_svds_approximation, 
+            matrix, 
+            num_runs=num_runs, 
+            warmup_runs=warmup_runs,
+            num_iter=30,
+            k=10
+        )
+        '''
         svd_times, svd_result = time_function(
             one_sv_svds_approximation, 
             matrix, 
             num_runs=num_runs, 
             warmup_runs=warmup_runs,
             num_iter=30
-        )
+        )'''
         
-        # Calculate accuracy metrics
-        accuracy_metrics = calculate_accuracy_metrics(matrix, newton_result, svd_result)
         
         # Store results
         results[device] = {
@@ -123,7 +155,6 @@ def run_comprehensive_test():
             'svd_times': svd_times,
             'newton_result': newton_result,
             'svd_result': svd_result,
-            'accuracy_metrics': accuracy_metrics
         }
         
         # Print timing statistics
@@ -135,14 +166,8 @@ def run_comprehensive_test():
         print(f"\nTiming Results ({device.upper()}):")
         print(f"Newton-Schulz: {newton_mean:.6f} ± {newton_std:.6f} seconds")
         print(f"SVD Approximation: {svd_mean:.6f} ± {svd_std:.6f} seconds")
-        print(f"Speedup factor: {svd_mean/newton_mean:.2f}x")
+        print(f"T_SVDS / T_NS factor: {svd_mean/newton_mean:.2f}x")
         
-        print(f"\nAccuracy Metrics ({device.upper()}):")
-        print(f"Frobenius error (Newton): {accuracy_metrics['frobenius_error_newton']:.6f}")
-        print(f"Frobenius error (SVD): {accuracy_metrics['frobenius_error_svd']:.6f}")
-        print(f"Spectral error (Newton): {accuracy_metrics['spectral_error_newton']:.6f}")
-        print(f"Spectral error (SVD): {accuracy_metrics['spectral_error_svd']:.6f}")
-    
     return results
 
 def create_performance_plots(results):
@@ -168,25 +193,6 @@ def create_performance_plots(results):
         axes[0, i].set_ylabel('Time (seconds)')
         axes[0, i].grid(True, alpha=0.3)
         
-        # Accuracy comparison bar plot
-        accuracy = device_results['accuracy_metrics']
-        methods = ['Newton-Schulz', 'SVD Approx']
-        frobenius_errors = [accuracy['frobenius_error_newton'], accuracy['frobenius_error_svd']]
-        spectral_errors = [accuracy['spectral_error_newton'], accuracy['spectral_error_svd']]
-        
-        x = np.arange(len(methods))
-        width = 0.35
-        
-        axes[1, i].bar(x - width/2, frobenius_errors, width, label='Frobenius Error', alpha=0.8)
-        axes[1, i].bar(x + width/2, spectral_errors, width, label='Spectral Error', alpha=0.8)
-        axes[1, i].set_title(f'Approximation Error Comparison\n({device.upper()})')
-        axes[1, i].set_ylabel('Relative Error')
-        axes[1, i].set_xticks(x)
-        axes[1, i].set_xticklabels(methods)
-        axes[1, i].legend()
-        axes[1, i].grid(True, alpha=0.3)
-        axes[1, i].set_yscale('log')
-    
     plt.tight_layout()
     plt.savefig('/legeartis/Neon/code/performance_comparison_256x2304.png', dpi=300, bbox_inches='tight')
     print(f"\nPerformance plots saved as: performance_comparison_256x2304.png")
@@ -203,7 +209,6 @@ def detailed_analysis(results):
         
         newton_times = device_results['newton_times']
         svd_times = device_results['svd_times']
-        accuracy = device_results['accuracy_metrics']
         
         # Statistical analysis
         newton_stats = {
@@ -237,17 +242,10 @@ def detailed_analysis(results):
         print(f"  Max: {svd_stats['max']:.6f}s")
         
         print(f"\nPerformance Comparison:")
-        print(f"  Speedup (mean): {svd_stats['mean']/newton_stats['mean']:.2f}x")
-        print(f"  Speedup (median): {svd_stats['median']/newton_stats['median']:.2f}x")
+        print(f"  T_SVDS / T_NS (mean): {svd_stats['mean']/newton_stats['mean']:.2f}x")
+        print(f"  T_SVDS / T_NS (median): {svd_stats['median']/newton_stats['median']:.2f}x")
         
-        print(f"\nAccuracy Analysis:")
-        print(f"  Newton-Schulz Frobenius error: {accuracy['frobenius_error_newton']:.6e}")
-        print(f"  SVD Approximation Frobenius error: {accuracy['frobenius_error_svd']:.6e}")
-        print(f"  Accuracy ratio (Frobenius): {accuracy['frobenius_error_svd']/accuracy['frobenius_error_newton']:.2f}")
-        print(f"  Newton-Schulz Spectral error: {accuracy['spectral_error_newton']:.6e}")
-        print(f"  SVD Approximation Spectral error: {accuracy['spectral_error_svd']:.6e}")
-        print(f"  Accuracy ratio (Spectral): {accuracy['spectral_error_svd']/accuracy['spectral_error_newton']:.2f}")
-
+        
 def main():
     """Main function to run all tests."""
     print("Starting comprehensive performance test...")
