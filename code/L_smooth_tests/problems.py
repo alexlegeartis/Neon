@@ -1,9 +1,10 @@
+# we use RandomQuadraticPSDProblem
 from math import sqrt
 from typing import Optional, Tuple
 
 import torch
 
-from benchmark_runner import MatrixProblem
+from optimizer_runner import MatrixProblem
 
 
 def _rand_orthogonal(n: int, device: torch.device, dtype: torch.dtype = torch.float32) -> torch.Tensor:

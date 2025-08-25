@@ -37,7 +37,6 @@ def create_modified_main_function(sgd_coeff):
                          dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
         optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
         
-        # Import NormalizedMuon here to avoid circular imports
         optimizer2 = NormalizedMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=sgd_coeff)
         optimizers = [optimizer1, optimizer2]
         for opt in optimizers:
