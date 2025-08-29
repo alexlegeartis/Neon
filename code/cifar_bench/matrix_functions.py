@@ -5,6 +5,8 @@ import torch
 import torch.utils.dlpack as thd
 from cupyx.scipy.sparse.linalg import svds as cupyx_svds
 
+
+# we use to compute tau for the Oseledets' update
 def find_tau(S, tau_start, eps=1e-2):
     smax = cp.max(S)
     f_mid = cp.sum(cp.maximum(S - tau_start, 0))
@@ -26,6 +28,7 @@ def find_tau(S, tau_start, eps=1e-2):
         else:
             high = mid
     return (low + high) / 2
+
 
 def find_tau_torch(S, tau_start, eps=1e-2):
     smax = torch.max(S)
@@ -49,6 +52,8 @@ def find_tau_torch(S, tau_start, eps=1e-2):
             high = mid
     return (low + high) / 2
 
+
+# we use to run the old F*-Neon
 def k_sv_svds_approximation_dlpack(W_torch, k, tau, num_iter=30):
     """SVD approximation using the top k singular values and corresponding vectors."""
     W = cp.from_dlpack(thd.to_dlpack(W_torch)).astype(cp.float32)
@@ -66,10 +71,10 @@ def k_sv_svds_approximation_dlpack(W_torch, k, tau, num_iter=30):
     # print(sum(S_thresholded), opt_tau)
     approx = U @ cp.diag(S_thresholded) @ Vt
     approx_torch = thd.from_dlpack(approx.toDlpack())
-    # print(opt_tau)
     return approx_torch, opt_tau, k
 
 
+# slow approach that uses full SVD and torch
 def svd_full_approximation(A, tau=0):
     k = 0
     if (k == 0):
@@ -88,6 +93,7 @@ def svd_full_approximation(A, tau=0):
     return A_reconstructed
 
 
+# code produced by Cursor, so it needs some verification
 def randomized_svd_torch_full(G, n_components=1, n_oversamples=5, n_iter=2):
     """
     Full randomized SVD in PyTorch to compute top k singular triplets.
@@ -167,6 +173,7 @@ def randomized_svd_torch_full(G, n_components=1, n_oversamples=5, n_iter=2):
     return U[:, :n_components], S[:n_components], Vt[:n_components, :]
 
 
+# the same idea, but we use only u1, sigma1, v1t, which is preposterous
 def randomized_svd_torch(G, n_components=1, n_oversamples=5, n_iter=2):
     """
     Randomized SVD in PyTorch to compute the top singular triplet.
@@ -247,7 +254,8 @@ def randomized_svd_torch(G, n_components=1, n_oversamples=5, n_iter=2):
     
     return u1, sigma1, v1
 
-# used in k-Neon
+
+# used in k-Neon with possibility of Error Feedback
 def several_sv_svds_approximation(W_torch, k, num_iter=50):
     """SVD approximation using the top k singular values and corresponding vectors."""
     # Store original device and dtype
@@ -279,28 +287,6 @@ def one_sv_svds_approximation(W_torch, num_iter=30):
     approx_torch = thd.from_dlpack(approx.toDlpack()).to(device=original_device, dtype=original_dtype)
     return approx_torch, float(S[0]) # sigma1
 
-    '''
-    # Ensure W_torch is a torch tensor
-    if not isinstance(W_torch, torch.Tensor):
-        W_torch = torch.tensor(W_torch, device=W_torch.device if hasattr(W_torch, 'device') else 'cpu')
-    
-    # Use the randomized SVD directly on the torch tensor
-    # u1, sigma1, v1 = randomized_svd_torch(W_torch, n_components=1)
-    G = W_torch
-    dtype = G.dtype if isinstance(G.dtype, torch.dtype) else torch.float32
-    if dtype == torch.float16:
-        dtype = torch.float32  # QR decomposition not supported for half precision on CUDA
-    device = G.device
-    
-    # Convert to appropriate dtype if needed
-    G_compute = G.to(dtype) if G.dtype != dtype else G
-    u, s, v = torch.svd_lowrank(G_compute, q=2, niter=2)
-
-    u1 = u[:, 0]
-    sigma1 = s[0]
-    v1 = v[:, 0]
-    '''
-    # return torch.outer(u1, v1), sigma1 # * - we do not need this! Muon doesn't have this 
 
 # similar to several_sv_svds, but returns only a product
 def lanczos_svdt(W_torch, k, num_iter=50):
@@ -316,6 +302,7 @@ def lanczos_svdt(W_torch, k, num_iter=50):
     approx = U @ cp.diag(S) @ Vt
     approx_torch = thd.from_dlpack(approx.toDlpack()).to(device=original_device, dtype=original_dtype)
     return approx_torch
+
 
 def main():
     # Parameters

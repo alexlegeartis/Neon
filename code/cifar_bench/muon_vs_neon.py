@@ -5,13 +5,13 @@ import torch
 torch.backends.cudnn.benchmark = True
 from torch import nn
 import torch.nn.functional as F
-import airbench
+import airbench_muon as airbench
 import matplotlib.pyplot as plt
 import time
 import os
 import numpy as np
 
-from optimizers import Neon, Muon
+from optimizers import Neon, NormalizedMuon, zeropower_via_newtonschulz5
 
 code_version = '13may_muon_neon'
 
@@ -31,52 +31,7 @@ NEON_LR_SCHEDULE = {
     10: 0.24,
 }
 
-# @torch.compile
-def zeropower_via_newtonschulz5(G, steps=3, eps=1e-7):
-    assert len(G.shape) == 2
-    a, b, c = (3.4445, -4.7750,  2.0315)
-    X = G.bfloat16()
-    X /= (X.norm() + eps) # ensure top singular value <= 1
-    if G.size(0) > G.size(1):
-        X = X.T
-    for _ in range(steps):
-        A = X @ X.T
-        B = b * A + c * A @ A
-        X = a * X + B @ X
-    if G.size(0) > G.size(1):
-        X = X.T
-    return X
-'''
-class Muon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
-        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
-        super().__init__(params, defaults)
-        self.sgd_coeff = sgd_coeff
 
-    def step(self):
-        for group in self.param_groups:
-            lr = group["lr"]
-            momentum = group["momentum"]
-            for p in group["params"]:
-                g = p.grad
-                if g is None:
-                    continue
-                state = self.state[p]
-
-                if "momentum_buffer" not in state.keys():
-                    state["momentum_buffer"] = torch.zeros_like(g)
-                buf = state["momentum_buffer"]
-                buf.mul_(momentum).add_(g)
-                g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
-
-                p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
-                # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
-                eps = 1e-12
-                g_normalized = g / (g.norm() + eps)           
-                update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
-                p.data.add_(update, alpha=-lr) # take a step
-'''
 # note the use of low BatchNorm stats momentum
 class BatchNorm(nn.BatchNorm2d):
     def __init__(self, num_features, momentum=0.6, eps=1e-12):
@@ -160,10 +115,10 @@ class CifarNet(nn.Module):
 
 def main(optimizer_type='neon', sgd_coeff=0):
     """Run training with specified optimizer type ('muon' or 'neon')"""
-    num_epochs = 30
+    num_epochs = 10
     model = CifarNet().cuda().to(memory_format=torch.channels_last)
 
-    batch_size = 10000
+    batch_size = 2000
     bias_lr = 0.053
     head_lr = 0.67
     wd = 2e-6 * batch_size
@@ -178,7 +133,7 @@ def main(optimizer_type='neon', sgd_coeff=0):
     
     test_loader = airbench.CifarLoader("cifar10", train=False, batch_size=batch_size)
     train_loader = airbench.CifarLoader("cifar10", train=True, batch_size=batch_size,
-                                        aug=dict(flip=True, translate=2), altflip=True)
+                                        aug=dict(flip=True, translate=2))
     total_train_steps = ceil(num_epochs * len(train_loader))
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
@@ -192,12 +147,12 @@ def main(optimizer_type='neon', sgd_coeff=0):
     
     # Select optimizer based on parameter
     if optimizer_type.lower() == 'muon':
-        optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=sgd_coeff, weight_decay=0)
+        optimizer2 = NormalizedMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=sgd_coeff)
         print(f"Muon Learning Rate: 0.24")
         print(f"Muon Momentum: 0.6")
         print(f"Muon Nesterov: True")
     elif optimizer_type.lower() == 'adamw':
-        adamw_lr = 1e-3
+        adamw_lr = 1e-2
         # optimizer2 = torch.optim.AdamW(filter_params, lr=adamw_lr, weight_decay=wd)
         optimizer2 = torch.optim.SGD(filter_params, momentum=0.85, nesterov=True)
         print(f"AdamW Learning Rate: {adamw_lr}")
@@ -206,8 +161,8 @@ def main(optimizer_type='neon', sgd_coeff=0):
         # neon_mode = 'accurate'
         neon_mode = 'fast'
         # Use the initial learning rate from the schedule
-        neon_lr = 0.2 # 0.2 # NEON_LR_SCHEDULE[0]
-        neon_momentum = 0.9
+        neon_lr = 0.4 # 0.2 # NEON_LR_SCHEDULE[0]
+        neon_momentum = 0.65
         optimizer2 = Neon(filter_params, lr=neon_lr, momentum=neon_momentum, 
         nesterov=True, neon_mode=neon_mode,
                           iter_num = 50, sgd_coeff=0)
@@ -344,13 +299,11 @@ def plot_comparison():
      # Run with Neon optimizer
     
     print("Training with Neon optimizer...")
-    neon_results = main(optimizer_type='neon', sgd_coeff=0)
+    neon_results = main(optimizer_type='neon', sgd_coeff=0.5)
     print("Training with Muon optimizer...")
     muon_results = main(optimizer_type='muon', sgd_coeff=0)
-    print("Training with AdamW optimizer...")
+    print("Training with AdamW optimizer...") #it's not Adam, it's SGD!
     adamw_results = main(optimizer_type='adamw', sgd_coeff=0)
-    
-    
     
 
     
