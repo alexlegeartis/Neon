@@ -4,4 +4,4 @@
 export PATH="$HOME/.local/bin:$PATH"
 
 # Run py-spy profiling
-py-spy record -o profile.svg -- python3 code/muon_vs_neon.py
+py-spy record -o profile.svg -- python3 muon_vs_neon.py
