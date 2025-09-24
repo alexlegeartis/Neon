@@ -12,6 +12,9 @@
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{changes}
+\definechangesauthor[name={Ivan Kozyrev}, color=orange]{IK}
 \newtheorem{lemma}{Lemma}
 \newcommand{\norm}[1]{\lVert #1\rVert}
 \newcommand{\abs}[1]{\lvert #1 \rvert}
@@ -61,7 +64,7 @@ AIRI, Skoltech \\
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 
-%\icompfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\icompfinalcopy % Uncomment for camera-ready version, but NOT for submission.
 
 %------------------------------------------------------------------------------------
 % \epsilon is predefined; override to use \varepsilon
@@ -100,6 +103,7 @@ AIRI, Skoltech \\
 \DeclareMathOperator{\diag}{diag}
 
 \usepackage{arydshln} % dashed lines
+\usepackage[right=5cm, marginparwidth=4.6cm, marginparsep=0.2cm]{geometry} % For comments!
 
 %------------------------------------------------------------------------------------
 
@@ -113,9 +117,12 @@ AIRI, Skoltech \\
 
 In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms to introduce a new family of Muon-like algorithms we name {\it Fanions}. Then, we consider their convex combinations with the Frobenius norm and corresponding duals to develop a new family of algorithms we name {\it F-Fanions}, one of them being {\it F-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that properly-tuned F-Muon is almost on par with Muon, which questions the necessity of finding the exact solution to the problem in linear optimization oracle framework.
 
+
 \end{abstract}
 
 \section{Introduction}
+This is the original text. \added[id=IK, comment={I think we should mention this.}]{This is a new sentence that has been added.}
+
  Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam \citep{kingma2014adam} and AdamW \citep{loshchilov2017decoupled}, recently proposed Muon \citep{jordan2024muon} has shown promising results on training very large models \citep{liu2025muon}. Its key difference from Adam and AdamW is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
  
  That is what can be said from a practical point of view. From the perspective of theory, the main innovation of Muon has been an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update \citep{bernstein2025deriving}. Based upon recent theoretical advances that explain some theory behind Muon, Scion and Gluon \citep{bernstein2025deriving,kovalev2025understanding,pethick2025training,riabinin2025gluon}, we explore application of other matrix norms to optimization of functions of matrices. As it has been done with Muon, we stipulate that our algorithms' updates be fast to compute.
