@@ -40,21 +40,17 @@
 \headcommand {\beamer@framepages {20}{20}}
 \headcommand {\slideentry {0}{0}{21}{21/21}{}{0}}
 \headcommand {\beamer@framepages {21}{21}}
-\headcommand {\beamer@sectionpages {1}{21}}
-\headcommand {\beamer@subsectionpages {1}{21}}
-\headcommand {\sectionentry {1}{References}{22}{References}{0}}
-\headcommand {\slideentry {1}{0}{0}{22/22}{}{0}}
+\headcommand {\slideentry {0}{0}{22}{22/22}{}{0}}
 \headcommand {\beamer@framepages {22}{22}}
-\headcommand {\slideentry {1}{0}{0}{22/23}{}{0}}
-\headcommand {\beamer@framepages {22}{23}}
-\headcommand {\slideentry {1}{0}{0}{22/24}{}{0}}
-\headcommand {\beamer@framepages {22}{24}}
-\headcommand {\slideentry {1}{0}{0}{22/25}{}{0}}
-\headcommand {\beamer@framepages {22}{25}}
-\headcommand {\slideentry {1}{0}{0}{22/26}{}{0}}
-\headcommand {\beamer@framepages {22}{26}}
-\headcommand {\beamer@partpages {1}{26}}
-\headcommand {\beamer@subsectionpages {1}{26}}
-\headcommand {\beamer@sectionpages {1}{26}}
-\headcommand {\beamer@documentpages {26}}
-\headcommand {\gdef \inserttotalframenumber {26}}
+\headcommand {\beamer@sectionpages {1}{22}}
+\headcommand {\beamer@subsectionpages {1}{22}}
+\headcommand {\sectionentry {1}{References}{23}{References}{0}}
+\headcommand {\slideentry {1}{0}{0}{23/23}{}{0}}
+\headcommand {\beamer@framepages {23}{23}}
+\headcommand {\slideentry {1}{0}{0}{23/24}{}{0}}
+\headcommand {\beamer@framepages {23}{24}}
+\headcommand {\beamer@partpages {1}{24}}
+\headcommand {\beamer@subsectionpages {1}{24}}
+\headcommand {\beamer@sectionpages {1}{24}}
+\headcommand {\beamer@documentpages {24}}
+\headcommand {\gdef \inserttotalframenumber {24}}

@@ -1,2 +1,7 @@
 \beamer@slide {tbl:mat_vs_vec_lmo}{6}
 \beamer@slide {lemma:dual_to_conv_comb}{11}
+\beamer@slide {eq:L}{18}
+\beamer@slide {eq:variance}{18}
+\beamer@slide {eq:norm}{18}
+\beamer@slide {lemma:stoch_tr}{19}
+\beamer@slide {eq:str_K_nonconvex}{19}
