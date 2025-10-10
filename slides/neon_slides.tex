@@ -31,6 +31,13 @@
 \usepackage{fontawesome5} % for question mark
 %\usepackage[authoryear]{natbib}
 
+\usepackage{environ}
+\newcounter{aequation}
+\NewEnviron{aequation}{\refstepcounter{aequation}$$\BODY\eqno{\text{(A\theaequation)}}$$}
+\crefname{aequation}{assumption}{assumptions}
+\creflabelformat{aequation}{(#2A#1#3)}
+
+
 % Citations use the standard natbib formatting (as in the article)
 \usepackage[style=authoryear, maxcitenames=1, maxbibnames=3, terseinits=true, uniquelist=false, natbib=true,]{biblatex}
 \addbibresource{../conf_article/icomp2024_conference.bib}
@@ -73,12 +80,19 @@
 
 % Title
 \title[The Ky Fan Norms and Beyond]{The Ky Fan Norms and Beyond: Dual Norms and Combinations for Matrix Optimization}
-\author[A. Kravatskiy et al.]{Alexey Kravatskiy\inst{1} \and Ivan Kozyrev\inst{1} \and Nikolai Kozlov\inst{1} \and Alexander Vinogradov\inst{1} \and Daniil Merkulov\inst{1,2,3,4} \and Ivan Oseledets\inst{5,2}}
+\author[A. Kravatskiy et al.]{%
+  Alexey Kravatskiy\inst{1} \and
+  Ivan Kozyrev\inst{1} \and
+  Nikolai Kozlov\inst{1} \and
+  Alexander Vinogradov\inst{1} \and
+  Daniil Merkulov\inst{1,2,3,4} \and
+  Ivan Oseledets\inst{5,2}\\[0.3em]
+}
 \institute[]{%
-\inst{1} MIPT \and
-\inst{2} Skoltech \and
-\inst{3} HSE \and
-\inst{4} SberAI \and
+\inst{1} MIPT \hspace{1em}%
+\inst{2} Skoltech \hspace{1em}%
+\inst{3} HSE \hspace{1em}%
+\inst{4} AI4Science \hspace{1em}%
 \inst{5} AIRI
 }
 \date{\today}
@@ -291,18 +305,20 @@ Let us consider the convex combination of the Ky Fan rank-$k$ norm and the Frobe
       \begin{column}{0.48\textwidth}
         \includegraphics[width=\linewidth]{muon_tuned_diff_alpha.pdf}
         \centering
-        \scriptsize Params tuned for Muon \citep{cifar2023airbench}
+        \scriptsize With params tuned for Muon, as in \citep{cifar2023airbench}
       \end{column}
       \begin{column}{0.48\textwidth}
         \includegraphics[width=\linewidth]{fmuon_tuned_diff_alpha.pdf}
         \centering
-        \scriptsize Params tuned for F-Muon
+        \scriptsize With params tuned for F-Muon
       \end{column}
     \end{columns}
     \vspace{0.6em}
     \centering
 
-    \footnotesize F-Muon with \(\alpha\approx 0.5\) matches Muon after tuning
+    \footnotesize F-Muon with \(\alpha = 0.5\) matches Muon after tuning
+
+    \faQuestionCircle \space How should we interpret cases with $\alpha > 1$?
   \end{frame}
 
 %----------------------------------------
@@ -313,28 +329,69 @@ Let us consider the convex combination of the Ky Fan rank-$k$ norm and the Frobe
 
     \footnotesize LMO balls for learning rates from the experiment
 
-    \faQuestionCircle \space How should we interpret cases with $\alpha > 1$?
   \end{figure}
 \end{frame}
 %-----------------------------------------------------------------------------------------------
 \begin{frame}{NanoGPT speedrun}
+  Setup from \citet{modded_nanogpt_2024}: 1750 iterations and cross-entropy loss lower than 3.28
     \begin{itemize}
-      \item Setup from \citet{modded_nanogpt_2024}: 1750 iterations and cross-entropy loss lower than 3.28
-      \item Muon: {\tt lr=0.05, momentum=0.95}, 3.279
-      \item F-Muon with \(\alpha=0.5\): {\tt lr=0.07, momentum=0.95}, 3.281
+      \item Muon: {\tt lr=0.05, momentum=0.95}, final loss = 3.279
+      \item F-Muon with \(\alpha=0.5\): {\tt lr=0.07, momentum=0.95}, final loss = 3.281
+      \item NSGD: {\tt lr=0.07, momentum=0.96}, final loss = 3.4651
+      \item F-Muon with $\alpha=0.5$: {\tt lr=0.07, momentum=0.96}, final loss = 3.2824!
     \end{itemize}
 \end{frame}
-%----------------------------------------
-\begin{frame}{Trust-region bounds (L-smooth)}
-  \begin{itemize}
-    \item Deterministic: choose \(\eta=\cO(\epsilon/L)\), \(K=\cO(L\Delta_0/\epsilon^2)\) \citep{kovalev2025understanding}.
-    \item Stochastic (with variance \(\sigma^2\), link between norms \(\rho\)): detailed schedules for \(\eta,\alpha,K\).
-    \item Asymptotically, norms are proportional for large random matrices (Marchenko–Pastur), aligning guarantees across choices.
-  \end{itemize}
-\end{frame}
+%----------------------------------------------------------------------------------------------
+\begin{frame}{Formal assumptions}
+  L-smoothness:
+  \begin{aequation}\label{eq:L}
+    \norm{\nabla f(\mX) - \nabla f(\mX')}^\dagger \leq L \norm{\mX-\mX'}
+    \quad\text{for all}\;
+    \mX, \mX' \in \Rmn,
+    \end{aequation}
+  
+  Bounded variance:
+    \begin{aequation}\label{eq:variance}
+      \Ed{\xi \sim \cD}{g(\mX;\xi)} = \nabla f(\mX)
+      \quad\text{and}\quad
+      \Ed{\xi \sim \cD}{\sqnf{g(\mX;\xi) - \nabla f(\mX)}} \leq \sigma^2
+      \quad\text{for all}\;
+      \mX \in \Rmn,
+      \end{aequation}
+  
+  Bounded norm:
+      \begin{aequation}\label{eq:norm}
+        \norm{\mX}^\dagger \leq \rho\cdot\normf{\mX}
+        \quad\text{for all}\;
+        \mX \in \Rmn,
+        \end{aequation}
 
+  From Marchenko-Pastur law, $\normf{\cdot} \sim \frac{\sqrt{n}}{2}\norms{\cdot}$ and $\normn{\cdot} \sim \frac{n}{2}\norms{\cdot}$ for large $n$.
+          
+    
+
+\end{frame}
+\begin{frame}{Bounds from \citep{kovalev2025understanding}}
+  \begin{lemma}\label{lemma:stoch_tr}
+    To reach the precision $\E{\min_{k=1\ldots K} \norm{\nabla f(\mX_k)}^\dagger} \leq \epsilon$ under the assumptions \Cref{eq:L}, \Cref{eq:variance}, \Cref{eq:norm}, it is sufficient to choose the parameters as follows:
+    \begin{align}
+        \eta &= \cO\left(\min\left\{\frac{\epsilon}{L}, \frac{\epsilon^3}{\rho^2\sigma^2L}\right\}\right),
+        \qquad
+        \alpha = \cO\left(\min\left\{1, \frac{\epsilon^2}{\rho^2\sigma^2}\right\}\right),
+        \\
+        \label{eq:str_K_nonconvex}
+        K &= \cO\left(\max\left\{
+            \frac{\rho\sigma}{\epsilon},
+            \frac{\rho^3\sigma^3}{\epsilon^3},
+            \frac{L\Delta_0}{\epsilon^2},
+            \frac{L\Delta_0\rho^2\sigma^2}{\epsilon^4}
+        \right\}\right).
+    \end{align}
+    \end{lemma}
+
+\end{frame}
 %----------------------------------------
-\begin{frame}{Experiment: Random linear least squares}
+\begin{frame}{Random linear least squares: Loss and the Spectral Norm of the gradient}
   \begin{columns}[T,totalwidth=\textwidth]
     \begin{column}{0.48\textwidth}
       \includegraphics[width=\linewidth]{simple_lls/loss_vs_iteration_50x50.pdf}
@@ -348,26 +405,33 @@ Let us consider the convex combination of the Ky Fan rank-$k$ norm and the Frobe
     \end{column}
   \end{columns}
   \vspace{0.3em}
-  \footnotesize Setup informed by \citet{kovalev2025understanding}.
+  \centering
+  \footnotesize Linear least squares problem for a 50 x 50 matrix. Common {\tt lr=0.01}.
 \end{frame}
 
 %----------------------------------------
-\begin{frame}{Ky Fan geometry}
-  \begin{figure}[t]
-    \centering
-    \includegraphics[width=0.45\linewidth]{KyFan.pdf}\hfill
-    \includegraphics[width=0.45\linewidth]{KyFanDual.pdf}
-    \caption{Ky Fan 2-norm ball and its dual (singular-value space).}
-  \end{figure}
-\end{frame}
-
+\begin{frame}{Geometric intuition: Ky Fan norms}
+  \centering
+  \begin{minipage}{0.46\textwidth}
+      \includegraphics[height=0.75\textheight,keepaspectratio]{KyFan.pdf}
+  \end{minipage}\hfill
+  \begin{minipage}{0.46\textwidth}
+      \includegraphics[height=0.75\textheight,keepaspectratio]{KyFanDual.pdf}
+  \end{minipage}
+  
+  \vspace{0.3em}
+  \footnotesize Ky Fan rank-2 ball and its dual in a 3D singular-value space
+  \end{frame}
 %----------------------------------------
 \begin{frame}{Conclusions}
   \begin{itemize}
-    \item Fanions unify Muon/Neon via Ky Fan norms; F-Fanions add robustness via Frobenius mixing.
-    \item TRLan enables efficient k-rank updates; practical speed benefits over power/RSVD.
-    \item Empirically, F-Muon remains competitive on CIFAR-10 and NanoGPT.
+    \item Muon and NSGD are special cases of F-Fanions
+    \item Mixture of norm-based updates is a norm-based update!
+    \item No existing bounds describe the superiority of the spectral norm
   \end{itemize}
+
+  \vspace{2em}
+  \textbf{For future experiments}: Exploration of matrix and vector algorithms correspondence
 \end{frame}
 
 %----------------------------------------
