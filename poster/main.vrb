@@ -11,7 +11,7 @@
 
 Training large language models requires optimizers more scalable and efficient than Adam/AdamW. The recent Muon~[2] optimizer shows great promise, sometimes doubling AdamW's efficiency, due to its unique design:
 \begin{itemize}
-  \item \textbf{\color{HazySummerEve}Matrix-Aware Design:} It is constructed specifically for weight matrices, not generic vectors.
+  \item \textbf{\color{HazySummerEve}Matrix-Aware Design:} It is constructed specifically for weight matrices rather than generic vectors.
   \item \textbf{\color{HazySummerEve}Principled Update Rule:} Muon's update is not merely heuristic. It is derived as the solution to a linear minimization problem constrained by the operator (spectral) norm, giving it a solid mathematical foundation.
 \end{itemize}
 
@@ -19,7 +19,7 @@ Muon's success has inspired variants like Dion~[1] algorithm and frameworks of S
 \begin{attention}
 In deriving Muon's update step, why constrain by the spectral norm? How would alternative norms affect performance and computational cost?
 \end{attention}
-To investigate this, we first analyze the link between Muon-like algorithms and their defining norms. We then propose \textbf{\color{HazySummerEve}F-Fanions}, a novel family of optimizers derived from exotic, mixed norms. Finally, we present an empirical comparison between Muon and F-Fanions across various numerical experiments.
+To investigate this, we first analyze the link between Muon-like algorithms and their defining norms. We then propose \textbf{\color{HazySummerEve}F-Fanions}, a novel family of optimizers derived from exotic, mixed norms. Finally, we present an empirical comparison between Muon and F-Fanions.
 
 \vspace{0.5em}
 \textbf{\Huge\color{Zen}How Norms Shape the Update Step}\\[0.3em]
@@ -30,23 +30,26 @@ Many optimizers are defined by a norm-constrained Linear Minimization Oracle (LM
 \end{equation*}
 The choice of norm dictates the algorithm. For matrix methods, the update often uses the Singular Value Decomposition (SVD) of the gradient, $\mG^t = \mU \mSigma \mV^\top$.
 
+{
 \centering
 % Using 'tabular' now for better width control based on content
 \begin{tabular}{clcc}
 \toprule
-\textbf{Case} & \textbf{Method} & \textbf{Constraining Norm} & \textbf{Update Formula} \\
+\textbf{Case} & \textbf{Method} & \textbf{Norm} & \textbf{Update Formula} \\
 \midrule
 \multirow{3}{*}{\rotatebox[origin=c]{90}{\parbox{1.5cm}{\centering Vec.}}}
-& Normalized SGD    & $\ell_2$          & $-\eta g / \norm{g}_2$ \\
-& SignSGD           & $\ell_\infty$     & $-\eta\sign(g)$ \\
-& Coordinate Descent    & $\ell_1$          & $-\eta e_{\mathrm{argmax}|g_i|}$ \\
+& Normalized SGD    & $\ell_2$          & $-\eta g^t / \norm{g^t}_2$ \\
+& SignSGD           & $\ell_\infty$     & $-\eta\sign(g^t)$ \\
+& Gauss-Southwell CD    & $\ell_1$      & $-\eta \sum_{i \in \argmax|g_i^t|} \sign(g_i^t)e_i$ \\
 \midrule
 \multirow{3}{*}{\rotatebox[origin=c]{90}{\parbox{1.5cm}{\centering Mat.}}}
 & Normalized SGD    & $\normf{\cdot}$   & $-\eta\mG^t / \normf{\mG^t}$ \\
 & Muon     & $\norms{\cdot}$   & $-\eta\mU \mV^\top$ \\
-& Dion (no feedback)   & $\norm{\cdot}_{KF-k}^\dag$ & $-\eta\mU_k \mV_k^\top$ \\
+& Dion (without EF)   & $\norm{\cdot}_{KF-k}^\dag$ & $-\eta\mU_k \mV_k^\top$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}\eqspace
+}
+Here $\norm{\cdot}_{KF-k}$ denotes Ky Fan $k$ norm, $\norm{\cdot}^\dag$ is the dual norm.
 
 \end{column}
 \hspace{0.02\textwidth}% Space between columns
@@ -63,13 +66,13 @@ We introduce a generalized norm that unifies and interpolates between these meth
 
 This defines the \textbf{\color{HazySummerEve}F-Fanions}, a new family of optimizers parameterized by $\alpha \in [0, 1]$ and $k$, with the update rule:
 \begin{equation*}
-    \Delta \mX^t = \eta \alpha \mU_k \mV_k^\top + \eta(1 - \alpha) \frac{\mG^t}{\normf{\mG^t}}\,.
+    \Delta \mX^t = -\eta \alpha \mU_k \mV_k^\top - \eta(1 - \alpha) \frac{\mG^t}{\normf{\mG^t}}\,.
 \end{equation*}
 
 This framework recovers existing algorithms as special cases:
 \begin{itemize}
     \item \textbf{\color{HazySummerEve}Normalized SGD:} $\alpha = 0$.
-    \item \textbf{\color{HazySummerEve}Dion} (no feedback): $\alpha = 1$, $k < \min\{m, n\}$.
+    \item \textbf{\color{HazySummerEve}Dion} (without error feedback): $\alpha = 1$, $k < \min\{m, n\}$.
     \item \textbf{\color{HazySummerEve}Muon:} $\alpha = 1$, $k = \min\{m, n\}$.
 \end{itemize}
 We also identify and analyze \textbf{\color{HazySummerEve}F-Neon}, a computationally efficient member of this family where $k=1$.
@@ -105,7 +108,7 @@ TRLan's dramatic speed advantage in this direct computation makes low-rank F-Fan
 \vspace{0.5em}
 \textbf{\Huge\color{Zen}Modded NanoGPT Speedrun}\\[0.3em]
 
-We benchmarked our method against Muon on the \texttt{modded\_nanogpt\_2024} speedrun, a time-constrained training challenge. Below are the results after 1750 steps,
+We benchmarked our method against Muon on the \texttt{modded nanogpt 2024} speedrun, a pretraining of a real LLM. Below are the results after 1750 steps,
 
 {
 \centering
@@ -153,7 +156,7 @@ We evaluate F-Muon against Muon by training a Convolutional Neural Network (CNN)
 \Large
     We can see that Properly tuned F-Muon can perform on par with Muon, achieving the same 94\% accuracy.
 
-    Another Interesting observation here is that tuned F-Muon has much larger trust region then Muon, and thus makes larger step sizes (figure to the right).
+    Another Interesting observation here is that tuned F-Muon has much larger trust region than Muon, and thus makes larger step sizes (figure to the right).
   \end{column}
   \begin{column}{0.49\textwidth}
     \includegraphics[width=\linewidth]{fstardual_cifar.pdf}
@@ -165,7 +168,7 @@ We evaluate F-Muon against Muon by training a Convolutional Neural Network (CNN)
 \textbf{\Huge\color{Zen}Conclusion \& Outlook}\\[0.6em]
 
 \begin{itemize}
-    \item We introduced the \textbf{\color{HazySummerEve}F-Fanion framework}, unifying LMO-based optimizers like Muon and Dion via mixed norms.
+    \item We introduced the \textbf{\color{HazySummerEve}F-Fanion framework}, unifying LMO-based optimizers like Muon and Normalized SGD via mixed norms.
 
     \item The choice of norm is a flexible design parameter, not a fixed rule. Our results show alternatives to the spectral norm can be equally effective.
 
@@ -178,10 +181,10 @@ We evaluate F-Muon against Muon by training a Convolutional Neural Network (CNN)
 \begin{itemize}
    \large
     \setlength{\itemsep}{0pt} % Remove spacing between items
-    \item[{[1]}] Ahn, K. \& Xu, B. *Dion*. arXiv:2504.05295, 2025.
-    \item[{[2]}] Bernstein, J. *Deriving muon*. 2025. URL: jeremybernste.in/writing/deriving-muon
-    \item[{[3]}] Bernstein, J. \& Newhouse, L. *Old optimizer, new norm*. arXiv:2409.20325, 2024.
-    \item[{[4]}] Riabinin, A. et al. *Gluon: Making muon \& scion great again!* arXiv:2505.13416, 2025.
+    \item[{[1]}] Ahn, K. \& Xu, B. \textit{Dion: A Communication-Efficient Optimizer for Large Models}. arXiv:2504.05295, 2025.
+    \item[{[2]}] Bernstein, J. \textit{Deriving Muon}. 2025. URL: jeremybernste.in/writing/deriving-muon
+    \item[{[3]}] Bernstein, J. \& Newhouse, L. \textit{Old Optimizer, New Norm: An Anthology}. arXiv:2409.20325, 2024.
+    \item[{[4]}] Riabinin, A. et al. \textit{Gluon: Making Muon \& Scion Great Again!} arXiv:2505.13416, 2025.
 \end{itemize}
 
 \end{column}
