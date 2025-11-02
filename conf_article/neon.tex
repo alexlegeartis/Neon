@@ -146,14 +146,12 @@ Most notably, our experiments on real-world tasks demonstrate that the choice of
 
 \section{\added[id = IK, comment={I think it goes well into one big section.}]{Update Step as Constrained Optimization}}
 
-\subsection{\replaced[id = IK, comment={Merged what previously had been section with two subsections into this one and improved the notation. Also removed the thing about trust region, it'll be referenced in succeeding sections.}]{Linear Minimization Oracle}{Problem Statement}}
+\subsection{\replaced[id = IK, comment={Merged what previously had been section with two subsections into this one and improved the notation. Also removed the thing about trust region, it'll be referenced in succeeding sections.}]{Linear Minimization Oracle Framework}{Problem Statement}}
 
 Training a neural network involves optimizing a function of weight matrices. For simplicity, we consider the problem of minimizing a differentiable function of a single matrix:
 \begin{equation}\label{eq:mat}
 	F(\cdot)\colon \Rmn \to \R\,,\qquad F(\mX) \to \min_{\mX \in \Rmn}\,.
 \end{equation}
-In practice, neural networks have multiple weight matrices $\mX_1, \mX_2, \ldots$, and the objective function depends on all of them. The framework we consider applies to each weight matrix independently, where the gradient $\mG_i = \nabla_{\mX_i} F$ for each matrix is computed via backpropagation, and the update rule is applied separately to each matrix.
-
 We equip the matrix space $\Rmn$ with a standard dot product $\<\cdot, \cdot> \to \R$ and a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius norm $\normf{\cdot}$. The dual norm $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ associated with $\norm{\cdot}$ is defined as
 \begin{equation}\label{eq:dual_norm}
 	\norm{\mG}^\dagger = \sup_{\mD \in \Rmn\,,\norm{\mD}\leq 1} \<\mG,\mD>\,.
@@ -163,7 +161,14 @@ One approach to optimizing such functions is to employ an iterative algorithm ba
 \begin{equation}\label{eq:lmo}
 	\mathrm{LMO}(\mG) \in \argmin_{\mD \in \cS} \<\mG, \mD>\,,
 \end{equation}
-where $\mG$ is typically a gradient (possibly with momentum) of $F$ and $\cS \subset \Rmn$ is some set. The update rule used in Muon optimizer is uSCG \citep{pethick2025training}. In the most general case, which involves momentum and stochastic gradient $g(\mX^k, \xi^k)$, it can be written as
+where $\mG$ is typically a gradient (possibly with momentum) of $F$ and $\cS \subset \Rmn$ is some set. The simple update formula then can look like
+\begin{equation}\label{eq:simple_update}
+	\mX^{k + 1} = \mX^k + \mathrm{LMO}\left(\nabla F\left(\mX^k\right)\right)\,.
+\end{equation}
+
+In a typical neural network, the objective function $F$ depends on a set of weight matrices $\{ \mX_1, \mX_2, \ldots \}$. The optimization framework we have described is applied in a layer-wise fashion. At each iteration $k$, a stochastic gradient $g(\mX^k, \xi^k)$ is computed using a mini-batch of data $\xi^k$ via backpropagation. This yields a separate gradient component, $\mG_i^k$, for each matrix $\mX_i$. The LMO-based update rule is then applied to each matrix $\mX_i$ using its corresponding gradient component $\mG_i^k$.
+
+The update rule used in Muon optimizer is uSCG \citep{pethick2025training}. In the most general case, which involves momentum, it can be written as
 \begin{equation}\label{eq:usgd_update}
 	\begin{aligned}
 		\mM^{k}     & = \alpha_{k} g(\mX^k, \xi^k) + (1 - \alpha_k)\mM^{k - 1}\,, \\
