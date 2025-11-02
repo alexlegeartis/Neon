@@ -1,6 +1,7 @@
 \contentsline {deleted}{Deleted~(IK): \truncate {\Changestruncatewidth }{new}}{1}{section*.1}%
-\contentsline {replaced}{Replaced~(IK): \truncate {\Changestruncatewidth }{Subsequently, we construct a second family of algorithms, dubbed {\it F-Fanions}, based on the duals of convex combinations of Ky Fan k-norms and the Frobenius norm. One prominent member of this family is {\it F-Muon}.}}{1}{section*.2}%
+\contentsline {replaced}{Replaced~(IK): \truncate {\Changestruncatewidth }{Subsequently, we construct a second family of algorithms, dubbed {\it F-Fanions}, based on the duals of convex combinations of Ky Fan k-norms and the Frobenius norm. One prominent member of this family is {\it F-Muason}.}}{1}{section*.2}%
 \contentsline {replaced}{Replaced~(IK): \truncate {\Changestruncatewidth }{which questions the necessity of finding the exact solution to the problem in linear optimization oracle framework.}}{1}{section*.3}%
-\contentsline {replaced}{Replaced~(IK): \truncate {\Changestruncatewidth }{From a theoretical perspective, a key innovation of Muon was its principled derivation of the update rule, which emerges as the solution to an optimization problem constrained by the spectral norm \citep {bernstein2025deriving}}}{2}{section*.4}%
+\contentsline {replaced}{Replaced~(IK): \truncate {\Changestruncatewidth }{From a theoretical perspective, a key innovation of Muon was its principled derivation of the update rule, which emerges as the solution to an optimization problem constrained by the RMS-to-RMS norm (scaled version of spectral norm) \citep {bernstein2025deriving}}}{2}{section*.4}%
 \contentsline {replaced}{Replaced~(IK): \truncate {\Changestruncatewidth }{}}{2}{section*.5}%
-\contentsline {replaced}{Replaced~(IK): \truncate {\Changestruncatewidth }{$\alpha > 1$}}{8}{section*.11}%
+\contentsline {replaced}{Replaced~(IK): \truncate {\Changestruncatewidth }{LMO}}{2}{section*.6}%
+\contentsline {replaced}{Replaced~(IK): \truncate {\Changestruncatewidth }{$\alpha > 1$}}{9}{section*.12}%
