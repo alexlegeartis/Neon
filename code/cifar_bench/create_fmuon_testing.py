@@ -8,8 +8,8 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 from math import ceil
-from airbench_muon import CifarNet, CifarLoader, evaluate, BatchNorm, Conv, ConvGroup
-from airbench_muon import NormalizedMuon
+from cifar_bench.airbench_muon import CifarNet, CifarLoader, evaluate, BatchNorm, Conv, ConvGroup
+from optimizers import NormalizedMuon
 
 def create_modified_main_function(sgd_coeff):
     """

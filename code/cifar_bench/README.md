@@ -12,4 +12,4 @@ muon_vs_neon.py: comparison of Muon, Neon, SGD with plots
 
 profile_script.sh: runs a profiler on muon_vs_neon.py --> profiler.svg
 
-matrix_functions.py and optimizer.py: are required in other folders as well, and must be copied
+matrix_functions.py and optimizer.py: have been moved to the root.

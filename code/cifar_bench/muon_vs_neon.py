@@ -5,7 +5,7 @@ import torch
 torch.backends.cudnn.benchmark = True
 from torch import nn
 import torch.nn.functional as F
-import airbench_muon as airbench
+import cifar_bench.airbench_muon as airbench
 import matplotlib.pyplot as plt
 import time
 import os

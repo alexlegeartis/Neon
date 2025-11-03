@@ -3,10 +3,10 @@ from math import sqrt
 
 import torch
 
-from optimizers import Muon, Neon, NormalizedMuon # you must add optimizers to the same folder!
-from optimizer_runner import MatrixProblem, run_optimizer_on_problem
-from benchmark_plotter import build_default_panels, plot_from_descriptions, plot_and_save_default_panels
-from problems import RandomQuadraticPSDProblem as SimpleQuadratic, LogisticRegressionProblem
+from optimizers import Muon, Neon, NormalizedMuon, RandomNormalizedMuon
+from L_smooth_tests.optimizer_runner import MatrixProblem, run_optimizer_on_problem
+from L_smooth_tests.benchmark_plotter import build_default_panels, plot_from_descriptions, plot_and_save_default_panels
+from L_smooth_tests.problems import RandomQuadraticPSDProblem as SimpleQuadratic, LogisticRegressionProblem
 
 class SinFrobeniusNormProblem(MatrixProblem):
     """
@@ -63,7 +63,7 @@ def main() -> None:
     experiments: Dict[str, Dict[str, Any]] = {}
     nsgd_name = "NSGD"
     nsgd_results = run_optimizer_on_problem(
-        optimizer_class=NormalizedMuon,
+        optimizer_class=RandomNormalizedMuon, # an experiment
         optimizer_kwargs=dict(lr=lr_fro, momentum=0.95, nesterov=True, sgd_coeff=1),
         problem=problem,
         X_init=X0,
@@ -77,7 +77,7 @@ def main() -> None:
     muon_name = "Muon"
     muon_results = run_optimizer_on_problem(
         optimizer_class=NormalizedMuon,
-        optimizer_kwargs=dict(lr=lr_op, momentum=0.95, nesterov=True),
+        optimizer_kwargs=dict(lr=lr_op, momentum=0.6, nesterov=True),
         problem=problem,
         X_init=X0,
         num_iterations=iter_num_op,

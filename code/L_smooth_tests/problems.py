@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 
 import torch
 
-from optimizer_runner import MatrixProblem
+from L_smooth_tests.optimizer_runner import MatrixProblem
 
 
 def _rand_orthogonal(n: int, device: torch.device, dtype: torch.dtype = torch.float32) -> torch.Tensor:

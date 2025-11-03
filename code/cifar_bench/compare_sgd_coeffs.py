@@ -6,9 +6,9 @@ Useful for testing the setup before running the full experiment.
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
-from airbench_muon import CifarNet
-from create_fmuon_testing import create_modified_main_function
-from plot_sgd_coeffs_results import plot_results, plot_results_from_file
+from cifar_bench.airbench_muon import CifarNet
+from cifar_bench.create_fmuon_testing import create_modified_main_function
+from cifar_bench.plot_sgd_coeffs_results import plot_results, plot_results_from_file
 
 def quick_test():
     """Run a quick test with fewer coefficient values and fewer runs."""
