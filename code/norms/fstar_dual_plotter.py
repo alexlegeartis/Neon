@@ -1,4 +1,4 @@
-# for different alphas lmos for F-Muon
+# for different alphas lmos for F-Muon !!!! It's mistake here, this norm is ftwo dual, see ipynb for the revised version
 import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt

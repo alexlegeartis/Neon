@@ -13,3 +13,6 @@ muon_vs_neon.py: comparison of Muon, Neon, SGD with plots
 profile_script.sh: runs a profiler on muon_vs_neon.py --> profiler.svg
 
 matrix_functions.py and optimizer.py: have been moved to the root.
+
+norm_logger_airbench.py: a draft of the approach to track the Frobenius, spectral, and nuclear norms of gradients of the layers.
+There we discovered that those norms don't actually decrease significantly, and for Neon they even increase.

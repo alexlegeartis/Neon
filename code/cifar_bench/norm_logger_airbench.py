@@ -5,7 +5,6 @@ Here we experiment with differnt LMO-based optimizers on CIFAR airbench
 #############################################
 #                  Setup                    #
 #############################################
-
 import os
 import sys
 with open(sys.argv[0]) as f:
@@ -19,6 +18,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
 from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon
+
 
 
 #############################################
@@ -333,16 +333,44 @@ def evaluate(model, loader, tta_level=0):
 ############################################
 #                Training                  #
 ############################################
+# TODO: create a pandas dataframe out of these values:
+
+def log_grad_frobenius_norms(model, step=None, logger=None, silent=False):
+    norms = {}
+    total_sq = 0.0
+    for name, param in model.named_parameters():
+        if param.grad is None:
+            continue
+        g = param.grad.data
+        fro_norm = g.norm(p='fro').item()
+        # fro_norm = torch.linalg.norm(g.reshape(len(g), -1).float(), ord='nuc') - we can measure that as well
+        norms[name] = fro_norm
+        total_sq += fro_norm ** 2  # accumulate squares for total
+    
+    total_norm = total_sq ** 0.5
+
+    # Logging options
+    if logger is not None:
+        for k, v in norms.items():
+            logger.add_scalar(f"grad_frobenius/{k}", v, step)
+        logger.add_scalar("grad_frobenius/total", total_norm, step)
+    elif not silent:
+        print(f"[Step {step}] Total grad Frobenius: {total_norm:.4f}")
+        for k, v in norms.items():
+            print(f"  {k}: {v:.4f}")
+    
+    return norms, total_norm
 
 def main(run, model):
-    batch_size = 2000
+    batch_size = 200
     bias_lr = 0.053
     head_lr = 0.67
     wd = 2e-6 * batch_size
 
-    test_loader = CifarLoader('cifar10', train=False, batch_size=2000)
+    test_loader = CifarLoader('cifar10', train=False, batch_size=200)
     train_loader = CifarLoader('cifar10', train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
-    if run == 'warmup':
+    is_warmup = run == 'warmup'
+    if is_warmup:
         # The only purpose of the first run is to warmup the compiled model, so we can use dummy data
         train_loader.labels = torch.randint(0, 10, size=(len(train_loader.labels),), device=train_loader.labels.device)
     total_train_steps = ceil(8 * len(train_loader))
@@ -361,7 +389,9 @@ def main(run, model):
     # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
     # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
     
-    optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0) # 67.7%
+    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=10, momentum=0.95, nesterov=True, sgd_coeff=0) # only 32%, but Fro norm is only 40
+    optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0) #
+    
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=5, momentum=0.65, nesterov=True, sgd_coeff=0) # 72.3%
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=20, momentum=0.65, nesterov=True, sgd_coeff=0) # 89.0%, very slow
 
@@ -408,7 +438,6 @@ def main(run, model):
     train_images = train_loader.normalize(train_loader.images[:5000])
     model.init_whiten(train_images)
     stop_timer()
-
     for epoch in range(ceil(total_train_steps / len(train_loader))):
 
         ####################
@@ -440,6 +469,15 @@ def main(run, model):
                 eta = (step / total_train_steps) # percentage of training
                 group["momentum"] = (group["target_momentum"] - 0.1) * eta + group["target_momentum"] * (1 - eta)
             '''
+            if step % 400 == 0 and not is_warmup:
+                _, total_gnorm = log_grad_frobenius_norms(
+                    model,
+                    step=step,
+                    logger=None,
+                    silent=False
+                )
+                print(f"Epoch {epoch}, Step {step}: Total grad Frobenius = {total_gnorm:.4f}")
+
             for opt in optimizers:
                 opt.step()
             model.zero_grad(set_to_none=True)
@@ -477,8 +515,8 @@ if __name__ == "__main__":
     # model.compile(mode='max-autotune')
 
     print_columns(logging_columns_list, is_head=True)
-    main('warmup', model)
-    accs = torch.tensor([main(run, model) for run in range(5)]) # num of repetitions in the test
+    # main('warmup', model)
+    accs = torch.tensor([main(run, model) for run in range(1)]) # num of repetitions in the test
     print('Mean: %.4f    Std: %.4f' % (accs.mean(), accs.std()))
 
     log_dir = os.path.join('logs', str(uuid.uuid4()))

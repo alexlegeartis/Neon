@@ -188,8 +188,8 @@ class Neon(torch.optim.Optimizer):
                         u, s, vt = several_sv_svds_approximation(g_resh, self.k)
                         update = u @ vt
                         error = u @ torch.diag(s) @ vt
-                update2 = (1-self.sgd_coeff) * update + self.sgd_coeff * g_resh / (g_resh.norm() + 1e-12)
-                p.data.add_(update2.view(g.shape), alpha=-lr)
+                update2 = (1-self.sgd_coeff) * update.view(g.shape) + self.sgd_coeff * g / (g.norm() + 1e-12)
+                p.data.add_(update2, alpha=-lr)
 
 
 # the same as F-Muon, the copy is in airbench_muon.py

@@ -1,4 +1,4 @@
-# different alphas lmos for F-Neon
+# different alphas lmos for F-Neon !!! No, there's a mistake here! See ipynb for revised version. And the code of Minkowski sum has mistakes
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm

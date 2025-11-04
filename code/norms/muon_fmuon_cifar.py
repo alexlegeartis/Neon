@@ -1,4 +1,4 @@
-# the code plots F-Muon and Muon optimal lmo balls for CIFAR airbench
+# the code plots F-Muon and Muon optimal lmo balls for CIFAR airbench -there's a mistake here, the corrected version is in ipynb!
 import numpy as np
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
