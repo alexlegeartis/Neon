@@ -20,5 +20,5 @@ Nano_gpt_exp/data/tiny_stories/train.bin
 Nano_gpt_exp/data/tiny_stories/val.bin
 Nano_gpt_exp/out-tiny_stories/
 Nano_gpt_exp/out/
-logs/*
-cifar10/*
+logs/
+cifar10/
