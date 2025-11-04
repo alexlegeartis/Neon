@@ -335,17 +335,17 @@ def evaluate(model, loader, tta_level=0):
 ############################################
 
 def main(run, model):
-    batch_size = 2000 # default: 2000
+    batch_size = 32 # default: 2000
     bias_lr = 0.053
     head_lr = 0.67
     wd = 2e-6 * batch_size
 
-    test_loader = CifarLoader('cifar10', train=False, batch_size=2000)
+    test_loader = CifarLoader('cifar10', train=False, batch_size=32)
     train_loader = CifarLoader('cifar10', train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
     if run == 'warmup':
         # The only purpose of the first run is to warmup the compiled model, so we can use dummy data
         train_loader.labels = torch.randint(0, 10, size=(len(train_loader.labels),), device=train_loader.labels.device)
-    total_train_steps = ceil(8 * len(train_loader))
+    total_train_steps = ceil(10 * len(train_loader))
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
     # Create optimizers and learning rate schedulers
@@ -356,9 +356,10 @@ def main(run, model):
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
-    # optimizer2 = RandomNormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # random mix, 93.3%, 11.26 s
-    optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
-    # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
+    # random mix, 93.3%, 11.26 s on bs 2000 with lr=0.4, mom=0.65
+    # optimizer2 = RandomNormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # and 92.9% for bs 200
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
+    optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
     
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0) # 67.7%
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=5, momentum=0.65, nesterov=True, sgd_coeff=0) # 72.3%
