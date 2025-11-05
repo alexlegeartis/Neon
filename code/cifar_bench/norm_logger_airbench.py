@@ -342,7 +342,8 @@ def log_grad_frobenius_norms(model, step=None, logger=None, silent=False):
         if param.grad is None:
             continue
         g = param.grad.data
-        fro_norm = g.norm(p='fro').item()
+        # fro_norm = g.norm(p='fro').item()
+        fro_norm = torch.linalg.norm(g.reshape(len(g), -1).float(), ord=2) # - we can measure that as well
         # fro_norm = torch.linalg.norm(g.reshape(len(g), -1).float(), ord='nuc') - we can measure that as well
         norms[name] = fro_norm
         total_sq += fro_norm ** 2  # accumulate squares for total
@@ -355,19 +356,19 @@ def log_grad_frobenius_norms(model, step=None, logger=None, silent=False):
             logger.add_scalar(f"grad_frobenius/{k}", v, step)
         logger.add_scalar("grad_frobenius/total", total_norm, step)
     elif not silent:
-        print(f"[Step {step}] Total grad Frobenius: {total_norm:.4f}")
+        print(f"[Step {step}] Total grad spectral: {total_norm:.4f}")
         for k, v in norms.items():
             print(f"  {k}: {v:.4f}")
     
     return norms, total_norm
 
 def main(run, model):
-    batch_size = 200
+    batch_size = 2000
     bias_lr = 0.053
     head_lr = 0.67
     wd = 2e-6 * batch_size
 
-    test_loader = CifarLoader('cifar10', train=False, batch_size=200)
+    test_loader = CifarLoader('cifar10', train=False, batch_size=2000)
     train_loader = CifarLoader('cifar10', train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
     is_warmup = run == 'warmup'
     if is_warmup:
@@ -386,11 +387,11 @@ def main(run, model):
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
     # random mix, 93.3%, 11.26 s on bs 2000 with lr=0.4, mom=0.65
     # optimizer2 = RandomNormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # and 92.9% for bs 200
-    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
+    optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
     # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
     
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=10, momentum=0.95, nesterov=True, sgd_coeff=0) # only 32%, but Fro norm is only 40
-    optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0) #
+    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0) #
     
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=5, momentum=0.65, nesterov=True, sgd_coeff=0) # 72.3%
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=20, momentum=0.65, nesterov=True, sgd_coeff=0) # 89.0%, very slow
@@ -469,19 +470,19 @@ def main(run, model):
                 eta = (step / total_train_steps) # percentage of training
                 group["momentum"] = (group["target_momentum"] - 0.1) * eta + group["target_momentum"] * (1 - eta)
             '''
-            if step % 400 == 0 and not is_warmup:
+            if step % 50 == 0 and not is_warmup:
                 _, total_gnorm = log_grad_frobenius_norms(
                     model,
                     step=step,
                     logger=None,
                     silent=False
                 )
-                print(f"Epoch {epoch}, Step {step}: Total grad Frobenius = {total_gnorm:.4f}")
+                print(f"Epoch {epoch}, Step {step}: Total grad Spectral = {total_gnorm:.4f}")
 
             for opt in optimizers:
                 opt.step()
-            model.zero_grad(set_to_none=True)
             step += 1
+            model.zero_grad(set_to_none=True)
             if step >= total_train_steps:
                 break
         stop_timer()

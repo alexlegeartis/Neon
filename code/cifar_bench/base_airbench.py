@@ -388,7 +388,7 @@ def main(run, model):
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance
     
 
-    optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 93.9%, worse than F-Muon, but not so bad
+    optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 94%, on par with Muon
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
     
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible
@@ -424,14 +424,14 @@ def main(run, model):
 
         ####################
         #     Training     #
-        ####################
-        if epoch == 8 and switch_to_muon:
-            # optimizers[1] = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5)
-            optimizers[1].sgd_coeff = 0
-            optimizers[1].momentum = 0.6
-            for group in optimizers[1].param_groups:
-                group["initial_lr"] = 0.24
-                # group["target_momentum"] = group.get("momentum", 0)  # default to 0 if not se
+        # ####################
+        # if epoch == 8 and switch_to_muon: # to go to Muon
+        #     # optimizers[1] = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5)
+        #     optimizers[1].sgd_coeff = 0
+        #     optimizers[1].momentum = 0.6
+        #     for group in optimizers[1].param_groups:
+        #         group["initial_lr"] = 0.24
+        #         # group["target_momentum"] = group.get("momentum", 0)  # default to 0 if not set
         # Restart optimizers at each epoch
         for opt in optimizers:
             opt.zero_grad(set_to_none=True)
