@@ -48,7 +48,7 @@ def newtonschulz5_with_nuclear(G, steps=3, eps=1e-12):
         X = a * X + B @ X
     if G.size(0) > G.size(1):
         X = X.T
-    return X * torch.trace(G.bfloat16() @ X.T)
+    return X, torch.trace(G.bfloat16() @ X.T) # UV^t and nuclear norm
 
 
 # archaic: it had been used in Neon before Lanczos
@@ -131,6 +131,42 @@ class Muon(torch.optim.Optimizer):
                 update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 p.data.add_(update, alpha=-lr) # take a step
 
+class MuonCringeMomentum(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
+        if lr < 0.0:
+            raise ValueError(f"Invalid learning rate: {lr}")
+        if momentum < 0.0:
+            raise ValueError(f"Invalid momentum value: {momentum}")
+        if nesterov and momentum <= 0:
+            raise ValueError("Nesterov momentum requires a momentum")
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+
+    def step(self):
+        for group in self.param_groups:
+            lr = group["lr"]
+            momentum = group["momentum"]
+            for p in group["params"]:
+                g = p.grad
+                if g is None:
+                    continue
+                state = self.state[p]
+
+                if "momentum_buffer" not in state.keys():
+                    state["momentum_buffer"] = torch.zeros_like(g)
+                buf = state["momentum_buffer"]
+                # buf.mul_(momentum).add_(g)
+                g_old = g
+                g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
+
+                norm = p.data.norm()
+                if norm < 1e-10:
+                    norm = 1e-10
+                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
+                p.data.add_(update, alpha=-lr) # take a step
+                buf.mul_(momentum).add_(g_old - lr * update)
+
 
 # this function also supports F-Neon
 class Neon(torch.optim.Optimizer):
@@ -144,9 +180,11 @@ class Neon(torch.optim.Optimizer):
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
-            raise ValueError(f"Invalid momentum value: {momentum}")
+            pass
+            # raise ValueError(f"Invalid momentum value: {momentum}")
         if nesterov and momentum <= 0:
-            raise ValueError("Nesterov momentum requires a momentum")
+            pass
+            # raise ValueError("Nesterov momentum requires a momentum")
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
 
@@ -260,11 +298,53 @@ class MuonSGDStyle(torch.optim.Optimizer):
                 g_normalized = g / (g.norm() + eps)
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 if self.sgd_coeff != 1:
-                    update_part = newtonschulz5_with_nuclear(g.reshape(len(g), -1)).view(g.shape)
+                    uvt, nuc_norm = newtonschulz5_with_nuclear(g.reshape(len(g), -1))
+                    uvt = uvt.view(g.shape)
+                    update_part = uvt * nuc_norm
                     update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
                 else:
                     update = self.sgd_coeff * g_normalized
                 p.data.add_(update, alpha=-lr) # take a step
+
+
+class NuclearNormalizedMuon(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+        self.sgd_coeff = sgd_coeff
+
+    def step(self):
+        for group in self.param_groups:
+            lr = group["lr"]
+            momentum = group["momentum"]
+            for p in group["params"]:
+                g = p.grad
+                if g is None:
+                    continue
+                state = self.state[p]
+
+                if "momentum_buffer" not in state.keys():
+                    state["momentum_buffer"] = torch.zeros_like(g)
+                buf = state["momentum_buffer"]
+                buf.mul_(momentum).add_(g)
+                g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
+
+                eps = 1e-12
+                norm = p.data.norm()
+                if norm < 1e-10:
+                    norm = 1e-10
+                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
+                uvt, nuc_norm = newtonschulz5_with_nuclear(g.reshape(len(g), -1))
+                uvt = uvt.view(g.shape)
+                g_normalized = g / (nuc_norm + eps)
+                if self.sgd_coeff != 1:
+                    update_part = uvt
+                    update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
+                else:
+                    update = self.sgd_coeff * g_normalized
+                p.data.add_(update, alpha=-lr) # take a step
+
 
 # generated by Cursor, but I checked the logic. Unfortunately, I do not see much help, only increased variance
 class Dion(torch.optim.Optimizer):
@@ -442,7 +522,7 @@ class SignSGDMuon(torch.optim.Optimizer):
                 p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                update = (1 - self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * 0.01 # the last one is lr
+                update = (1 - self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * 0.001
                 p.data.add_(update, alpha=-lr) # take a step
 
 
@@ -481,3 +561,53 @@ class RandomNormalizedMuon(torch.optim.Optimizer):
                     g_normalized = g / (g.norm() + eps)
                     update = g_normalized
                 p.data.add_(update, alpha=-lr) # take a step
+
+
+class SpectrallyNormalizedNeon(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, k=1, tau = 0, nesterov=False,
+                iter_num = 100, sgd_coeff=0):
+        self.tau = tau
+        self.k = k # target number of SVD componenets which we preserve
+        self.lanczos_iter_num = iter_num
+        self.type = 'kyfan'
+        self.sgd_coeff = sgd_coeff
+        if lr < 0.0:
+            raise ValueError(f"Invalid learning rate: {lr}")
+        if momentum < 0.0:
+            pass
+            # raise ValueError(f"Invalid momentum value: {momentum}")
+        if nesterov and momentum <= 0:
+            pass
+            # raise ValueError("Nesterov momentum requires a momentum")
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+
+    def step(self):
+        for group in self.param_groups:
+            lr = group['lr']
+            momentum = group['momentum']
+            for p in group['params']:
+                g = p.grad
+                if g is None:
+                    continue
+                state = self.state[p]
+                if 'momentum_buffer' not in state.keys():
+                    state['momentum_buffer'] = torch.zeros_like(g)
+                buf = state['momentum_buffer']
+                buf.mul_(momentum).add_(g)
+                g = g.add(buf, alpha=momentum) if group['nesterov'] else buf
+
+                # Add numerical stability
+                norm = p.data.norm()
+                if norm < 1e-8:
+                    continue
+                p.data.mul_(len(p.data)**0.5 / norm)
+                
+                g_resh = g.reshape(len(g), -1)
+                n, m = g_resh.shape # d_out and d_in
+                u, s, vt = several_sv_svds_approximation(g_resh, self.k)
+                update = u @ vt
+                # error = u @ torch.diag(s) @ vt
+                update2 = (1-self.sgd_coeff) * update.view(g.shape) + self.sgd_coeff * g / (s[0] + 1e-12)
+                p.data.add_(update2, alpha=-lr)
+

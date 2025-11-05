@@ -18,8 +18,8 @@ from torch import nn
 import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
-from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon
-
+from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon, NuclearNormalizedMuon, MuonCringeMomentum
+from optimizers import SpectrallyNormalizedNeon
 
 #############################################
 #               Muon optimizer              #
@@ -359,9 +359,20 @@ def main(run, model):
     # random mix, 93.3%, 11.26 s on bs 2000 with lr=0.4, mom=0.65
     # optimizer2 = RandomNormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # and 92.9% for bs 200
     # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
+    # optimizer2 = MuonCringeMomentum(filter_params, lr=0.24, momentum=0.6, nesterov=True) # it's not bad, but without Nesterov=true it does not work
     # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
+    switch_to_muon = True
+    # optimizer2 = torch.optim.SGD(filter_params, momentum=0.85, nesterov=True, lr=0.001) # about 90%
     
-    optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0) # 67.7%
+    # optimizer2 = SpectrallyNormalizedNeon(filter_params, lr=0.48, momentum=0.65, nesterov=True, sgd_coeff=0) # pure Neon, 68.2%, lr is a bit high
+    # optimizer2 = SpectrallyNormalizedNeon(filter_params, lr=0.3, momentum=0.6, nesterov=True, sgd_coeff=1) # Spectrally Normalized SGD, 91.4%
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.3, momentum=0.6, sgd_coeff=1, nesterov=True) # Frobenius NSGD, only 88%
+    # optimizer2 = NormalizedMuon(filter_params, lr=1, momentum=0.6, sgd_coeff=1, nesterov=True) # Frobenius NSGD, 90.4%, mild dependency on lr
+    # optimizer2= NuclearNormalizedMuon(filter_params, lr=0.4, momentum=0.6, sgd_coeff=0.5, nesterov=True) # 93.6%
+    # optimizer2 = NuclearNormalizedMuon(filter_params, lr=3, momentum=0.6, sgd_coeff=1, nesterov=True) # Nuclear NSGD, 89%
+
+    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.3, momentum=0.65, nesterov=True, sgd_coeff=0) # 68.2%, lr is a bit high
+    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0) # 34%, lr is a bit high
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=5, momentum=0.65, nesterov=True, sgd_coeff=0) # 72.3%
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=20, momentum=0.65, nesterov=True, sgd_coeff=0) # 89.0%, very slow
 
@@ -377,7 +388,7 @@ def main(run, model):
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance
     
 
-    # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 93.9%, worse than F-Muon, but not so bad
+    optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 93.9%, worse than F-Muon, but not so bad
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
     
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible
@@ -414,7 +425,13 @@ def main(run, model):
         ####################
         #     Training     #
         ####################
-
+        if epoch == 8 and switch_to_muon:
+            # optimizers[1] = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5)
+            optimizers[1].sgd_coeff = 0
+            optimizers[1].momentum = 0.6
+            for group in optimizers[1].param_groups:
+                group["initial_lr"] = 0.24
+                # group["target_momentum"] = group.get("momentum", 0)  # default to 0 if not se
         # Restart optimizers at each epoch
         for opt in optimizers:
             opt.zero_grad(set_to_none=True)
@@ -429,9 +446,9 @@ def main(run, model):
         for inputs, labels in train_loader:
             outputs = model(inputs, whiten_bias_grad=(step < whiten_bias_train_steps))
             F.cross_entropy(outputs, labels, label_smoothing=0.2, reduction='sum').backward()
-            for group in optimizer1.param_groups[:1]:
+            for group in optimizers[0].param_groups[:1]:
                 group["lr"] = group["initial_lr"] * (1 - step / whiten_bias_train_steps)
-            for group in optimizer1.param_groups[1:] + optimizer2.param_groups:
+            for group in optimizers[0].param_groups[1:] + optimizers[1].param_groups:
                 group["lr"] = group["initial_lr"] * (1 - step / total_train_steps)
 
             '''
