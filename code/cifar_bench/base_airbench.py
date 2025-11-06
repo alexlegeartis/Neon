@@ -358,7 +358,7 @@ def main(run, model):
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
     # random mix, 93.3%, 11.26 s on bs 2000 with lr=0.4, mom=0.65
     # optimizer2 = RandomNormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # and 92.9% for bs 200
-    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
+    optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
     # optimizer2 = MuonCringeMomentum(filter_params, lr=0.24, momentum=0.6, nesterov=True) # it's not bad, but without Nesterov=true it does not work
     # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
     switch_to_muon = True
@@ -388,7 +388,7 @@ def main(run, model):
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance
     
 
-    optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 94%, on par with Muon
+    # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 94%, on par with Muon
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
     
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible
@@ -421,16 +421,18 @@ def main(run, model):
     stop_timer()
 
     for epoch in range(ceil(total_train_steps / len(train_loader))):
-
         ####################
         #     Training     #
         # ####################
-        # if epoch == 8 and switch_to_muon: # to go to Muon
+        # no gain:
+        # if epoch == 5 and switch_to_muon: # to go to Muon
         #     # optimizers[1] = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5)
-        #     optimizers[1].sgd_coeff = 0
-        #     optimizers[1].momentum = 0.6
+        #     # optimizers[1].sgd_coeff = 0.5
+        #     # optimizers[1].momentum = 0.65
         #     for group in optimizers[1].param_groups:
-        #         group["initial_lr"] = 0.24
+        #         # pass
+        #         group["initial_lr"] = 0.35
+        #         group["momentum"] = 0.6
         #         # group["target_momentum"] = group.get("momentum", 0)  # default to 0 if not set
         # Restart optimizers at each epoch
         for opt in optimizers:

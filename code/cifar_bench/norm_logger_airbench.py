@@ -10,13 +10,16 @@ import sys
 with open(sys.argv[0]) as f:
     code = f.read()
 import uuid
+import random
 from math import ceil
+from datetime import datetime
 
 import torch
 from torch import nn
 import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
+import pandas as pd
 from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon
 
 
@@ -331,36 +334,176 @@ def evaluate(model, loader, tta_level=0):
     return (logits.argmax(1) == loader.labels).float().mean().item()
 
 ############################################
+#            Seed Setting                  #
+############################################
+
+def set_seed(seed=42):
+    """Set random seeds for reproducibility."""
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # Set deterministic behavior for CUDA operations
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    # Set seed for numpy if available
+    try:
+        import numpy as np
+        np.random.seed(seed)
+    except ImportError:
+        pass
+
+############################################
 #                Training                  #
 ############################################
-# TODO: create a pandas dataframe out of these values:
 
-def log_grad_frobenius_norms(model, step=None, logger=None, silent=False):
-    norms = {}
-    total_sq = 0.0
+def log_grad_frobenius_norms(model, step=None, epoch=None, loss=None, outputs=None, labels=None, logger=None, silent=False, norm_data_list=None):
+    """
+    Compute and log Frobenius, spectral, and nuclear norms of gradients.
+    
+    Args:
+        model: The model to compute gradients for
+        step: Current training step
+        epoch: Current epoch
+        loss: Current loss value (optional)
+        outputs: Model outputs for computing train accuracy (optional)
+        labels: Ground truth labels for computing train accuracy (optional)
+        logger: Optional logger (e.g., tensorboard)
+        silent: If True, don't print
+        norm_data_list: Optional list to append norm data for DataFrame creation
+    
+    Returns:
+        Tuple of (norms_dicts, total_norms)
+    """
+    frobenius_norms = {}
+    spectral_norms = {}
+    nuclear_norms = {}
+    
+    total_frobenius_sq = 0.0
+    total_spectral_max = 0.0
+    total_nuclear_sum = 0.0
+    
     for name, param in model.named_parameters():
         if param.grad is None:
             continue
         g = param.grad.data
-        # fro_norm = g.norm(p='fro').item()
-        fro_norm = torch.linalg.norm(g.reshape(len(g), -1).float(), ord=2) # - we can measure that as well
-        # fro_norm = torch.linalg.norm(g.reshape(len(g), -1).float(), ord='nuc') - we can measure that as well
-        norms[name] = fro_norm
-        total_sq += fro_norm ** 2  # accumulate squares for total
+        
+        # Reshape to 2D matrix for matrix norms (for conv layers: out_channels x (in_channels * kernel_h * kernel_w))
+        # For 1D params, this just flattens them
+        g_2d = g.reshape(len(g), -1).float()
+        
+        # Compute all three norms
+        fro_norm = torch.linalg.norm(g_2d, ord='fro').item()
+        spec_norm = torch.linalg.norm(g_2d, ord=2).item()
+        nuc_norm = torch.linalg.norm(g_2d, ord='nuc').item()
+        
+        frobenius_norms[name] = fro_norm
+        spectral_norms[name] = spec_norm
+        nuclear_norms[name] = nuc_norm
+        
+        # Accumulate for total norms
+        total_frobenius_sq += fro_norm ** 2
+        total_spectral_max = max(total_spectral_max, spec_norm)
+        total_nuclear_sum += nuc_norm
     
-    total_norm = total_sq ** 0.5
+    total_frobenius = total_frobenius_sq ** 0.5
+    total_spectral = total_spectral_max
+    total_nuclear = total_nuclear_sum
+
+    # Compute train accuracy if outputs and labels are provided
+    train_acc = None
+    if outputs is not None and labels is not None:
+        with torch.no_grad():
+            train_acc = (outputs.detach().argmax(1) == labels).float().mean().item()
+
+    # Store data for DataFrame if norm_data_list is provided
+    if norm_data_list is not None:
+        row_data = {
+            'step': step,
+            'epoch': epoch if epoch is not None else -1,
+        }
+        # Add loss if provided
+        if loss is not None:
+            row_data['loss'] = loss.item() if hasattr(loss, 'item') else float(loss)
+        # Add train accuracy if computed
+        if train_acc is not None:
+            row_data['train_acc'] = train_acc
+        # Add per-layer norms
+        for name in frobenius_norms.keys():
+            row_data[f'{name}_frobenius'] = frobenius_norms[name]
+            row_data[f'{name}_spectral'] = spectral_norms[name]
+            row_data[f'{name}_nuclear'] = nuclear_norms[name]
+        # Add total norms
+        row_data['total_frobenius'] = total_frobenius
+        row_data['total_spectral'] = total_spectral
+        row_data['total_nuclear'] = total_nuclear
+        norm_data_list.append(row_data)
 
     # Logging options
     if logger is not None:
-        for k, v in norms.items():
+        for k, v in frobenius_norms.items():
             logger.add_scalar(f"grad_frobenius/{k}", v, step)
-        logger.add_scalar("grad_frobenius/total", total_norm, step)
+        logger.add_scalar("grad_frobenius/total", total_frobenius, step)
+        for k, v in spectral_norms.items():
+            logger.add_scalar(f"grad_spectral/{k}", v, step)
+        logger.add_scalar("grad_spectral/total", total_spectral, step)
+        for k, v in nuclear_norms.items():
+            logger.add_scalar(f"grad_nuclear/{k}", v, step)
+        logger.add_scalar("grad_nuclear/total", total_nuclear, step)
     elif not silent:
-        print(f"[Step {step}] Total grad spectral: {total_norm:.4f}")
-        for k, v in norms.items():
-            print(f"  {k}: {v:.4f}")
+        loss_str = f", Loss: {loss.item():.4f}" if loss is not None else ""
+        train_acc_str = f", Train Acc: {train_acc:.4f}" if train_acc is not None else ""
+        print(f"[Step {step}] Total grad norms - Frobenius: {total_frobenius:.4f}, Spectral: {total_spectral:.4f}, Nuclear: {total_nuclear:.4f}{loss_str}{train_acc_str}")
+        for k in frobenius_norms.keys():
+            print(f"  {k}: Fro={frobenius_norms[k]:.4f}, Spec={spectral_norms[k]:.4f}, Nuc={nuclear_norms[k]:.4f}")
     
-    return norms, total_norm
+    return (frobenius_norms, spectral_norms, nuclear_norms), (total_frobenius, total_spectral, total_nuclear)
+
+def save_norm_dataframe(norm_data_list, run=None, optimizer_name=None, epoch_val_acc=None):
+    """
+    Convert norm data list to DataFrame and save to cifar_norms/ folder.
+    
+    Args:
+        norm_data_list: List of dictionaries containing norm data
+        run: Run identifier (optional)
+        optimizer_name: Optimizer name for filename (optional)
+        epoch_val_acc: Dictionary mapping epoch -> val_acc to backfill (optional)
+    
+    Returns:
+        Path to saved CSV file
+    """
+    if not norm_data_list:
+        print("Warning: No norm data to save.")
+        return None
+    
+    # Create DataFrame
+    df = pd.DataFrame(norm_data_list)
+    
+    # Backfill val_acc for each epoch if provided
+    if epoch_val_acc is not None and 'epoch' in df.columns:
+        df['val_acc'] = df['epoch'].map(epoch_val_acc)
+    
+    # Create output directory
+    output_dir = 'cifar_norms'
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Create meaningful filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename_parts = ['grad_norms']
+    if optimizer_name:
+        filename_parts.append(optimizer_name)
+    if run is not None:
+        filename_parts.append(f'run{run}')
+    filename_parts.append(timestamp)
+    filename = '_'.join(filename_parts) + '.csv'
+    
+    filepath = os.path.join(output_dir, filename)
+    df.to_csv(filepath, index=False)
+    
+    print(f"Saved norm data to: {os.path.abspath(filepath)}")
+    print(f"DataFrame shape: {df.shape}, Columns: {len(df.columns)}")
+    
+    return filepath
 
 def main(run, model):
     batch_size = 2000
@@ -368,13 +511,22 @@ def main(run, model):
     head_lr = 0.67
     wd = 2e-6 * batch_size
 
+    # Save run ID before it might be modified
+    run_id = run
+
+    # Initialize list to collect norm data for DataFrame
+    norm_data_list = []
+    
+    # Dictionary to store val_acc for each epoch (will be backfilled into DataFrame)
+    epoch_val_acc = {}
+
     test_loader = CifarLoader('cifar10', train=False, batch_size=2000)
     train_loader = CifarLoader('cifar10', train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
     is_warmup = run == 'warmup'
     if is_warmup:
         # The only purpose of the first run is to warmup the compiled model, so we can use dummy data
         train_loader.labels = torch.randint(0, 10, size=(len(train_loader.labels),), device=train_loader.labels.device)
-    total_train_steps = ceil(8 * len(train_loader))
+    total_train_steps = ceil(10 * len(train_loader))
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
     # Create optimizers and learning rate schedulers
@@ -387,11 +539,13 @@ def main(run, model):
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
     # random mix, 93.3%, 11.26 s on bs 2000 with lr=0.4, mom=0.65
     # optimizer2 = RandomNormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # and 92.9% for bs 200
-    optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
+    
+    # Get optimizer name for logging
     # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
     
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=10, momentum=0.95, nesterov=True, sgd_coeff=0) # only 32%, but Fro norm is only 40
-    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0) #
+    optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.04, momentum=0.65, nesterov=True, sgd_coeff=0) #
     
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=5, momentum=0.65, nesterov=True, sgd_coeff=0) # 72.3%
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=20, momentum=0.65, nesterov=True, sgd_coeff=0) # 89.0%, very slow
@@ -412,6 +566,7 @@ def main(run, model):
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
     
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible
+    optimizer_name = optimizer2.__class__.__name__
     
     optimizers = [optimizer1, optimizer2]
     for opt in optimizers:
@@ -458,7 +613,8 @@ def main(run, model):
         model.train()
         for inputs, labels in train_loader:
             outputs = model(inputs, whiten_bias_grad=(step < whiten_bias_train_steps))
-            F.cross_entropy(outputs, labels, label_smoothing=0.2, reduction='sum').backward()
+            loss = F.cross_entropy(outputs, labels, label_smoothing=0.2, reduction='sum')
+            loss.backward()
             for group in optimizer1.param_groups[:1]:
                 group["lr"] = group["initial_lr"] * (1 - step / whiten_bias_train_steps)
             for group in optimizer1.param_groups[1:] + optimizer2.param_groups:
@@ -470,14 +626,21 @@ def main(run, model):
                 eta = (step / total_train_steps) # percentage of training
                 group["momentum"] = (group["target_momentum"] - 0.1) * eta + group["target_momentum"] * (1 - eta)
             '''
-            if step % 50 == 0 and not is_warmup:
-                _, total_gnorm = log_grad_frobenius_norms(
+            if step % 20 == 0 and not is_warmup:
+                _, (total_fro, total_spec, total_nuc) = log_grad_frobenius_norms(
                     model,
                     step=step,
+                    epoch=epoch,
+                    loss=loss,
+                    outputs=outputs,
+                    labels=labels,
                     logger=None,
-                    silent=False
+                    silent=False,
+                    norm_data_list=norm_data_list
                 )
-                print(f"Epoch {epoch}, Step {step}: Total grad Spectral = {total_gnorm:.4f}")
+                loss_val = loss.item() if hasattr(loss, 'item') else float(loss)
+                train_acc_val = (outputs.detach().argmax(1) == labels).float().mean().item()
+                print(f"Epoch {epoch}, Step {step}: Total grad norms - Frobenius: {total_fro:.4f}, Spectral: {total_spec:.4f}, Nuclear: {total_nuc:.4f}, Loss: {loss_val:.4f}, Train Acc: {train_acc_val:.4f}")
 
             for opt in optimizers:
                 opt.step()
@@ -494,6 +657,8 @@ def main(run, model):
         # Save the accuracy and loss from the last training batch of the epoch
         train_acc = (outputs.detach().argmax(1) == labels).float().mean().item()
         val_acc = evaluate(model, test_loader, tta_level=0)
+        # Store val_acc for this epoch to backfill into DataFrame
+        epoch_val_acc[epoch] = val_acc
         print_training_details(locals(), is_final_entry=False)
         run = None # Only print the run number once
 
@@ -507,9 +672,15 @@ def main(run, model):
     epoch = 'eval'
     print_training_details(locals(), is_final_entry=True)
 
+    # Save norm data to DataFrame if not warmup
+    if not is_warmup and norm_data_list:
+        save_norm_dataframe(norm_data_list, run=run_id, optimizer_name=optimizer_name, epoch_val_acc=epoch_val_acc)
+
     return tta_val_acc
 
 if __name__ == "__main__":
+    # Set seed for reproducibility
+    set_seed(42)
 
     # We re-use the compiled model between runs to save the non-data-dependent compilation time
     model = CifarNet().cuda().to(memory_format=torch.channels_last)

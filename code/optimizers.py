@@ -1,7 +1,7 @@
 import math
 import torch
 import torch.nn.functional as F
-from torch import nn, Tensor
+from torch import nn, Tensor, nuclear_norm
 import torch.distributed as dist
 from matrix_methods.matrix_functions import k_sv_svds_approximation_dlpack, one_sv_svds_approximation, svd_full_approximation, several_sv_svds_approximation
 
@@ -27,6 +27,27 @@ def zeropower_via_newtonschulz5(G, steps=3, eps=1e-12):
     if G.size(0) > G.size(1):
         X = X.T
     return X
+
+def zeropower_via_newtonschulz5_with_fro_norm(G, steps=3, eps=1e-12):
+    """Simplified Newton-Schulz iteration for whitening"""
+    assert len(G.shape) == 2
+    a, b, c = (3.4445, -4.7750, 2.0315)
+    X = G.bfloat16()
+    # Add numerical stability
+    norm = X.norm() + eps
+    if norm < eps:
+        print("Norm lower than eps")
+        return torch.zeros_like(X)
+    X /= norm
+    if G.size(0) > G.size(1):
+        X = X.T
+    for _ in range(steps):
+        A = X @ X.T
+        B = b * A + c * A @ A
+        X = a * X + B @ X
+    if G.size(0) > G.size(1):
+        X = X.T
+    return X, norm
 
 
 def newtonschulz5_with_nuclear(G, steps=3, eps=1e-12):
@@ -259,13 +280,27 @@ class NormalizedMuon(torch.optim.Optimizer):
                     norm = 1e-10
                 p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
-                g_normalized = g / (g.norm() + eps)
                 if self.sgd_coeff != 1:
-                    update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                    update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g_normalized
+                    # zeropower expects 2D input: reshape and restore
+                    update_part, fro_norm = zeropower_via_newtonschulz5_with_fro_norm(
+                        g.reshape(g.size(0), -1)
+                    )
+                    update_part = update_part.view_as(g)
+
+                    # normalize g by fro_norm in-place (safe after update_part computed)
+                    # If you prefer not to mutate g, use g_div = g / fro_norm instead.
+                    g.div_(fro_norm)
+
+                    update = (1 - self.sgd_coeff) * update_part + self.sgd_coeff * g
                 else:
-                    update = self.sgd_coeff * g_normalized
-                p.data.add_(update, alpha=-lr) # take a step
+                    # normalize g by its norm + eps (in-place), then scale by sgd_coeff
+                    grad_norm = g.norm().add_(eps)
+                    g.div_(grad_norm)
+                    update = self.sgd_coeff * g
+
+                # apply parameter update (no_grad context is active)
+                p.data.add_(update, alpha=-lr)
+
 
 
 class MuonSGDStyle(torch.optim.Optimizer):
