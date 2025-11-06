@@ -180,16 +180,24 @@ def _sanitize_filename(filename: str) -> str:
     filename = filename.replace('.', '_').replace(' ', '_')
     return filename
 
+import re
+
+def collect_grad_norm_files(folder_path):
+    pattern = re.compile(r"grad_norms_(.*?)_run\d+_\d{8}_\d{6}\.csv$")
+    result = {}
+
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".csv"):
+            match = pattern.match(filename)
+            if match:
+                key = match.group(1)
+                result[key] = filename
+
+    return result
 
 if __name__ == "__main__":
     # Example usage
-    log_files = {
-        "Muon": "grad_norms_Muon_run0_20251106_222819.csv",
-        "NormalizedMuon": "grad_norms_NormalizedMuon_run0_20251106_223129.csv",
-        "Neon 0.4": "grad_norms_Neon_run_lr_0_4.csv",
-        "Neon 0.04": "grad_norms_Neon_run_lr_004.csv",
-        "Neon 4": "grad_norms_Neon_run_lr_4.csv"
-    }
+    log_files = collect_grad_norm_files(".")
     
     metrics = [
         "total_frobenius",

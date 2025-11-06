@@ -238,7 +238,7 @@ class CifarNet(nn.Module):
                 mod.half()
 
     def reset(self):
-        for m in model.modules():
+        for m in self.modules():
             if type(m) in (nn.Conv2d, Conv, BatchNorm, nn.Linear):
                 m.reset_parameters()
         w = self.head.weight.data
@@ -459,7 +459,7 @@ def log_grad_frobenius_norms(model, step=None, epoch=None, loss=None, outputs=No
     
     return (frobenius_norms, spectral_norms, nuclear_norms), (total_frobenius, total_spectral, total_nuclear)
 
-def save_norm_dataframe(norm_data_list, run=None, optimizer_name=None, epoch_val_acc=None):
+def save_norm_dataframe(norm_data_list, run=None, optimizer_name=None, combo_name=None, epoch_val_acc=None):
     """
     Convert norm data list to DataFrame and save to cifar_norms/ folder.
     
@@ -467,6 +467,7 @@ def save_norm_dataframe(norm_data_list, run=None, optimizer_name=None, epoch_val
         norm_data_list: List of dictionaries containing norm data
         run: Run identifier (optional)
         optimizer_name: Optimizer name for filename (optional)
+        combo_name: Combo name for filename (optional, takes precedence over optimizer_name)
         epoch_val_acc: Dictionary mapping epoch -> val_acc to backfill (optional)
     
     Returns:
@@ -487,10 +488,12 @@ def save_norm_dataframe(norm_data_list, run=None, optimizer_name=None, epoch_val
     output_dir = 'cifar_norms'
     os.makedirs(output_dir, exist_ok=True)
     
-    # Create meaningful filename
+    # Create meaningful filename - use combo_name if provided, otherwise optimizer_name
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename_parts = ['grad_norms']
-    if optimizer_name:
+    if combo_name:
+        filename_parts.append(combo_name)
+    elif optimizer_name:
         filename_parts.append(optimizer_name)
     if run is not None:
         filename_parts.append(f'run{run}')
@@ -505,7 +508,19 @@ def save_norm_dataframe(norm_data_list, run=None, optimizer_name=None, epoch_val
     
     return filepath
 
-def main(run, model):
+def main(run, model, optimizer_config=None, combo_name=None):
+    """
+    Main training function.
+    
+    Args:
+        run: Run identifier
+        model: The model to train
+        optimizer_config: Callable that takes filter_params and returns optimizer2, or None for default
+        combo_name: Name for this optimizer combo (used in filename)
+    
+    Returns:
+        TTA validation accuracy
+    """
     batch_size = 2000
     bias_lr = 0.053
     head_lr = 0.67
@@ -526,7 +541,7 @@ def main(run, model):
     if is_warmup:
         # The only purpose of the first run is to warmup the compiled model, so we can use dummy data
         train_loader.labels = torch.randint(0, 10, size=(len(train_loader.labels),), device=train_loader.labels.device)
-    total_train_steps = ceil(10 * len(train_loader))
+    total_train_steps = ceil(15 * len(train_loader))
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
     # Create optimizers and learning rate schedulers
@@ -537,35 +552,14 @@ def main(run, model):
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
-    # random mix, 93.3%, 11.26 s on bs 2000 with lr=0.4, mom=0.65
-    # optimizer2 = RandomNormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # and 92.9% for bs 200
-    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
     
-    # Get optimizer name for logging
-    # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
+    # Create optimizer2 using the provided config function, or use default
+    if optimizer_config is not None:
+        optimizer2 = optimizer_config(filter_params)
+    else:
+        # Default optimizer
+        optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.04, momentum=0.65, nesterov=True, sgd_coeff=0)
     
-    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=10, momentum=0.95, nesterov=True, sgd_coeff=0) # only 32%, but Fro norm is only 40
-    optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.04, momentum=0.65, nesterov=True, sgd_coeff=0) #
-    
-    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=5, momentum=0.65, nesterov=True, sgd_coeff=0) # 72.3%
-    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=20, momentum=0.65, nesterov=True, sgd_coeff=0) # 89.0%, very slow
-
-    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6) # 88.2%
-    # optimizer2 = Neon(filter_params, neon_mode='fast', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6) # 87.9%, must be the same as upper
-    # optimizer2 = Neon(filter_params, neon_mode='kyfan', k=5, lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6) # 87.6%
-
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=1, momentum_decay=0.9, sgd_coeff=0) # 68.5%, but with 4.8% variance
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=1, momentum_decay=0.95, sgd_coeff=0) # 67.2%, but with 5% variance
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=1, momentum_decay=0.8, sgd_coeff=0) # 66.9%, but with 5% variance
-
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=10, momentum_decay=0.9, sgd_coeff=0) # 84.5%, with 0.4% variance
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance
-    
-
-    # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 93.9%, worse than F-Muon, but not so bad
-    # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
-    
-    # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible
     optimizer_name = optimizer2.__class__.__name__
     
     optimizers = [optimizer1, optimizer2]
@@ -674,25 +668,95 @@ def main(run, model):
 
     # Save norm data to DataFrame if not warmup
     if not is_warmup and norm_data_list:
-        save_norm_dataframe(norm_data_list, run=run_id, optimizer_name=optimizer_name, epoch_val_acc=epoch_val_acc)
+        save_norm_dataframe(norm_data_list, run=run_id, optimizer_name=optimizer_name, combo_name=combo_name, epoch_val_acc=epoch_val_acc)
 
     return tta_val_acc
 
-if __name__ == "__main__":
+def run_optimizer_experiments(num_runs=1, warmup=True):
+    """
+    Manager function to run experiments with different optimizer2 configurations.
+    
+    Args:
+        num_runs: Number of repetitions for each optimizer config
+        warmup: Whether to run a warmup iteration first
+    
+    Returns:
+        Dictionary mapping combo_name -> list of accuracies
+    """
     # Set seed for reproducibility
-    set_seed(42)
 
     # We re-use the compiled model between runs to save the non-data-dependent compilation time
     model = CifarNet().cuda().to(memory_format=torch.channels_last)
     # model.compile(mode='max-autotune')
 
+    # Define optimizer configurations with names
+    optimizer_configs = {
+        'Neon_kyfan_lr04': lambda filter_params: Neon(
+            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0
+        ),
+        'FNeon_kyfan_lr04': lambda filter_params: Neon(
+            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5
+        ),
+        'Neon_kyfan_k5_lr04': lambda filter_params: Neon(
+            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0, k=5,
+        ),
+        'FNeon_kyfan_k5_lr04': lambda filter_params: Neon(
+            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5, k=5,
+        ),
+        'Neon_kyfan_k10_lr045': lambda filter_params: Neon(
+            filter_params, neon_mode='kyfan', lr=0.45, k=10, momentum=0.65, nesterov=True, sgd_coeff=0
+        ),
+        'FNeon_kyfan_k10_lr045': lambda filter_params: Neon(
+            filter_params, neon_mode='kyfan', lr=0.45, k=10, momentum=0.65, nesterov=True, sgd_coeff=0.5
+        ),
+        'Muon_lr024': lambda filter_params: Muon(
+            filter_params, lr=0.24, momentum=0.6, nesterov=True
+        ),
+        'FMuon_lr04': lambda filter_params: NormalizedMuon(
+            filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True
+        ),
+        'SignSGDMuon_lr04': lambda filter_params: SignSGDMuon(
+            filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5
+        ),
+        'NSGD_lr_1': lambda filter_params: NormalizedMuon(filter_params, lr=1, momentum=0.6, sgd_coeff=1, nesterov=True)
+    }
+    
+    # You can add more configurations here or modify existing ones
+    
+    results = {}
+    
     print_columns(logging_columns_list, is_head=True)
-    # main('warmup', model)
-    accs = torch.tensor([main(run, model) for run in range(1)]) # num of repetitions in the test
-    print('Mean: %.4f    Std: %.4f' % (accs.mean(), accs.std()))
-
+    
+    # Run warmup if requested
+    if warmup:
+        print("\n=== Running warmup ===")
+        main('warmup', model, optimizer_config=None, combo_name=None)
+    
+    # Run each optimizer configuration
+    for combo_name, optimizer_config in optimizer_configs.items():
+        print(f"\n=== Running experiment: {combo_name} ===")
+        set_seed(42)
+        accs = torch.tensor([
+            main(run, model, optimizer_config=optimizer_config, combo_name=combo_name) 
+            for run in range(num_runs)
+        ])
+        results[combo_name] = accs
+        print(f'{combo_name} - Mean: %.4f    Std: %.4f' % (accs.mean(), accs.std()))
+    
+    # Save summary log
     log_dir = os.path.join('logs', str(uuid.uuid4()))
     os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, 'log.pt')
-    torch.save(dict(code=code, accs=accs), log_path)
-    print(os.path.abspath(log_path))
+    torch.save(dict(code=code, results=results), log_path)
+    print(f"\nSummary log saved to: {os.path.abspath(log_path)}")
+    
+    return results
+
+if __name__ == "__main__":
+    # Run experiments with different optimizer configurations
+    results = run_optimizer_experiments(num_runs=1, warmup=True)
+    
+    # Print final summary
+    print("\n=== Final Summary ===")
+    for combo_name, accs in results.items():
+        print(f'{combo_name}: Mean=%.4f, Std=%.4f' % (accs.mean(), accs.std()))

@@ -424,7 +424,6 @@ def main(run, model):
         ####################
         #     Training     #
         # ####################
-        # no gain:
         # if epoch == 5 and switch_to_muon: # to go to Muon
         #     # optimizers[1] = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5)
         #     # optimizers[1].sgd_coeff = 0.5
