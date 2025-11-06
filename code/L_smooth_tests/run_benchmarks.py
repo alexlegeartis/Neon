@@ -33,8 +33,9 @@ def main() -> None:
     # Initial point
     m, n = 50, 50
     # problem = LogisticRegressionProblem(m, n) 
-    problem = SimpleQuadratic(m, n, device=device, seed=42, eig_range_M=(0,1), eig_range_N=(0,1))
+    problem = SimpleQuadratic(m, n, device=device, seed=42, eig_range_M=(0,1), eig_range_N=(0,1), shift_scale=0)
     delta = 250 # let it be
+    # I don't believe in this constant talk
     grad_op_eps = 1
     lipsch_const_op = problem.lipschitz_constant(norm=2)
     lipsch_const_nuc = problem.lipschitz_constant(norm='nuc')
@@ -48,7 +49,7 @@ def main() -> None:
     lr_op = grad_op_eps / beta_op / lipsch_const_op
     lr_nuc = grad_op_eps / beta_nuc / lipsch_const_nuc
     lr_fro = grad_op_eps / beta_fro / lipsch_const_fro
-    print(f"Muon lr: {lr_op: .2E}, Neon iter: {lr_nuc: .2e}, Frobenius iter: {lr_fro:.2e}")
+    print(f"Muon lr: {lr_op: .2E}, Neon lr: {lr_nuc: .2e}, Frobenius lr: {lr_fro:.2e}")
 
     iter_num_op = int(lipsch_const_op * delta / grad_op_eps / grad_op_eps / beta_op / beta_op)
     iter_num_nuc = int(lipsch_const_nuc * delta / grad_op_eps / grad_op_eps / beta_nuc / beta_nuc)

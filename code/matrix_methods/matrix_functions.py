@@ -268,6 +268,7 @@ def several_sv_svds_approximation(W_torch, k, num_iter=50):
     
     # CuPy svds doesn't work well for small matrices (min_dim < 4), so use full SVD instead
     if min_dim < 4:
+        print("Full SVD!")
         # Use full SVD for small matrices
         U, S_full, Vt = torch.linalg.svd(W_torch, full_matrices=False)
         # Take top k singular values and vectors
@@ -281,6 +282,8 @@ def several_sv_svds_approximation(W_torch, k, num_iter=50):
     # Ensure k is valid: k must be >= 1 and < min(m, n)
     # Note: min_dim was already checked before conversion, so we can proceed
     k_val = min([k, min_dim - 1])
+    if k_val != k:
+        print(f"{k_val} is a new k. Instead of {k}")
     if k_val <= 0 or k_val >= min_dim:
         # Fallback for very small matrices
         W_norm = W_torch.norm().item()

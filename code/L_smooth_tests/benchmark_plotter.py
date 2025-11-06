@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def plot_from_descriptions(
@@ -146,22 +147,33 @@ def plot_and_save_individual_panels(
 
 def build_default_panels(experiments: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Build four default panels from results dicts keyed by experiment name (str):
+    Build default panels from results dicts keyed by experiment name (str):
       - Loss vs Iteration
       - Loss vs Time
-      - ||∇f(X)||_F vs Iteration
-      - ||∇f(X)||_F vs Time
-    Each value in experiments must contain keys: iterations, cumulative_time, losses, grad_frobenius_norms.
+      - Gradient Spectral Norm (||∇f(X)||_2) vs Iteration
+      - Gradient Spectral Norm (||∇f(X)||_2) vs Time
+      - Gradient Frobenius Norm (||∇f(X)||_F) vs Iteration
+      - Gradient Frobenius Norm (||∇f(X)||_F) vs Time
+      - Gradient Nuclear Norm (||∇f(X)||_*) vs Iteration
+      - Gradient Nuclear Norm (||∇f(X)||_*) vs Time
+    Each value in experiments must contain keys: iterations, cumulative_time, losses,
+    grad_spectral_norms, grad_frobenius_norms, grad_nuclear_norms.
     """
 
     def collect_series(x_key: str, y_key: str) -> List[Dict[str, Any]]:
         series: List[Dict[str, Any]] = []
         for name, res in experiments.items():
-            series.append({
+            # Pass through optional style fields if present in the experiment results
+            series_item: Dict[str, Any] = {
                 "name": name,
                 "x": res[x_key],
                 "y": res[y_key],
-            })
+            }
+            if "color" in res:
+                series_item["color"] = res["color"]
+            if "linestyle" in res:
+                series_item["linestyle"] = res["linestyle"]
+            series.append(series_item)
         return series
 
     panels: List[Dict[str, Any]] = [
@@ -182,15 +194,43 @@ def build_default_panels(experiments: Dict[str, Dict[str, Any]]) -> List[Dict[st
         {
             "title": "Gradient Spectral Norm vs Iteration",
             "x_label": "Iteration",
-            "y_label": "||∇f(X)||_2",
-            "series": collect_series("iterations", "grad_frobenius_norms"),
+            "y_label": r"$||∇f(X)||_{op}$",
+            "series": collect_series("iterations", "grad_spectral_norms"),
             "yscale": "log",
         },
         {
             "title": "Gradient Spectral Norm vs Time",
             "x_label": "Time (s)",
-            "y_label": "||∇f(X)||_2",
+            "y_label": r"$||∇f(X)||_{op}$",
+            "series": collect_series("cumulative_time", "grad_spectral_norms"),
+            "yscale": "log",
+        },
+        {
+            "title": "Gradient Frobenius Norm vs Iteration",
+            "x_label": "Iteration",
+            "y_label": "$||∇f(X)||_F$",
+            "series": collect_series("iterations", "grad_frobenius_norms"),
+            "yscale": "log",
+        },
+        {
+            "title": "Gradient Frobenius Norm vs Time",
+            "x_label": "Time (s)",
+            "y_label": "$||∇f(X)||_F$",
             "series": collect_series("cumulative_time", "grad_frobenius_norms"),
+            "yscale": "log",
+        },
+        {
+            "title": "Gradient Nuclear Norm vs Iteration",
+            "x_label": "Iteration",
+            "y_label": r"$||∇f(X)||_{nuc}$",
+            "series": collect_series("iterations", "grad_nuclear_norms"),
+            "yscale": "log",
+        },
+        {
+            "title": "Gradient Nuclear Norm vs Time",
+            "x_label": "Time (s)",
+            "y_label": r"$||∇f(X)||_{nuc}$",
+            "series": collect_series("cumulative_time", "grad_nuclear_norms"),
             "yscale": "log",
         },
     ]
@@ -200,7 +240,7 @@ def build_default_panels(experiments: Dict[str, Dict[str, Any]]) -> List[Dict[st
 
 def plot_and_save_default_panels(
     experiments: Dict[str, Dict[str, Any]],
-    base_save_dir: str = "simple_lls",
+    base_save_dir: str = "L_smooth_tests/simple_lls", # because it is run as a module
     title_suffix: str = "",
 ) -> None:
     """
@@ -215,3 +255,118 @@ def plot_and_save_default_panels(
     plot_and_save_individual_panels(panels, base_save_dir, title_suffix)
 
 
+
+def experiments_to_dataframe(experiments: Dict[str, Dict[str, Any]]) -> pd.DataFrame:
+    """
+    Convert experiments dict into a long-form DataFrame with columns:
+      - experiment: str
+      - x_key: str in {"iterations", "cumulative_time"}
+      - x: float
+      - y_key: str in {"losses", "grad_spectral_norms", "grad_frobenius_norms", "grad_nuclear_norms"}
+      - y: float
+      - color: Optional[str]
+      - linestyle: Optional[str]
+    """
+    rows: List[Dict[str, Any]] = []
+    y_keys = [
+        "losses",
+        "grad_spectral_norms",
+        "grad_frobenius_norms",
+        "grad_nuclear_norms",
+    ]
+    x_keys = ["iterations", "cumulative_time"]
+
+    for exp_name, res in experiments.items():
+        color = res.get("color")
+        linestyle = res.get("linestyle")
+        for y_key in y_keys:
+            y_values = res.get(y_key)
+            if y_values is None:
+                continue
+            for x_key in x_keys:
+                x_values = res.get(x_key)
+                if x_values is None:
+                    continue
+                # Pair by index (assume equal length)
+                length = min(len(x_values), len(y_values))
+                for i in range(length):
+                    rows.append(
+                        {
+                            "experiment": exp_name,
+                            "x_key": x_key,
+                            "x": float(x_values[i]),
+                            "y_key": y_key,
+                            "y": float(y_values[i]),
+                            "color": color,
+                            "linestyle": linestyle,
+                        }
+                    )
+
+    return pd.DataFrame(rows)
+
+
+def save_experiments_to_csv(experiments: Dict[str, Dict[str, Any]], csv_path: str) -> None:
+    """Save experiments dict into a single CSV file at csv_path."""
+    df = experiments_to_dataframe(experiments)
+    # Create parent dirs if needed
+    import os
+    os.makedirs(os.path.dirname(csv_path) or ".", exist_ok=True)
+    df.to_csv(csv_path, index=False)
+
+
+def load_experiments_from_csv(csv_path: str) -> Dict[str, Dict[str, Any]]:
+    """
+    Load experiments from CSV produced by save_experiments_to_csv and
+    reconstruct the original experiments dict structure expected by plotting helpers.
+    """
+    df = pd.read_csv(csv_path)
+    # Ensure types
+    if "x" in df.columns:
+        df["x"] = df["x"].astype(float)
+    if "y" in df.columns:
+        df["y"] = df["y"].astype(float)
+
+    experiments: Dict[str, Dict[str, Any]] = {}
+    for exp_name, g in df.groupby("experiment"):
+        exp: Dict[str, Any] = {}
+        # Preserve style if present
+        styles = g[[c for c in ["color", "linestyle"] if c in g.columns]].dropna(how="all").head(1)
+        if not styles.empty:
+            srow = styles.iloc[0]
+            if "color" in srow and pd.notna(srow["color"]):
+                exp["color"] = srow["color"]
+            if "linestyle" in srow and pd.notna(srow["linestyle"]):
+                exp["linestyle"] = srow["linestyle"]
+
+        # Rebuild each series
+        for x_key, gx in g.groupby("x_key"):
+            gx_sorted = gx.sort_values("x")
+            exp[x_key] = gx_sorted["x"].tolist()
+        for y_key, gy in g.groupby("y_key"):
+            # Choose the longest y among x_key splits (they should match); default use all rows
+            gy_sorted = gy.sort_values(["x_key", "x"])  # stable
+            target_len = max(len(exp.get("iterations", [])), len(exp.get("cumulative_time", [])), 0)
+            exp[y_key] = gy_sorted["y"].tolist()[: target_len]
+
+        experiments[exp_name] = exp
+
+    return experiments
+
+
+def plot_from_csv(
+    csv_path: str,
+    ncols: int = 2,
+    title_suffix: str = "",
+    combined_save_path: Optional[str] = None,
+    base_save_dir: str = "L_smooth_tests/simple_lls",
+) -> None:
+    """
+    Load experiments from a CSV file and generate the default panels.
+    - Saves individual PDFs to base_save_dir
+    - If combined_save_path is provided, also saves the combined panel figure there
+    """
+    experiments = load_experiments_from_csv(csv_path)
+    panels = build_default_panels(experiments)
+    plot_and_save_individual_panels(panels, base_save_dir=base_save_dir, title_suffix=title_suffix)
+    if combined_save_path is not None:
+        plot_from_descriptions(panels, ncols=ncols, title_suffix=title_suffix, save_path=combined_save_path)

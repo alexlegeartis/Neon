@@ -34,7 +34,7 @@ def _random_psd_matrix(
 
 class RandomQuadraticPSDProblem(MatrixProblem):
     """
-    f(X) = 0.5 * <X - S, M (X - S) N>, where M ∈ R^{m×m}, N ∈ R^{n×n} are symmetric PSD.
+    f(X) = 0.5 * <X - S, M (X - S) N>, where M ∈ R^{m x m}, N ∈ R^{n x n} are symmetric PSD.
     Gradient: ∇f(X) = M (X - S) N.
     """
 

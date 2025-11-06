@@ -171,7 +171,7 @@ class MuonCringeMomentum(torch.optim.Optimizer):
 # this function also supports F-Neon
 class Neon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, k=1, tau = 0, nesterov=False,
-                 neon_mode='fast', iter_num = 100, sgd_coeff=0):
+                 neon_mode='fast', iter_num=1, sgd_coeff=0):
         self.tau = tau
         self.k = k # target number of SVD componenets which we preserve
         self.lanczos_iter_num = iter_num
@@ -223,7 +223,7 @@ class Neon(torch.optim.Optimizer):
                         update, self.tau, self.k = k_sv_svds_approximation_dlpack(g_resh, self.k, self.tau, self.lanczos_iter_num)
 
                     elif self.type == 'kyfan': # no EF here, so it is not Dion
-                        u, s, vt = several_sv_svds_approximation(g_resh, self.k)
+                        u, s, vt = several_sv_svds_approximation(g_resh, self.k, self.lanczos_iter_num)
                         update = u @ vt
                         error = u @ torch.diag(s) @ vt
                 update2 = (1-self.sgd_coeff) * update.view(g.shape) + self.sgd_coeff * g / (g.norm() + 1e-12)
