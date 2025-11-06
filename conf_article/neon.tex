@@ -113,198 +113,215 @@ AIRI, Skoltech \\
 \maketitle
 
 \begin{abstract}
-% In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms, their affine combinations with the Frobenius norms, and corresponding duals to develop a new family of Muon-like algorithms we name {\it Fanions}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
+	% In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms, their affine combinations with the Frobenius norms, and corresponding duals to develop a new family of Muon-like algorithms we name {\it Fanions}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
 
-In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms to introduce a new family of Muon-like algorithms we name {\it Fanions}. Then, we consider their convex combinations with the Frobenius norm and corresponding duals to develop a new family of algorithms we name {\it F-Fanions}, one of them being {\it F-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that properly-tuned F-Muon is almost on par with Muon, which questions the necessity of finding the exact solution to the problem in linear optimization oracle framework.
-
+	In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan k-norms to introduce a \deleted[id=IK, comment={Redundant}]{new} family of Muon-like algorithms we name {\it Fanions}, which happen to be similar to Dion. \replaced[id=IK, comment={This rewrite clarifies the sentence structure, making it clear that the norms (not the algorithms) are being combined.}]{Subsequently, we construct a second family of algorithms, dubbed {\it F-Fanions}, based on the duals of convex combinations of Ky Fan k-norms and the Frobenius norm. One prominent member of this family is {\it F-Muon}.}{Then, we consider their convex combinations with the Frobenius norm and corresponding duals to develop a new family of algorithms we name {\it F-Fanions}, one of them being {\it F-Muon}.} We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that properly-tuned F-Muon is almost on par with Muon, \replaced[id=IK, comment={Alex, clarify this please. It's a very non-obvious and non-clear conclusion, especially when knowing that Muon itself only provides an approximate answer to the LMO. I provided an alternative phrase.}]{which questions the necessity of finding the exact solution to the problem in linear optimization oracle framework.}{which shows the flexibility in the choice of the norm and opens possibilities for easier-to-compute variants.}
 
 \end{abstract}
 
 \section{Introduction}
-This is the original text. \added[id=IK, comment={I think we should mention this.}]{This is a new sentence that has been added.}
 
- Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam \citep{kingma2014adam} and AdamW \citep{loshchilov2017decoupled}, recently proposed Muon \citep{jordan2024muon} has shown promising results on training very large models \citep{liu2025muon}. Its key difference from Adam and AdamW is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
- 
- That is what can be said from a practical point of view. From the perspective of theory, the main innovation of Muon has been an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update \citep{bernstein2025deriving}. Based upon recent theoretical advances that explain some theory behind Muon, Scion and Gluon \citep{bernstein2025deriving,kovalev2025understanding,pethick2025training,riabinin2025gluon}, we explore application of other matrix norms to optimization of functions of matrices. As it has been done with Muon, we stipulate that our algorithms' updates be fast to compute.
+Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam \citep{kingma2014adam} and AdamW \citep{loshchilov2017decoupled}, recently proposed Muon \citep{jordan2024muon} has shown promising results on training very large models \citep{liu2025muon}. Its key difference from Adam and AdamW is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
 
- In this article, we focus on the two most common matrix norms akin to the spectral norm, namely the nuclear norm and the Frobenius norm. Working in the linear minimization oracle (lmo) framework, which is equivalent to a factor to the trust region approach and the steepest descent under norm constraint, we derive Neon, our algorithm based on the nuclear norm. In the section {\it Matrix side of the updates}, we explain how Neon updates can be computed asymptotically with the same $\cO(m n \min\{m, n\})$ number of FLOPs as Muon updates are computed via Newton-Schulz iterations.
+That is what can be said from a practical point of view. \replaced[id=IK, comment={Rewrote this to be more precise. The innovation wasn't just 'using' a norm, but deriving the update from a principled, constrained optimization problem. I think this better reflects the contribution of the Muon paper.}]{From a theoretical perspective, a key innovation of Muon was its principled derivation of the update rule, which emerges as the solution to an optimization problem constrained by the RMS-to-RMS norm (scaled version of spectral norm) \citep{bernstein2025deriving}}{From the perspective of theory, the main innovation of Muon has been an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update}.
 
- Noticing that Neon and Muon are diametrical in terms of the rank of the update matrix, we bridge the space by considering the dual to the Ky Fan $k$-norm, the primal norm being the sum of the $k$ largest singular values of the matrix. The resulting update turns out to be Dion \citet{ahn2025dioncommunicationefficientoptimizerlarge} without error feedback.
- 
- To make Neon and Dion without error feedback more robust, we "regularize" them by Normalized SGD (NSGD), which is derived in lmo with the Frobenius norm. We do this in the same lmo approach by considering a norm that is dual to the convex combination of the Frobenius norm and the Ky Fan k-norm. So we derive the algorithms we name F-Neon and F-Dion respectively. The same procedure we follow with Muon to obtain F-Muon.
+\replaced[id = IK, comment={Subsequent paragraphs in the introduction are very heavily modified.}]{}{}
 
- Having faced the array of different Muon-like optimizers, which, according to the upper bounds from \citet{kovalev2025understanding,riabinin2025gluon}, must converge similarly, we painstakingly compare them on a synthetic linear least squares problem with a known Lipschitz constant. The efforts result in comparison of the algorithms by their convergence not in terms of the dual norms of the gradient, but in terms of the common spectral norm, which may strongly differ, especially in large matrices, from the initial dual norms. Thus, we compare the algorithms in a unified fashion and find that sometimes if an algorithm converges fast by the loss, it does not imply its fast convergence by the norm of the gradient, and vice versa.
+Motivated by the success of Muon, many generalizations and variations of it were proposed. Among the notable ones are Scion \citep{pethick2025training}, Dion \citep{ahn2025dioncommunicationefficientoptimizerlarge} and Gluon \citep{riabinin2025gluon}. Those researches target Muon's efficiency and establish convergence bounds. One central question, however, remains unanswered:
 
- Finally, observing the poor performace of Neon and Dion without error feedback, which negatively impacts F-Neon and F-Dion as well, we test Muon and F-Muon on two deep-learning tasks, training convolutional network on CIFAR-10 \citep{cifar2023airbench} and pre-training NanoGPT on FineWeb \citep{modded_nanogpt_2024}. The results support the supremacy of Muon, but the most striking outcome of the tests is that F-Muon, only half of which is Muon, is on par with Muon on training the convolutional network and only slighter worse that Muon on NanoGPT pre-training, while NSGD is far from that. The case of F-Muon answers in the affirmative to the question of possibility to perturb the norm that underpins the algorithm without sacrificing its performace. We envision that this effect will be used in the future to constuct easier to compute approximations of empirically optimal algorithms like Muon.
+\textit{In deriving Muon's update step, why constrain by the spectral norm? How would alternative norms affect performance and computational cost?}
+
+In this article, we tackle this question by first showing the connection between matrix norms and corresponding existing algorithms and discuss the theoretic bounds derived for those algorithms. We then leverage the family of norms dual to Ky Fan k-norms to derive a new class of algorithms with low-rank updates, which we call Fanions. Subsequently, we create a second, hybrid family named F-Fanions by constructing convex combinations of the Ky Fan norms with the Frobenius norm and taking dual of that composite norm. Working within the linear minimization oracle (\replaced[id = IK, comment={I think it's better this way.}]{LMO}{lmo}) framework we derive the explicit update formulas for both algorithm families. As it was done with Muon, we stipulate our algorithms to be fast to approximate, for which we utilize the Lanczos algorithm as described in \cref{sec:matrix-side}.
+
+We then compare the performance of the algorithm families across various benchmarks (\cref{sec:experiments}):
+\begin{itemize}
+	\item Synthetic least squares experiment,
+	\item CIFAR-10 airbench,
+	\item Pre-training NanoGPT on FineWeb dataset.
+\end{itemize}
+
+Our experiments reveal important insights about the role of matrix norms in optimization. On a synthetic least squares problem, we observe a striking discrepancy: while some algorithms converge slowly in terms of loss, they may converge quickly in terms of gradient norm, and vice versa. This suggests that existing theoretical guarantees may not fully explain practical algorithm performance.
+
+Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon achieves $94.01 \pm 0.14\%$ accuracy, essentially matching Muon's $94.00 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, only marginally worse than Muon's 3.279. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, answering affirmatively the central question posed above. This flexibility suggests potential for developing easier-to-compute variants of successful algorithms like Muon.
+
+\section{\added[id = IK, comment={I think it goes well into one big section.}]{Update Step as Constrained Optimization}}
+
+\subsection{\replaced[id = IK, comment={Merged what previously had been section with two subsections into this one and improved the notation. Also removed the thing about trust region, it'll be referenced in succeeding sections.}]{Linear Minimization Oracle Framework}{Problem Statement}}
+
+Training a neural network involves optimizing a function of weight matrices. For simplicity, we consider the problem of minimizing a differentiable function of a single matrix:
+\begin{equation}\label{eq:mat}
+	F(\cdot)\colon \Rmn \to \R\,,\qquad F(\mX) \to \min_{\mX \in \Rmn}\,.
+\end{equation}
+We equip the matrix space $\Rmn$ with a standard dot product $\<\cdot, \cdot> \to \R$ and a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius norm $\normf{\cdot}$. The dual norm $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ associated with $\norm{\cdot}$ is defined as
+\begin{equation}\label{eq:dual_norm}
+	\norm{\mG}^\dagger = \sup_{\mD \in \Rmn\,,\norm{\mD}\leq 1} \<\mG,\mD>\,.
+\end{equation}
+
+One approach to optimizing such functions is to employ an iterative algorithm based on Linear Minimization Oracle (LMO):
+\begin{equation}\label{eq:lmo}
+	\mathrm{LMO}(\mG) \in \argmin_{\mD \in \cS} \<\mG, \mD>\,,
+\end{equation}
+where $\mG$ is typically a gradient (possibly with momentum) of $F$ and $\cS \subset \Rmn$ is some set. The simple update formula then can look like
+\begin{equation}\label{eq:simple_update}
+	\mX^{k + 1} = \mX^k + \mathrm{LMO}\left(\nabla F\left(\mX^k\right)\right)\,.
+\end{equation}
+
+In a typical neural network, the objective function $F$ depends on a set of weight matrices $\{ \mX_1, \mX_2, \ldots \}$. The optimization framework we have described is applied in a layer-wise fashion. At each iteration $k$, a stochastic gradient $g(\mX^k, \xi^k)$ is computed using a mini-batch of data $\xi^k$ via backpropagation. This yields a separate gradient component, $\mG_i^k$, for each matrix $\mX_i$. The LMO-based update rule is then applied to each matrix $\mX_i$ using its corresponding gradient component $\mG_i^k$.
+
+The update rule used in Muon optimizer is uSCG \citep{pethick2025training}. In the most general case, which involves momentum, it can be written as
+\begin{equation}\label{eq:usgd_update}
+	\begin{aligned}
+		\mM^{k}     & = \alpha_{k} g(\mX^k, \xi^k) + (1 - \alpha_k)\mM^{k - 1}\,, \\
+		\mX^{k + 1} & = \mX^k + \gamma_k\mathrm{LMO}(\mM^{k})\,.
+	\end{aligned}
+\end{equation}
+
+Here we are particularly interested in the case when $\cS$ is a ball in the $\norm{\cdot}$ norm:
+\begin{equation}\label{eq:ball}
+	\cS = \cB_\eta = \{ \mD \in \Rmn \mid \norm{\mD} \leq \eta \}\,.
+\end{equation}
+In this case it can be easily shown that
+\begin{equation} \label{eq:lmo_in_norm_ball}
+	\argmin_{\mD \in \cS} \<\mG, \mD> = - \eta \{ \mD \in \cB_1 \mid \<\mG, \mD> = \norm{\mG}^\dagger\}\,.
+\end{equation}
+And update for $\mX$ in \cref{eq:usgd_update} becomes
+\begin{equation}\label{eq:our_update}
+	\mX^{k+1} = \mX^{k} - \gamma_k\eta \{\mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,.
+\end{equation}
+This formula will later allow us to easily compute updates for various norms.
+
+\subsection{Different Norms $\norm{\cdot}$ imply different updates}
+
+In this subsection we will derive and discuss updates induced by the choice of the norm in \cref{eq:our_update}. To describe those updates, the singular value decomposition (SVD) of $\mM^k$ is required. We denote SVD of $\mM^k$ as $\mM^k = \mU \mSigma \mV^\top$, where $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and  $\mV = [v_1, v_2, \dots, v_r]$.
+
+\subsection{\texorpdfstring{$\normf{\mM^{k}}$ and Normalized SGD}{NSGD}}
+
+\begin{lemma}\label{lemma:nsgd_update}
+	When $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
+
+	\begin{equation}\label{eq:nsgd_update}
+		\mX^{k+1} = \mX^{k} - \eta \frac{\mM^k}{\normf{\mM^k}}
+	\end{equation}
+
+\end{lemma}
+
+The result is the same as in (Table 1, \citet{pethick2025training}), but here we use the Euclidean norm as $\normf{\mM^k} = \sqrt{\sum_{i=1}^{\min\{m,n\}}\sigma_i^2}$, which clearly is a matrix norm.
+
+\subsection{\texorpdfstring{$\norms{\mM^{k}}$ and Muon}{Muon}}
+\begin{lemma}\label{lemma:muon_update}
+	When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
+
+	\begin{equation}\label{eq:muon_update}
+		\mX^{k+1} = \mX^{k} - \eta U V^\top
+	\end{equation}
+\end{lemma}
+
+Though the update is well-known, we provide a much simpler proof in the appendix, when compared to \citet{bernstein2024oldoptimizernewnorm}.
+
+\subsection{\texorpdfstring{$\normn{\mM^{k}}$ and Neon}{Neon}}
+\begin{lemma}\label{lemma:neon_update}
+	When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
+
+	\begin{equation}\label{eq:neon_update}
+		\mX^{k+1} = \mX^{k} - \eta u_1 v_1^\top
+	\end{equation}
+\end{lemma}
+We name the derived algorithm \emph{Neon}. In the section {\it The Matrix side of updates}, we will discuss how to compute the update efficiently.
+
+\subsection{\texorpdfstring{$\normfstar{\mM^{k}}^\dagger$ and F-Muon}{F-Muon}}
+We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
+
+\begin{equation}\label{eq:fstar_norm}
+	\normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
+\end{equation}
+
+where $\alpha \in [0, 1]$ defines a specific norm from the $F*$-family. $\normfstar{\cdot}^\dagger$ can be expressed as in \cref{eq:normfstardual}. However, its norm ball is a simple Minkowski sum of $\alpha \normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:fstardual}.
+
+\begin{lemma}\label{lemma:nsgd_muon_update}
+	When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+
+	\begin{equation}\label{eq:nsgd_muon_update}
+		\mX^{k+1} = \mX^{k} - \eta (\alpha U V^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
+	\end{equation}
+\end{lemma}
+
+We name the derived algorithm \emph{F-Muon}. It turns out that F-Muon is a convex combination of Normalized SGD and Muon. The implications are significant and discussed in the following sections.
+
+\subsection{\texorpdfstring{$\normftwo{\mM^{k}}^\dagger$ and F-Neon}{F-Neon}}
+We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
+
+\begin{equation}\label{eq:ftwo_norm}
+	\normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
+\end{equation}
+
+where $\alpha \in [0, 1]$ defines a specific norm from the F2-family.$\normftwo{\cdot}^\dagger$ can be expressed as in \cref{eq:normftwodual}. However, its norm ball is a simple Minkowski sum of $\alpha \norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:ftwodual}.
+
+\begin{lemma}\label{lemma:nsgd_neon_update}
+	When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+
+	\begin{equation}\label{eq:nsgd_neon_update}
+		\mX^{k+1} = \mX^{k} - \eta (\alpha u_1 v_1^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
+	\end{equation}
+\end{lemma}
+
+We name the derived algorithm \emph{F-Neon}. It turns out that F-Neon is a convex combination of Normalized SGD and Neon. The implications are significant and discussed in the following sections.
 
 
-\section{Problem Statement}
-\subsection{Function of a matrix}
-    We consider the problem of minimizing a differentiable matrix function $F(\cdot)\colon \Rmn \to \R$
-    \begin{equation}\label{eq:mat}
-        \min_{\mX \in \Rmn} f(\mX).
-    \end{equation}
+\subsection{\texorpdfstring{$\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}{Muon, Neon, and Centralized Dion without error feedback}}
+We remind the reader that the Ky Fan k-norm (\citet{bhatia2013matrix}, p. 92), which we denote as $\normkfk{\cdot}$, is the sum of the k largest singular values of the matrix. It can be proved that $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96). Special cases of the Ky Fan k-norm are the Ky Fan 1-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
 
-    We equip the matrix space $\Rmn$ with a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius norm $\normf{\cdot}$. $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ is the dual norm associated with $\norm{\cdot}$, i.e., $\norm{\mX}^\dagger = \sup_{\norm{\mX'}\leq 1} \<\mX,\mX'>$ for all $\mX \in \Rmn$.
- 
-\subsection{Linear Minimization Oracle and Trust Region}
-    We analyze the problem from the perspective of linear minimization oracle (lmo) and unconstrained stochastic conditional gradient descent (uSCG) \citep{pethick2025training}. lmo is defined as:
-    \begin{equation}\label{eq:lmo}
-        \mathrm{lmo}(\mS) \in \arg\min_{\mX \in \cS} \<\mS, \mX>,
-    \end{equation}
-    where $\cS$ is some set. We are interested in the case when $\cS$ is a ball in our $\norm{\cdot}$ norm:
-    \begin{equation}\label{eq:ball}
-        \cS := \cB_\eta :=\{ \mX \mid \norm{\mX} \leq \eta \}.
-    \end{equation}
+\begin{lemma}\label{lemma:ky_fan_update}
+	When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \cref{eq:our_update} turns into:
 
-    uSCG update is defined as:
-    $\mX^{k+1} = \mX^{k} + \gamma_k lmo(\mM^k),$ where $\mM^{k+1} = (1-\alpha_{k+1})\mM^{k} + \alpha_{k+1}g(\mX^k, \xi_k)$ is a momentum.
+	\begin{equation}\label{eq:ky_fan_update}
+		\mX^{t+1} = \mX^{t} - \eta \sum_{i=1}^{k}u_i v_i^\top
+	\end{equation}
+\end{lemma}
+In the section {\it The Matrix side of updates}, we will discuss how to compute the updates efficiently.
 
-    It can be easily shown that the formula is equvalent to
-    \begin{equation}\label{eq:almost_trust_update}
-        \mX^{k+1} = \mX^{k} - \gamma_k\eta \arg\max_{\mX \in \cB_1} \<\mS, \mX> = \mX^{k} - \gamma_k\eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}.
-    \end{equation}
+We introduce the family of {\it Fanions}, which consists of {\it Fanion-$k$}, lmo-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. By this terminology and the lemma, Muon is a Fanion-$\min\{n,m\}$, while Neon is an Fanion-1. Moreover, the centralized version of rank-$r$ Dion \citep{ahn2025dioncommunicationefficientoptimizerlarge} without the error feedback and without scaling of the update, from the perspective of lmo, is actually a Fanion-$r$.
 
-    Let us set $\gamma_k = 1$. This transforms algorithm defined by \cref{eq:almost_trust_update} into Algorithm 1 from \citet{kovalev2025understanding}. Therefore, we can view \cref{eq:almost_trust_update} both as an lmo-based algorithm and as a trust-region algorithm.
-
-\section{Different Norms $\norm{\cdot}$ imply different updates}
-
-    Based on different norms $\norm{\cdot}$, we will simplify the update defined by the aforementioned equation:
-
-    \begin{equation}\label{eq:our_update}
-        \mX^{k+1} = \mX^{k} - \eta \{\Delta \in \cB_1 \mid \<\mM^k, \Delta> = \norm{\mM^k}^\dagger\}
-    \end{equation}
-
-    Throughout this work, we denote the singular value decomposition (SVD) of $\mM^k$ as $\mM^k = \mU \mSigma \mV^\top$, where $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and  $\mV = [v_1, v_2, \dots, v_r]$.
-
-    \subsection{\texorpdfstring{$\normf{\mM^{k}}$ and Normalized SGD}{NSGD}}
-
-        \begin{lemma}\label{lemma:nsgd_update}
-            When $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
-
-            \begin{equation}\label{eq:nsgd_update}
-                \mX^{k+1} = \mX^{k} - \eta \frac{\mM^k}{\normf{\mM^k}}
-            \end{equation}
-
-        \end{lemma}
-
-        The result is the same as in (Table 1, \citet{pethick2025training}), but here we use the Euclidean norm as $\normf{\mM^k} = \sqrt{\sum_{i=1}^{\min\{m,n\}}\sigma_i^2}$, which clearly is a matrix norm.
-
-    \subsection{\texorpdfstring{$\norms{\mM^{k}}$ and Muon}{Muon}}
-    \begin{lemma}\label{lemma:muon_update}
-        When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
-
-        \begin{equation}\label{eq:muon_update}
-            \mX^{k+1} = \mX^{k} - \eta U V^\top
-        \end{equation}
-    \end{lemma}
-
-    Though the update is well-known, we provide a much simpler proof in the appendix, when compared to \citet{bernstein2024oldoptimizernewnorm}.
-
-    \subsection{\texorpdfstring{$\normn{\mM^{k}}$ and Neon}{Neon}}
-    \begin{lemma}\label{lemma:neon_update}
-        When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
-
-        \begin{equation}\label{eq:neon_update}
-            \mX^{k+1} = \mX^{k} - \eta u_1 v_1^\top
-        \end{equation}
-    \end{lemma}
-        We name the derived algorithm \emph{Neon}. In the section {\it The Matrix side of updates}, we will discuss how to compute the update efficiently.
-
-    \subsection{\texorpdfstring{$\normfstar{\mM^{k}}^\dagger$ and F-Muon}{F-Muon}}
-        We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
-
-        \begin{equation}\label{eq:fstar_norm}
-            \normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
-        \end{equation}
-
-        where $\alpha \in [0, 1]$ defines a specific norm from the $F*$-family. $\normfstar{\cdot}^\dagger$ can be expressed as in \cref{eq:normfstardual}. However, its norm ball is a simple Minkowski sum of $\alpha \normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:fstardual}.
-
-    \begin{lemma}\label{lemma:nsgd_muon_update}
-        When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
-
-        \begin{equation}\label{eq:nsgd_muon_update}
-            \mX^{k+1} = \mX^{k} - \eta (\alpha U V^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
-        \end{equation}
-    \end{lemma}
-
-        We name the derived algorithm \emph{F-Muon}. It turns out that F-Muon is a convex combination of Normalized SGD and Muon. The implications are significant and discussed in the following sections.
-
-    \subsection{\texorpdfstring{$\normftwo{\mM^{k}}^\dagger$ and F-Neon}{F-Neon}}
-        We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
-
-        \begin{equation}\label{eq:ftwo_norm}
-            \normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
-        \end{equation}
-
-        where $\alpha \in [0, 1]$ defines a specific norm from the F2-family.$\normftwo{\cdot}^\dagger$ can be expressed as in \cref{eq:normftwodual}. However, its norm ball is a simple Minkowski sum of $\alpha \norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:ftwodual}.
-
-    \begin{lemma}\label{lemma:nsgd_neon_update}    
-        When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
-
-        \begin{equation}\label{eq:nsgd_neon_update}
-            \mX^{k+1} = \mX^{k} - \eta (\alpha u_1 v_1^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
-        \end{equation}
-    \end{lemma}
-
-        We name the derived algorithm \emph{F-Neon}. It turns out that F-Neon is a convex combination of Normalized SGD and Neon. The implications are significant and discussed in the following sections.
-
-    
-    \subsection{\texorpdfstring{$\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}{Muon, Neon, and Centralized Dion without error feedback}}
-        We remind the reader that the Ky Fan k-norm (\citet{bhatia2013matrix}, p. 92), which we denote as $\normkfk{\cdot}$, is the sum of the k largest singular values of the matrix. It can be proved that $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96). Special cases of the Ky Fan k-norm are the Ky Fan 1-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
-
-        \begin{lemma}\label{lemma:ky_fan_update}    
-            When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \cref{eq:our_update} turns into:
-    
-            \begin{equation}\label{eq:ky_fan_update}
-                \mX^{t+1} = \mX^{t} - \eta \sum_{i=1}^{k}u_i v_i^\top
-            \end{equation}
-        \end{lemma}
-        In the section {\it The Matrix side of updates}, we will discuss how to compute the updates efficiently.
-
-        We introduce the family of {\it Fanions}, which consists of {\it $k$-Fanions}, lmo-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. By this terminology and the lemma, Muon is a $\min\{n,m\}$-Fanion, while Neon is an 1-Fanion. Moreover, the centralized version of rank-$r$ Dion \citep{ahn2025dioncommunicationefficientoptimizerlarge} without the error feedback and without scaling of the update, from the perspective of lmo, is actually a $r$-Fanion.      
-        
-        In addition, one can consider F-KF-k-norm: $\norm{\cdot}_{\mathrm{F-KF-k}}$ = $\alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}$, the dual to which will produce algorithms like F-Dion without the error feedback. The resulting family can be named {\it F-Fanions}.
+In addition, one can consider F-KF-k-norm: $\norm{\cdot}_{\mathrm{F-KF-k}}$ = $\alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}$, the dual to which will produce algorithms like F-Dion without the error feedback. The resulting family can be named {\it F-Fanions}.
 
 \subsection{Algorithms for Matrices $\leftrightarrow$ Algorithms for Vectors}
 
 lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms with common $p$ may be analogous to each other, as is illustrated by \cref{tbl:mat_vs_vec_lmo}. The analogies go beyond similarities in the updates. SignSGD is very close to Adam, as noted in \citet{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well in training large models. NSGD is the same for both matrix and vector cases. Greedy Coordinate Descent methods are not applied to high-dimensional problems, from this perspective, it is not surprising that Neon underperforms on such problems.
 
-Despite such similarities, no theory has been yet proposed that would reduce the matrix case to the optimization of a function of a singular values vector. If such a theory is developed, analysis of matrix algorithms like Muon will be greatly simplified.
+\deleted[id = IK, comment={This is essentially like saying uh oh the optimization in multy-dimensional space is so hard, why there is no algorithm to reduce this problem to 1-d case.}]{Despite such similarities, no theory has been yet proposed that would reduce the matrix case to the optimization of a function of a singular values vector. If such a theory is developed, analysis of matrix algorithms like Muon will be greatly simplified.}
 
 \begin{table*}[t]
-    \caption{lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms. $g$ is the gradient. When it is a matrix, $g = \mU \mSigma \mV^\top$}
-    \label{tbl:mat_vs_vec_lmo}
-    \bgroup
-    \def\arraystretch{1.2}
-    \resizebox{\textwidth}{!}{
-    \begin{tabular}{|l|c|c|c|}
-    \hline
-    Method & lmo constraint set $\mathcal D$ & lmo & Reference \\
-    \hline
-    \hline
-    Normalized SGD & $l_2$-ball, $S_2$-ball & $-\eta \tfrac{g}{\norm{g}_2} = -\eta \tfrac{g}{\norm{g}_F}$ & \citep{hazan2015beyond} \\
-    Momentum Normalized SGD & Ball in $l_2$, or Ball in $S_2$ & $-\eta \tfrac{g}{\norm{g}_2} = -\eta\tfrac{g}{\norm{g}_F}$ & \citep{cutkosky2020momentum}\\
-    \hline
-    SignSGD & Ball in Max-norm $l_\infty$ & $-\eta \sign(g)$ & \citep[Thm. 1]{bernstein2018signsgd} \\
-    Signum  & Ball in Max-norm $l_\infty$ & $-\eta \sign(g)$ & \citep[Thm. 3]{bernstein2018signsgd} \\
-    \hdashline
-    Muon & Ball in Spectral $S_\infty$ & $-\eta UV^\top$ & \citep{jordan2024muon} \\
-    \hline
-    Gauss-Southwell Coordinate Descent & Ball in $l_1$ & $-\eta \{i: g_i \geq g_k \forall k\}$ & \citep[p. 19]{shi2016primer}\\
-    \hdashline 
-    Neon & Ball in Nuclear $S_1$ & $-\eta u_1 v_1^\top$ & This work\\
-    \hline
-    \end{tabular}
-    }
-    \egroup
-    \end{table*}
-    
+	\caption{lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms. $g$ is the gradient. When it is a matrix, $g = \mU \mSigma \mV^\top$}
+	\label{tbl:mat_vs_vec_lmo}
+	\bgroup
+	\def\arraystretch{1.2}
+	\resizebox{\textwidth}{!}{
+		\begin{tabular}{|l|c|c|c|}
+			\hline
+			Method                             & lmo constraint set $\mathcal D$ & lmo                                                         & Reference                            \\
+			\hline
+			\hline
+			Normalized SGD                     & $l_2$-ball, $S_2$-ball          & $-\eta \tfrac{g}{\norm{g}_2} = -\eta \tfrac{g}{\norm{g}_F}$ & \citep{hazan2015beyond}              \\
+			Momentum Normalized SGD            & Ball in $l_2$, or Ball in $S_2$ & $-\eta \tfrac{g}{\norm{g}_2} = -\eta\tfrac{g}{\norm{g}_F}$  & \citep{cutkosky2020momentum}         \\
+			\hline
+			SignSGD                            & Ball in Max-norm $l_\infty$     & $-\eta \sign(g)$                                            & \citep[Thm. 1]{bernstein2018signsgd} \\
+			Signum                             & Ball in Max-norm $l_\infty$     & $-\eta \sign(g)$                                            & \citep[Thm. 3]{bernstein2018signsgd} \\
+			\hdashline
+			Muon                               & Ball in Spectral $S_\infty$     & $-\eta UV^\top$                                             & \citep{jordan2024muon}               \\
+			\hline
+			Gauss-Southwell Coordinate Descent & Ball in $l_1$                   & $-\eta \sum_{i \in \argmax|g_i^t|} \sign(g_i^t)e_i$                       & \citep[p. 19]{shi2016primer}         \\
+			\hdashline
+			Neon                               & Ball in Nuclear $S_1$           & $-\eta u_1 v_1^\top$                                        & This work                            \\
+			\hline
+		\end{tabular}
+	}
+	\egroup
+\end{table*}
 
-\section{Matrix side of updates}
+
+\section{Matrix side of updates}\label{sec:matrix-side}
 To compute the algorithms' updates, we use thick-restarted Lanczos method for singular value problem (TRLan) on $\mM^{k\top}\mM^k$ or $\mM^k \mM^{k\top}$ matrices (the one with less size is picked), implemented in CuPy lSibrary \citep{cupy_svds_ref} and described in \citet{simonz1998thick}.
 
-This method is designed for efficiently approximating the largest singular values and vectors of large matrices. Its thick-restart strategy retains the most informative Ritz vectors at each cycle, which accelerates convergence while avoiding excessive memory growth. We are specifically interested in this algorithm because it allows us to extract several largest singular values and related singular vectors of the matrix to make a Neon step. Moreover, TRLan is stable GPU-friendly algorithm because it mainly operates with matrix-vector multiplications (MVs), which are higly-parallel, and does not require full reorthogonalization against the whole Krylov basis by managing  short recurrent formulas and incorparating thick restarting. 
+This method is designed for efficiently approximating the largest singular values and vectors of large matrices. Its thick-restart strategy retains the most informative Ritz vectors at each cycle, which accelerates convergence while avoiding excessive memory growth. We are specifically interested in this algorithm because it allows us to extract several largest singular values and related singular vectors of the matrix to make a Neon step. Moreover, TRLan is stable GPU-friendly algorithm because it mainly operates with matrix-vector multiplications (MVs), which are higly-parallel, and does not require full reorthogonalization against the whole Krylov basis by managing  short recurrent formulas and incorparating thick restarting.
 
 Per-cycle complexity is $O(mn^2 + n^2k + nk^2)$, where m and n are dimensions of the target matrix and n is the smaller one, k is retained subspace's size.
 
@@ -314,187 +331,125 @@ During the research it was noted that RSVD can give good and fast approximation 
 
 The practical drawback of the TRLAn is the absence of its implementation in PyTorch.
 \begin{table}[h!]
-    \centering
-    \begin{tabular}{c|c|c|c}
-    \hline
-    Method                              & rtol        & k & time,s \\
-    \hline 
-    Power Iterations                    & 0.01        & 1 & 7.7\\ 
-    SVDS (thick-restart Lanczos method) & 0.01        & 1 & 0.18\\
-    PCA Low Rank (RSVD)                 & 0.01        & 1 & 1.15\\
-    SVDS (thick-restart Lanczos method) & 0.01        & 10 & 0.47\\
-    PCA Low Rank (RSVD)                 & 0.01        & 10 & 19.4\\
-    SVDS (thick-restart Lanczos method) & 0.01        & 100 & 1.96\\
-    PCA Low Rank (RSVD)                 & 0.01        & 100 & 170\\
-    \end{tabular}
-    \caption{k-rank updated comparison}
-    Comparison of different numerical methods to calculate k-rank update on $5000\times5000$ matrix of real numbers, rtol is an error in Frobenius norm relative to the k-rank approximation. 
-    \label{tbl:matrix_methods}
+	\centering
+	\begin{tabular}{c|c|c|c}
+		\hline
+		Method                              & rtol & k   & time,s \\
+		\hline
+		Power Iterations                    & 0.01 & 1   & 7.7    \\
+		SVDS (thick-restart Lanczos method) & 0.01 & 1   & 0.18   \\
+		PCA Low Rank (RSVD)                 & 0.01 & 1   & 1.15   \\
+		SVDS (thick-restart Lanczos method) & 0.01 & 10  & 0.47   \\
+		PCA Low Rank (RSVD)                 & 0.01 & 10  & 19.4   \\
+		SVDS (thick-restart Lanczos method) & 0.01 & 100 & 1.96   \\
+		PCA Low Rank (RSVD)                 & 0.01 & 100 & 170    \\
+	\end{tabular}
+	\caption{k-rank updated comparison}
+	Comparison of different numerical methods to calculate k-rank update on $5000\times5000$ matrix of real numbers, rtol is an error in Frobenius norm relative to the k-rank approximation.
+	\label{tbl:matrix_methods}
 \end{table}
-\section{Trust Region Bounds for L-smooth functions}
-    First, we analyze the problem in the unstochastic case. From Corollary 1 of \citet{kovalev2025understanding}, we directly get the following result that matches lower bounds, as was noted in that article.
 
+\section{Experiments}\label{sec:experiments}
+\subsection{Randomized Linear Least Squares}
+We first compare F-Fanions on the following L-smooth problem:
 
-    \begin{lemma}\label{lemma:no_noise_tr}
-    To reach the precision $\min_{k=1\ldots K} \norm{\nabla f(\mX_k)}^\dagger \leq \epsilon$ by the iterations~\eqref{eq:our_update} under the conditions of \Cref{eq:L}, it is sufficient to choose the stepsize $\eta$ and the number of iterations $K$ as follows:
-    \begin{equation}\label{eq:unstoch_tr}
-      \eta = \cO\left(\frac{\epsilon}{L}\right),\qquad K = \cO\left(\frac{L\Delta_0}{\epsilon^2}\right).
-      % \eta = \frac{\epsilon}{3L},\qquad K = \ceil*{\frac{6L\Delta_0}{\epsilon^2}}.
-    \end{equation}
-    \end{lemma}
+\begin{equation}\label{eq:lls}
+	F(\mX) = \frac{1}{2} \<(\mX-\mS), \mM (\mX - \mS) \mN> \to \min_{\mX \in \Rmn}\
+\end{equation}
 
-    In the stochastic case, from Corollary of 2 of \citet{kovalev2025understanding}, we directly get the following result that once more matches lower bounds:
+where $\mX \in \Rmn$, $m=500$ and $n=500$ are typical dimensions of a neural network weight matrix, $S \in \Rmn$, $\mM \in \mathbb{S}^m_{+}$ and $\mN \in \mathbb{S}^n_{+}$ are positive-semidefinite matrices. The spectra of $\mM$ and $\mN$ are uniformly distributed in the (0, 1) interval. We set $\mS=0$, and $\mX^0 \sim 0.1 \gN(0, \mI)$.
 
-    \begin{lemma}\label{lemma:stoch_tr}
-    To reach the precision $\E{\min_{k=1\ldots K} \norm{\nabla f(\mX_k)}^\dagger} \leq \epsilon$ by ~\eqref{eq:our_update} under the assumptions \Cref{eq:variance}, \Cref{eq:L}, \Cref{eq:norm}, it is sufficient to choose the parameters as follows:
-    \begin{align}
-        \eta &= \cO\left(\min\left\{\frac{\epsilon}{L}, \frac{\epsilon^3}{\rho^2\sigma^2L}\right\}\right),
-        \qquad
-        \alpha = \cO\left(\min\left\{1, \frac{\epsilon^2}{\rho^2\sigma^2}\right\}\right),
-        \\
-        \label{eq:str_K_nonconvex}
-        K &= \cO\left(\max\left\{
-            \frac{\rho\sigma}{\epsilon},
-            \frac{\rho^3\sigma^3}{\epsilon^3},
-            \frac{L\Delta_0}{\epsilon^2},
-            \frac{L\Delta_0\rho^2\sigma^2}{\epsilon^4}
-        \right\}\right).
-    \end{align}
-    \end{lemma}
+We run different Fanions and their respective F-Fanions with $\alpha=1/2$: Neon (Fanion-1), Fanion-2, Fanion-5, Fanion-100, and Muon (Fanion-500). We test them against Normalized SGD, which is also a F-Fanion with $\alpha = 0$ and an arbitrary $k$.
 
-    As the norms $\normf{\cdot}$, $\normn{\cdot}$, $\norms{\cdot}$ are almost proportional to each other when $m, n \rightarrow \infty$ (with high probability for random matrices), the expected convergence guarantees in terms of $\normf{\cdot}$ are the same (it can be easily shown by noting that $\norm{\mX}\sim\alpha\normf{\mX}$, $\norm{\nabla f(\mX)}^\dagger \sim \frac{1}{\alpha} \normf{\nabla f(\mX)}$, and expressing $L$-constant via $L_F$-constant for the Frobenius norm).
+Since theoretical bounds \citep{kovalev2025understanding, riabinin2025gluon} rely on a very loose norm bound $\norm{\cdot}\le \rho \normf{\cdot}$, we do not derive learning rate from smoothness. Rather, we set the learning rate of $1/\sqrt{T}$ for each optimizer and the momentum of 0.6. 12 000 iterations for each algorithm ensure that the rate at some point gets low enough for each algorithm to converge. The results are presented in \cref{fig:lls} and ~\cref{sec:lls_plots_section}.
 
-    From the theory of random martices and the Marchenko-Pastur law, we get that random $\mM \in \Rmn: \mM \sim \cN(0, \sigma^2 \Rmn)$ has the following asymptotics of its norms:
+In terms of the loss minimization, F-Muon had the fastest convergence. In terms of the Frobenius norm of the gradient, the lowest was observed for NSGD. Then go F-Neon (F-Fanion-1), F-Fanion-2, F-Fanion-5, F-Fanion-100, and F-Muon (Fanion-500). It is noticeable that all F-Fanions have lower Frobenius norms of the gradients than their respective Fanioins. The same behavior will be recorded in the next section.
 
-    Nuclear: $\sigma n \sqrt{m}$
-
-    Frobenius: $\sigma \sqrt{m n}$
-    
-    Spectral: $\sigma(\sqrt{m} + \sqrt{n})$
-
-    This means that for square random matrices $n \times n$  the following asymptotics take place: $\normf{\cdot} \sim \frac{\sqrt{n}}{2}\norms{\cdot}$ and $\normn{\cdot} \sim \frac{n}{2}\norms{\cdot}$.
-
-
-\section{Experiments}
-    \subsection{Randomized Linear Least Squares}
-    Since the provided by other authors \citep{kovalev2025understanding,riabinin2025gluon} theoretical guarantees are almost norm-independent, we have to test them in practice.
-
-    To test the bounds from \citet{kovalev2025understanding}, we construct the following L-smooth problem:
-
-    \begin{equation}\label{eq:lls}
-        F(\mX) = \frac{1}{2} \<(\mX-\mS), \mM (\mX - \mS) \mN>
-    \end{equation}
-
-    where $\mX \in \Rmn$, $m=10$, $n=10$, $S \in \Rmn$, $\mM \in \mathbb{S}^m_{+}$ and $\mN \in \mathbb{S}^n_{+}$ are positive-semidefinite matrices. Spectra of $\mM$ and $\mN$ are uniformly distributed in (0, 1) interval.
-
-    It it easy to derive the gradient
-    \begin{equation}\label{eq:grad_lls}
-        \nabla F(\mX) = \mM (\mX - \mS) \mN,
-    \end{equation}
-
-    Let us define $\gamma$ as $\norm{\cdot} \sim \gamma \normf{\cdot}$, which is asymptotics from the previous section. Then $\norm{\cdot}^\dagger \sim \frac{1}{\gamma}\normf{\cdot}$, as $\normf{\cdot}^\dagger = \normf{\cdot}$. Hence, $\norm{\cdot} \sim \gamma^2 \norm{\cdot}^\dagger$
-
-    Then $\norm{\nabla f(\mX) - \nabla f(\mY)}^\dagger = \norm{\mM (\mX - \mY) \mN}^\dagger \leq \norm{\mM}^\dagger \norm{\mN}^\dagger \norm{\mX - \mY}^\dagger \sim \norm{\mM}^\dagger \norm{\mN}^\dagger \gamma^2 \norm{\mX - \mY}$, and $L \sim \gamma^2 \norm{\mM}^\dagger \norm{\mN}^\dagger$.
-    
-    Now for the known norms:
-
-    Frobenius (NSGD): $L = \normf{M} \normf{N}$
-
-    Spectral (Muon): $\gamma \sim \frac{2}{\sqrt{n}} \implies L \sim \frac{2}{n}\normn{M}\normn{N}$
-    
-    Nuclear (Neon): $\gamma \sim \sqrt{n} \implies L \sim n\norms{M}\norms{N}$
-
-    We take learning rate $\eta$ and iteration number $K$ from \cref{eq:unstoch_tr}.
-
-
-    We are interested to get $\epsilon_2=$ 1e0 precision in $\norms{\cdot}$. Hence, we target $\epsilon = \epsilon_2$ for the nuclear norm (Neon), $\epsilon = \frac{n}{2}$ for the spectral norm (Muon), and $\epsilon = \frac{\sqrt{n}}{2}$ for the Frobenius norm (NSGD).
-    With that, we get the following lrs: Muon lr: 2.33E-04, Neon lr: 2.10e-02, Frobenius (NSGD) lr: 1.75e-02, and the following number of iterations: Muon iter: 68, Neon iter: 11919, Frobenius iter: 323. L-constants are 171.4, 47.7, and 16.2 respectively. As we will see, these results do not relate well to the practice.
-
-    To make the problem more real-world, we do not use known information about smoothness. We run NormalizedSGD, Muon, F-Muon with $\alpha=1/2$, Neon, and F-Neon with $\alpha=1/2$ for 5 000 iterations with learning rate = 1e-2, which has been close to computed theoretically above. The results are in \cref{fig:lls}.
-
-    Though Neon displays the worst convergence in terms of loss, it is a leader in terms of the norm of the gradient. This might signify that the known bounds are not sufficient even in the case of a convex optimization: lmo-based algorithms may converge well by these bounds, but be impractical like Neon.
-
-    This experiment may also show that F-Muon may be more robust under general conditions than Muon.
-
-    
-    \begin{figure}[h!]
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[t]{0.8\linewidth}
         \centering
-        \begin{subfigure}[t]{0.48\linewidth}
-            \centering
-            \includegraphics[width=\linewidth]{figs/simple_lls/loss_vs_iteration_50x50.pdf}
-            \caption{Loss}
-            \label{fig:lls_loss}
-        \end{subfigure}
-        \hfill
-        \begin{subfigure}[t]{0.48\linewidth}
-            \centering
-            \includegraphics[width=\linewidth]{figs/simple_lls/gradient_spectral_norm_vs_iteration_50x50.pdf}
-            \caption{Spectral norm of the gradient}
-            \label{fig:lls_grad_norm}
-        \end{subfigure}
-        \caption{Linear least squares problem for a 50 x 50 matrix}
-        \label{fig:lls}
-                
-    \end{figure}   
-    
-    
-    \subsection{CIFAR-10 airbench}
-    We adapt Keller Jordan's code to test F-Muon, Neon, and F-Neon on the CIFAR-10 airbench \citep{cifar2023airbench}.
-    First, we run F-Muon for different $\alpha$ with the same {\tt lr=0.24(1 - step/total\_steps), momentum=0.6, nesterov=True}, as have been finetuned by Jordan, 10 repetitions for each $\alpha$. We record the accuracy after 8 epochs of training. The results are in \cref{fig:muon_alphas}.
-
-    Then we tune F-Muon with $\alpha = 0.5$. Tuned parameters are {\tt lr=0.4(1 - step/total\_steps), momentum=0.65, nesterov = True}. While Muon reaches $94.00 \pm 0.13$\% accuracy after 8 epochs, tuned F-Muon reaches $94.01 \pm 0.14\%$ after 8 epochs (average was done by 200 iterations).
-
-    Finally, we take this set of tuned parameters and test on different $\alpha$, 5 times for each $\alpha$. The results are in \cref{fig:fmuon_alphas}. We notice that even when $\alpha=0.1$, the accuracy is much higher than in case of the pure NSGD.
-
-    \begin{figure}[h!]
+        \includegraphics[width=\linewidth]{figs/simple_lls/loss_vs_iteration_500x500.pdf}
+        \caption{The loss}
+        \label{fig:lls_loss}
+    \end{subfigure}
+    \vspace{1em} % optional: add vertical spacing between subfigures
+    \begin{subfigure}[t]{0.8\linewidth}
         \centering
-        \begin{subfigure}[b]{0.48\linewidth}
-            \centering
-            \includegraphics[width=\linewidth]{figs/muon_tuned_diff_alpha.pdf}
-            \caption{With parameters tuned for Muon}
-            \label{fig:muon_alphas}
-        \end{subfigure}
-        \hfill
-        \begin{subfigure}[b]{0.48\linewidth}
-            \centering
-            \includegraphics[width=\linewidth]{figs/fmuon_tuned_diff_alpha.pdf}
-            \caption{With parameters tuned for F-Muon}
-            \label{fig:fmuon_alphas}
-        \end{subfigure}
-        \caption{Mean accuracies for different $\alpha$ of F-Muon.}
-        \label{fig:diff_alphas}
-    \end{figure}   
+        \includegraphics[width=\linewidth]{figs/simple_lls/gradient_frobenius_norm_vs_iteration_500x500.pdf}
+        \caption{The Frobenius norm of the gradient}
+        \label{fig:lls_fro_grad_norm}
+    \end{subfigure}
+    \caption{Linear least squares problem for a 500x500 matrix}
+    \label{fig:lls}
+\end{figure}
 
-    The results are curious and could be represented by \cref{fig:cifar_ball}: lmo ball, which we plotted in a 2D space of singular values, has drastically changed, but the observed convergence after tuning has not degraded. These observations raise the question of how much lmo-based algorithms are sensitive to the constraint area, i.e. what will happen if the ball is corrupted. In this particular example, we have had a blurred ball, which proved as robust as the original ball.
 
-    \begin{figure}[h]
-        \centering
-        \includegraphics[width=0.6\textwidth]{figs/fstardual_cifar.pdf} % adjust width as needed
-        \caption{Visualization of lmo balls for Muon and F-Muon.}
-        \label{fig:cifar_ball}
-    \end{figure}
 
-    The most pathological case is $\alpha < 0$, which corresponds to the lmo with an area that is not a norm ball! Despite this violation, the mixture of algorithms reaches almost the same accuracy as vanilla Muon.
+\subsection{CIFAR-10 airbench}
+We adapt Keller Jordan's code to test F-Muon, Neon, and F-Neon on the CIFAR-10 airbench \citep{cifar2023airbench}.
+First, we run F-Muon for different $\alpha$ with the same {\tt lr=0.24(1 - step/total\_steps), momentum=0.6, nesterov=True}, as have been finetuned by Jordan, 10 repetitions for each $\alpha$. We record the accuracy after 8 epochs of training. The results are in \cref{fig:muon_alphas}.
 
-    \subsection{Modded NanoGPT speedrun}
-    We test F-Muon on NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.5$, the optimal parameters are {\tt lr=0.07, momentum=0.95}, while for Muon they were  {\tt lr=0.05, momentum=0.95}. After testing for 1750 steps, as it has been done on the speedruns, we get 3.281 cross-entropy loss, while on Muon, it falls below the target threshold 3.28 reaching 3.279.
+Then we tune F-Muon with $\alpha = 0.5$. Tuned parameters are {\tt lr=0.4(1 - step/total\_steps), momentum=0.65, nesterov = True}. While Muon reaches $94.00 \pm 0.13$\% accuracy after 8 epochs, tuned F-Muon reaches $94.01 \pm 0.14\%$ after 8 epochs (average was done by 200 iterations).
 
-    Again, as on the CIFAR airbench, if we set $\alpha=-0.1$, F* to which is not a norm, we get a 3.2818 loss, which is not higher than for $\alpha=0.3$, for example.
+Finally, we take this set of tuned parameters and test on different $\alpha$, 5 times for each $\alpha$. The results are in \cref{fig:fmuon_alphas}. We notice that even when $\alpha=0.1$, the accuracy is much higher than in case of the pure NSGD.
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{figs/muon_tuned_diff_alpha.pdf}
+		\caption{With parameters tuned for Muon}
+		\label{fig:muon_alphas}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{figs/fmuon_tuned_diff_alpha.pdf}
+		\caption{With parameters tuned for F-Muon}
+		\label{fig:fmuon_alphas}
+	\end{subfigure}
+	\caption{Mean accuracies for different $\alpha$ of F-Muon.}
+	\label{fig:diff_alphas}
+\end{figure}
+
+The results are curious and could be represented by \cref{fig:cifar_ball}: lmo ball, which we plotted in a 2D space of singular values, has drastically changed, but the observed convergence after tuning has not degraded. These observations raise the question of how much lmo-based algorithms are sensitive to the constraint area, i.e. what will happen if the ball is corrupted. In this particular example, we have had a blurred ball, which proved as robust as the original ball.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figs/norms/fstardual_cifar.pdf} % adjust width as needed
+	\caption{Visualization of lmo balls for Muon and F-Muon.}
+	\label{fig:cifar_ball}
+\end{figure}
+
+The most pathological case is \replaced[id=IK, comment={In the pictures there are no experiments with $\alpha < 0$, but there is a one with $\alpha $}]{$\alpha > 1$}{$\alpha < 0$}, which corresponds to the lmo with an area that is not a norm ball! Despite this violation, the mixture of algorithms reaches almost the same accuracy as vanilla Muon.
+
+\subsection{NanoGPT speedrun}
+We test F-Muon on NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.5$, the optimal parameters are {\tt lr=0.07, momentum=0.95}, while for Muon they were  {\tt lr=0.05, momentum=0.95}. After testing for 1750 steps, as it has been done on the speedruns, we get 3.281 cross-entropy loss, while on Muon, it falls below the target threshold 3.28 reaching 3.279. However, this difference is negligible, if one looks at \cref{fig:gpt_loss}. It is even more striking, considering the fact that F-Muon is an average of Muon and NSGD, and the later performed quite poorly.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figs/nanogpt/val_loss_vs_step.pdf}
+	\caption{The validation loss for NanoGPT}
+	\label{fig:gpt_loss}
+\end{figure}
+
+Again, as on the CIFAR airbench, if we set $\alpha=-0.1$, F* to which is not a norm, we get a 3.2818 loss, which is not higher than for $\alpha=0.3$, for example.
 
 \section{Related Work}
 As Muon \citep{jordan2024muon} is a very successful and popular optimizer for functions of weight matrices, a lot of reseach has been put into, first, further improving its performance, and, second, in explaining its success.
 
-{\bf Improvements of Muon.} Regarding the first point, in less than a year, a large number of applications and improvements of Muon has been proposed. \citet{liu2025muon} adapted the algorthm for training language models larger than NanoGPT. \citet{shah2025practical} organized efficient hyperparameter transfer by combining Muon with maximal update parametrization. To construct their COSMOS optimizer, \citet{chen2025cosmoshybridadaptive} applied computationally intensive updates of SOAP optimizer to a low-dimensional "leading eigensubspace" while using memory-efficient methods like Muon for the remaining parameters. \citet{amsel2025polar} proposed a more efficient alternative to Newton-Schulz operations. \citet{si2025adamuon} introduced AdaMuon which combines element-wise adaptivity with orthogonal updates. We suppose that the described above or similar techniques can be applied to our optimizers as well. For example, F-Muon also benefits from faster alternatives to Newton-Schulz iterations, and Neon may be a great substitute to Muon in COSMOS, because, as we have shown in {\it the Matrix side of the updates}, Lanczos algorithms is much faster than Newton-Schulz iterations on large matrices.
+	{\bf Improvements of Muon.} Regarding the first point, in less than a year, a large number of applications and improvements of Muon has been proposed. \citet{liu2025muon} adapted the algorthm for training language models larger than NanoGPT. \citet{shah2025practical} organized efficient hyperparameter transfer by combining Muon with maximal update parametrization. To construct their COSMOS optimizer, \citet{chen2025cosmoshybridadaptive} applied computationally intensive updates of SOAP optimizer to a low-dimensional "leading eigensubspace" while using memory-efficient methods like Muon for the remaining parameters. \citet{amsel2025polar} proposed a more efficient alternative to Newton-Schulz operations. \citet{si2025adamuon} introduced AdaMuon which combines element-wise adaptivity with orthogonal updates. We suppose that the described above or similar techniques can be applied to our optimizers as well. For example, F-Muon also benefits from faster alternatives to Newton-Schulz iterations, and Neon may be a great substitute to Muon in COSMOS, because, as we have shown in {\it the Matrix side of the updates}, Lanczos algorithms is much faster than Newton-Schulz iterations on large matrices.
 
-{\bf Theory behind Muon.} Regarding the second point, there has been a prolonged gap in theory behind Muon, simplistic derivation of \citet{bernstein2025deriving} based on \citet{bernstein2024oldoptimizernewnorm} excluded. This gap, as it seems to us, is not even now completely closed. For example, \citet{kovalev2025understanding} has provided convergence guarantees of Muon in various settings, from which, however, Muon's supremacy cannot be recovered. Indeed, although the obtained bounds depend on the norm choice, the asymptotics of the convergence remain the same as for NSGD and other optimizers, $K = \cO(\epsilon^{-4})$ in a L-smooth stochastic case.
+	{\bf Theory behind Muon.} Regarding the second point, there has been a prolonged gap in theory behind Muon, simplistic derivation of \citet{bernstein2025deriving} based on \citet{bernstein2024oldoptimizernewnorm} excluded. This gap, as it seems to us, is not even now completely closed. For example, \citet{kovalev2025understanding} has provided convergence guarantees of Muon in various settings, from which, however, Muon's supremacy cannot be recovered. Indeed, although the obtained bounds depend on the norm choice, the asymptotics of the convergence remain the same as for NSGD and other optimizers, $K = \cO(\epsilon^{-4})$ in a L-smooth stochastic case.
 
 Similar drawback has a recent article \citet{riabinin2025gluon}, where L-smoothness assumption is replaced with a more practical $(L_0, L_1)$-smoothness. The authors derived from their theorems optimal stepsizes for Muon and Scion that match fine-tuned stepsizes reported by \citet{pethick2025training}. But still, they did not explain why, for instance, NSGD is inferior to Muon in training large-language models.
 
 We suppose that the reason for the recorded by us discrepancy between Neon and Muon performance, both of which are described by Scion or Gluon frameworks, lies in the structure of the norm ball, which must be an object of further research.
 
-{\bf The nuclear norm in lmo.} As we found out only when writing this article, the nuclear norm has been already explored in the context of the linear minimization oracle. \citet{pethick2025sam} applied it to create $\nu$SAM, a new sharpness-aware minimization technique. The update from their Lemma 3.1 coincides with the update of Neon, but is used for completely different purposes. In addition, \citet{pethick2025sam} use power iterations to find $u_1$ and $v_1^\top$, while we suggest utilizing much more efficient and precise Lanczos algorithm.
+	{\bf The nuclear norm in lmo.} As we found out only when writing this article, the nuclear norm has been already explored in the context of the linear minimization oracle. \citet{pethick2025sam} applied it to create $\nu$SAM, a new sharpness-aware minimization technique. The update from their Lemma 3.1 coincides with the update of Neon, but is used for completely different purposes. In addition, \citet{pethick2025sam} use power iterations to find $u_1$ and $v_1^\top$, while we suggest utilizing much more efficient and precise Lanczos algorithm.
 
-{\bf The Ky Fan Norm and Dion.} Rank-$k$ Centralized Dion, Algorithm 1 from \citet{ahn2025dioncommunicationefficientoptimizerlarge}, without an error feedback and scaling of the update, turns out to be an lmo-based algorithm under the $\normkfk{\cdot}^\dagger$ norm, which we described in {\it Different norms imply different updates}. Reported by the authors necessity of using error feedback to obtain satisfactory accuracy may take place in the cases of our algorithms as well, for example, F-Neon. This we leave to future research.
+	{\bf The Ky Fan Norm and Dion.} Rank-$k$ Centralized Dion, Algorithm 1 from \citet{ahn2025dioncommunicationefficientoptimizerlarge}, without an error feedback and scaling of the update, turns out to be an lmo-based algorithm under the $\normkfk{\cdot}^\dagger$ norm, which we described in {\it Different norms imply different updates}. Reported by the authors necessity of using error feedback to obtain satisfactory accuracy may take place in the cases of our algorithms as well, for example, F-Neon. This we leave to future research.
 
 \section{Conclusion}
 In this article, we have generalized several successful algorithms, like Muon and Dion, to the lmo-based algorithms in the $\normkfk{\cdot}^\dagger$ norm. Also we have proposed the technique of ``regularizing'' the updates with NSGD, a trick to increase the robustness of the algorithms, which is motivated by the consideration of the $\normfstar{\cdot}$, $\normftwo{\cdot}$, and general $\norm{\cdot}_{\mathrm{F-KF-k}}$ norms. Generalizations of well-known norms and subsequent combinations of them may further improve performance of lmo-based algorithms. If a theory is developed that explains the discrepancy between performance of different algorithms based on the matrix norms, one will probably be able to intentionally construct norms optimal to given architectures and probably even their parameters.
@@ -507,119 +462,88 @@ IO suggested using the nuclear norm in the \citet{bernstein2024oldoptimizernewno
 
 \appendix
 
-\section{Formal assumptions}
-Here we restate assumptions from \citet{kovalev2025understanding} that are used in the theorems from the main part of the article.
-
-{\bf Lipschitz continuous gradient.}
-    We assume that the gradient $\nabla f(\cdot)$ is Lipschitz continuous with respect to the norm $\norm{\cdot}$, that is, the following inequality holds:
-    \begin{aequation}\label{eq:L}
-    \norm{\nabla f(\mX) - \nabla f(\mX')}^\dagger \leq L \norm{\mX-\mX'}
-    \quad\text{for all}\;
-    \mX, \mX' \in \Rmn,
-    \end{aequation}
-    where $L > 0$ is the gradient Lipschitz constant.
-
-{\bf Stochastic gradient estimator.}
-    We assume access to a stochastic estimator $g(\cdot\,;\xi)\colon \Rmn \to \Rmn$ of the gradient $\nabla f(\cdot)$, where $\xi \sim \cD$ is a random variable sampled from a probability distribution $\cD$. We assume that the stochastic gradient estimator $g(\cdot;\xi)$ is unbiased and has bounded variance, that is, the following relations hold:
-    \begin{aequation}\label{eq:variance}
-    \Ed{\xi \sim \cD}{g(\mX;\xi)} = \nabla f(\mX)
-    \quad\text{and}\quad
-    \Ed{\xi \sim \cD}{\sqnf{g(\mX;\xi) - \nabla f(\mX)}} \leq \sigma^2
-    \quad\text{for all}\;
-    \mX \in \Rmn,
-    \end{aequation}
-    where $\sigma > 0$ is a positive variance parameter, and $\normf{\cdot}$ is the standard Euclidean, i.e. Frobenius, norm induced by the inner product $\<\cdot,\cdot>$, i.e., $\normf{\mX} = \sqrt{\<\mX,\mX>}=\sqrt{\tr(\mX^\top \mX)}$.
-
-    It is important to highlight that while \Cref{eq:L} uses the dual norm $\norm{\cdot}^\dagger$ to measure the difference between the gradients, the variance in \Cref{eq:variance} is measured with respect to the Frobenius norm $\sqnf{\cdot}$, which is necessary to properly utilize the unbiasedness property of the stochastic gradient estimator $g(\cdot;\xi)$. Therefore, we need to provide a connection between these norms using the following inequality:
-    \begin{aequation}\label{eq:norm}
-    \norm{\mX}^\dagger \leq \rho\cdot\normf{\mX}
-    \quad\text{for all}\;
-    \mX \in \Rmn,
-    \end{aequation}
-    where $\rho > 0$ is a positive constant.
-
 
 \section{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
 First, we need a well-known fact mentioned, for example, in \citet[Table 1]{yu2012arithmetic}. For the sake of completeness, we provide a proof of the fact.
 
 \begin{lemma}\label{lemma:dual_to_conv_comb}
-    Let $\norm{\cdot}_{(1)}$ and $\norm{\cdot}_{(2)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha,\beta \geq 0$. Define 
-    $$
-    \norm{x} := \alpha \norm{x}_{(1)} + \beta \norm{x}_{(2)}.
-    $$
-    Then the dual unit ball of $\norm{\cdot}$ satisfies
-    $$
-    B_{\norm{\cdot}^\dagger} 
-    = \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger},
-    $$
-    where $+$ denotes the Minkowski sum and $B_{\norm{\cdot}_{(i)}^\dagger}$ is the unit ball of the dual norm $\norm{\cdot}_{(i)}^\dagger$.
+	Let $\norm{\cdot}_{(1)}$ and $\norm{\cdot}_{(2)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha,\beta \geq 0$. Define
+	$$
+		\norm{x} := \alpha \norm{x}_{(1)} + \beta \norm{x}_{(2)}.
+	$$
+	Then the dual unit ball of $\norm{\cdot}$ satisfies
+	$$
+		B_{\norm{\cdot}^\dagger}
+		= \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger},
+	$$
+	where $+$ denotes the Minkowski sum and $B_{\norm{\cdot}_{(i)}^\dagger}$ is the unit ball of the dual norm $\norm{\cdot}_{(i)}^\dagger$.
 \end{lemma}
-    
-    \begin{proof}
-    Write $f(x) = \alpha \norm{x}_{(1)}$ and $g(x) = \beta \norm{x}_{(2)}$, so 
-    $$
-    \norm{x} = f(x)+g(x).
-    $$
-    Recall two standard facts:
-    \begin{enumerate}
-        \item For any norm $\norm{\cdot}$ and $\lambda>0$, 
-        $$
-        (\lambda \norm{\cdot})^*(y) = 
-        \sup_{x}\bigl( \langle y,x \rangle - \lambda \norm{x}\bigr)
-        = \delta_{\lambda B_{\norm{\cdot}^\dagger}}(y),
-        $$
-        i.e., the indicator function of the scaled dual ball.
-        \item The Fenchel conjugate of a sum satisfies
-        $$
-        (f+g)^*(y) = \inf_{u+v=y} \bigl(f^*(u) + g^*(v)\bigr).
-        $$
-    \end{enumerate}
-    Applying these to $f$ and $g$, we have 
-    $$
-    f^*(u) = \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u), 
-    \quad 
-    g^*(v) = \delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v).
-    $$
-    Thus
-    $$
-    \norm{\cdot}^*(y) 
-    = (f+g)^*(y)
-    = \inf_{u+v=y}
-    \bigl(
-    \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u)
-    +
-    \delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v)
-    \bigr)
-    = 
-    \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}+\beta B_{\norm{\cdot}_{(2)}^\dagger}}(y).
-    $$
-    But by definition, the conjugate of a norm is exactly the indicator of its dual unit ball:
-    $$
-    \norm{\cdot}^*(y) = \delta_{B_{\norm{\cdot}^\dagger}}(y).
-    $$
-    Therefore,
-    $$
-    B_{\norm{\cdot}^\dagger} = \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}.
-    $$
-    \end{proof}
+
+\begin{proof}
+	Write $f(x) = \alpha \norm{x}_{(1)}$ and $g(x) = \beta \norm{x}_{(2)}$, so
+	$$
+		\norm{x} = f(x)+g(x).
+	$$
+	Recall two standard facts:
+	\begin{enumerate}
+		\item For any norm $\norm{\cdot}$ and $\lambda>0$,
+		      $$
+			      (\lambda \norm{\cdot})^*(y) =
+			      \sup_{x}\bigl( \langle y,x \rangle - \lambda \norm{x}\bigr)
+			      = \delta_{\lambda B_{\norm{\cdot}^\dagger}}(y),
+		      $$
+		      i.e., the indicator function of the scaled dual ball.
+		\item The Fenchel conjugate of a sum satisfies
+		      $$
+			      (f+g)^*(y) = \inf_{u+v=y} \bigl(f^*(u) + g^*(v)\bigr).
+		      $$
+	\end{enumerate}
+	Applying these to $f$ and $g$, we have
+	$$
+		f^*(u) = \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u),
+		\quad
+		g^*(v) = \delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v).
+	$$
+	Thus
+	$$
+		\norm{\cdot}^*(y)
+		= (f+g)^*(y)
+		= \inf_{u+v=y}
+		\bigl(
+		\delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u)
+		+
+		\delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v)
+		\bigr)
+		=
+		\delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}+\beta B_{\norm{\cdot}_{(2)}^\dagger}}(y).
+	$$
+	But by definition, the conjugate of a norm is exactly the indicator of its dual unit ball:
+	$$
+		\norm{\cdot}^*(y) = \delta_{B_{\norm{\cdot}^\dagger}}(y).
+	$$
+	Therefore,
+	$$
+		B_{\norm{\cdot}^\dagger} = \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}.
+	$$
+\end{proof}
 
 Consequently,
 \begin{equation}\label{eq:dual_to_conv_comb}
-\norm{y}^\dagger
-= \inf\bigl\{ t \ge 0 : y \in t\bigl(\alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}\bigr) \bigr\}
-= \inf_{z,t}\bigl\{t \ge 0: z \in t \alpha B_{\norm{\cdot}_{(1)}^\dagger}, y - z \in t \beta B_{\norm{\cdot}_{(1)}^\dagger}\bigr\}
+	\norm{y}^\dagger
+	= \inf\bigl\{ t \ge 0 : y \in t\bigl(\alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}\bigr) \bigr\}
+	= \inf_{z,t}\bigl\{t \ge 0: z \in t \alpha B_{\norm{\cdot}_{(1)}^\dagger}, y - z \in t \beta B_{\norm{\cdot}_{(1)}^\dagger}\bigr\}
 \end{equation}
 
-Thus, we immediately find $\normfstar{\cdot}^\dagger$, which is related to F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we get 
+Thus, we immediately find $\normfstar{\cdot}^\dagger$, which is related to F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we get
 \begin{equation}\label{eq:normfstardual}
-\normfstar{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \norms{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
+	\normfstar{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \norms{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
 \end{equation}
 
 If $\alpha = 1$, then $\mZ = \mY$, and we get $\normfstar{\mY}^\dagger = \norms{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normfstar{\mY}^\dagger = \normf{\mY}$.
 
 Similarly, we find $\normftwo{\cdot}^\dagger$, which is related to F-Neon update:
 \begin{equation}\label{eq:normftwodual}
-\normftwo{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \normn{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
+	\normftwo{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \normn{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
 \end{equation}
 
 If $\alpha = 1$, then $\mZ = \mY$, and we get $\normftwo{\mY}^\dagger = \normn{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normftwo{\mY}^\dagger = \normf{\mY}$.
@@ -627,28 +551,28 @@ If $\alpha = 1$, then $\mZ = \mY$, and we get $\normftwo{\mY}^\dagger = \normn{\
 
 \section{Visualization of different matrix norms}
 \subsection{Duals to F* and F2 norms}
-    
- It follows from \cref{lemma:dual_to_conv_comb} that the norm ball in $\normfstar{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ and the norm ball in $\normftwo{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$.
+
+It follows from \cref{lemma:dual_to_conv_comb} that the norm ball in $\normfstar{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ and the norm ball in $\normftwo{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$.
 
 In Fig. \cref{fig:fduals} we plot these norms. On x-axis and y-axis, there are singular values $\sigma_1$, $\sigma_2$ respectively of a matrix from $\Rmn$ with $\min\{m,n\}=2$.
 
 \begin{figure}[h!]
-    \centering
-    \begin{subfigure}[b]{0.48\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{figs/fstardualball.pdf}
-        \caption{lmo balls for F-Muon for different $\alpha$}
-        \label{fig:fstardual}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{figs/ftwodualball.pdf}
-        \caption{lmo ball for F-Neon for different $\alpha$}
-        \label{fig:ftwodual}
-    \end{subfigure}
-    \caption{Balls in the duals to F* and F2 norms for different $\alpha$}
-    \label{fig:fduals}
+	\centering
+	\begin{subfigure}[b]{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{figs/norms/fstardualball.pdf}
+		\caption{lmo balls for F-Muon for different $\alpha$}
+		\label{fig:fstardual}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.48\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{figs/norms/ftwodualball.pdf}
+		\caption{lmo ball for F-Neon for different $\alpha$}
+		\label{fig:ftwodual}
+	\end{subfigure}
+	\caption{Balls in the duals to F* and F2 norms for different $\alpha$}
+	\label{fig:fduals}
 \end{figure}
 
 \subsection{The Ky Fan norm and its dual}
@@ -659,22 +583,22 @@ To showcase the complex structure of the Ky Fan $k$-norm and its dual, we sugges
 In fact, those balls can be described easier if we use the results from \citet{yu2012arithmetic}. The Ky Fan $2$-norm ball is an intersection of three $l_1$ balls in $(x,y)$, $(x, z)$, and $(y,z)$ spaces. The 1-ball in the dual Ky Fan $2$-norm is an intersection of 1-ball the in $l_\infty$ norm and $\frac{1}{2}$-ball in the $l_1$ norm.
 
 \begin{figure}[h!]
-    \centering
-    \begin{subfigure}[b]{0.45\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{figs/KyFan.pdf}
-        \caption{Ky Fan 2-norm}
-        \label{fig:kyfan}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.45\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{figs/KyFanDual.pdf}
-        \caption{Dual to Ky Fan 2-norm}
-        \label{fig:kyfandual}
-    \end{subfigure}
-    \caption{Ky Fan 2-norm and its dual}
-    \label{fig:kyfan_combined}
+	\centering
+	\begin{subfigure}[b]{0.45\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{figs/norms/KyFan.pdf}
+		\caption{Ky Fan 2-norm}
+		\label{fig:kyfan}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.45\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{figs/norms/KyFanDual.pdf}
+		\caption{Dual to Ky Fan 2-norm}
+		\label{fig:kyfandual}
+	\end{subfigure}
+	\caption{Ky Fan 2-norm and its dual}
+	\label{fig:kyfan_combined}
 \end{figure}
 
 
@@ -698,311 +622,39 @@ Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\norm
 Proof of \cref{lemma:ky_fan_update}:
 Since $\norm{\cdot}^\dagger = \normkfk{\cdot}^{\dagger\dagger} = \normkfk{\cdot}$, the goal to reach $\normkfk{\mM^t}$.
 
-Let us note that $\Delta = \sum_{i=1}^{k} u_i v_i^\top$ delivers the value. Indeed, $\<\mM^t, \Delta> =\<\mU \mSigma \mV^\top, \sum_{i=1}^{k} u_i v_i^\top> = \sum_{i,j=1}^{r, k}\<u_i \sigma_i v_i^\top, u_j v_j^\top> = \sum_{i=1}^{k}\sigma_i = \normkfk{\mM^t}$, which completes the proof. 
+Let us note that $\Delta = \sum_{i=1}^{k} u_i v_i^\top$ delivers the value. Indeed, $\<\mM^t, \Delta> =\<\mU \mSigma \mV^\top, \sum_{i=1}^{k} u_i v_i^\top> = \sum_{i,j=1}^{r, k}\<u_i \sigma_i v_i^\top, u_j v_j^\top> = \sum_{i=1}^{k}\sigma_i = \normkfk{\mM^t}$, which completes the proof.
+
+\section{More plots for Linear Least Squares}
+\label{sec:lls_plots_section}
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[t]{0.6\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/simple_lls/gradient_spectral_norm_vs_iteration_500x500.pdf}
+        \caption{The spectral norm of the gradient}
+        \label{fig:lls_op_grad_norm}
+    \end{subfigure}
+    \vspace{1em} % optional: add vertical spacing between subfigures
+    \begin{subfigure}[t]{0.6\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/simple_lls/gradient_nuclear_norm_vs_iteration_500x500.pdf}
+        \caption{The nuclear norm of the gradient}
+        \label{fig:lls_nuclear_grad_norm}
+    \end{subfigure}
+    \vspace{1em} % optional: add vertical spacing between subfigures
+    \begin{subfigure}[t]{0.6\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/simple_lls/loss_vs_time_500x500.pdf}
+        \caption{The loss over time}
+        \label{fig:lls_loss_time}
+    \end{subfigure}
+    \caption{More images for Linear least squares problem for a 500x500 matrix}
+    \label{fig:app_lls}
+\end{figure}
 
 \section{Technical details of the experiments}
 We compared TRLand with other methods in Google Colab. We used RTX A4000 for CIFAR airbench.
 
-\iffalse
-
-\section{Idea}
-\iffalse
-The goal of the project is to make variations on Muon to speed it up. Recently, authors of \cite{bernstein2024oldoptimizernewnorm} have proposed to derive update step for an optimizer as the solution of the certain optimization problem. This approach can be utilized to derive Muon \cite{jordan2024muon}, a novel algorithm for fast training of neural networks. Instead of using spectral norm, used to derive Muon, we utilize nuclear norm to produce a new optimization algorithm.
-\fi
-\subsection{Problem (Project description)}
-
-In this subsection, we provide a more detailed description of our idea and formulate it as a mathematical problem. The authors of \cite{bernstein2024oldoptimizernewnorm} suggest obtaining the update step as a solution to the optimization problem:
-\begin{equation}
-    \langle g, \delta w \rangle + \lambda \norm{\delta w}^2 \to \min_{\delta w}\,,
-\end{equation}
-where $w$ is the weight vector, $g$ is a gradient-like vector (e.g., obtained via momentum SGD), and $\norm{\cdot}$ represents a certain norm. Many popular optimizers, such as Adam (with exponential moving average disabled) and vanilla SGD, can be cast within this framework \cite{bernstein2024oldoptimizernewnorm}.
-
-In large language models, most weights are structured as matrices, which offers additional opportunities for optimization. Let $W$ be the weight matrix of a linear layer, and $G$ be a gradient-like matrix. Then, the update step $\delta W$ can be obtained as a solution to the optimization problem:
-\begin{equation}\label{eqn:opt_problem_mat}
-  \langle G, \delta W \rangle + \lambda \norm{\delta W}^2 \to \min_{\delta W}\,,
-\end{equation}
-where $\norm{\cdot}$ denotes a certain matrix norm. By setting this norm to the RMS-to-RMS norm (a scaled version of the spectral norm), we recover the Muon optimizer \cite{bernstein2025deriving, bernstein2024oldoptimizernewnorm} with an update step defined by:
-\begin{equation}\label{eqn:update_muon}
-\delta W = - \frac{1}{\lambda}\sqrt{\frac{n}{m}}UV^T\,,
-\end{equation}
-where $m$ is the input dimension of the layer, $n$ is the output dimension, and $U$ and $V$ are obtained from the singular value decomposition of the gradient matrix $G = U \Sigma V$.
-
-Motivated by the recent achievements of the Muon optimizer (e.g., \cite{liu2025muon}), we consider alternative choices of norms, specifically the nuclear norm $\norm{\cdot}_*$ and a custom $F*$ norm, given by 
-\begin{equation}\label{eqn:F_star}
-    \norm{X}_{F*}^2 = \frac{\norm{X}_F^2 + \norm{X}_*^2}{2}\,,
-\end{equation}
-where $\norm{\cdot}_F$ denotes the Frobenius norm.
-
-Using the nuclear norm in \eqref{eqn:opt_problem_mat} leads to a rank-one update of the weight matrices:
-\begin{equation}\label{eqn:update_star}
-  \delta W = -\frac{1}{2\lambda} u_1 \sigma_1 v_1^T\,,
-\end{equation}
-where $\sigma_1$ is the largest singular value, and $u_1$ and $v_1$ are the corresponding singular vectors. We expect one iteration of this method to be significantly faster than one iteration of Muon.
-
-Another choice is the $F*$ norm. With this choice, \eqref{eqn:opt_problem_mat} yields 
-\begin{equation}\label{eqn:update_F_star}
-\delta W = -\frac{1}{\lambda}UDV^T
-\end{equation} 
-with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$, and $\tau$ is given by
-\begin{equation}
-    \sum_{i} [\sigma_i - \tau]_+ = \tau\,.
-\end{equation}
-We anticipate that the method with this update step will perform well with large batch sizes.
-
-In this article we show how one can quickly compute weight updates defined by \eqref{eqn:update_star} or \eqref{eqn:update_F_star}. Then we finilize the method by adding momentum and test their performance against those of Muon at training multilayer perceptron and transformer. The results will be fast algorithm, which we will convert into a new optimizer classes for PyTorch, as was done with Muon.
-
-% Removed template instructions sections
-\section{Related Work}
-Our review primarily focuses on the Muon and Shampoo optimizers, as our algorithm extends the ideas used to derive these methods. We highlight the advantages and disadvantages of these approaches, the unique effects they introduce, and compare them to Neon.
-
-\subsection{Muon optimizer}
-
-In the previous section, we described the theoretical foundation behind the weight update step in the Muon optimizer, but we did not discuss how to obtain the required matrices in practice. The update step is defined by \eqref{eqn:update_muon}, which requires $UV^T$ with $U$ and $V^T$ from the singular value decomposition of the gradient-like matrix $G$. A naive solution would involve computing the SVD of $G$ and constructing the required expression. However, the developers of the Muon optimizer introduced a workaround using Newton-Schulz iterations \cite{jordan2024muon}. The Newton-Schulz iterations from the original article \cite{jordan2024muon} require 10 matrix-matrix multiplications to achieve the desired accuracy. The asymptotic complexity of such an operation is identical to that of SVD and equals $O(mn \min\{m, n\})$ for an $m \times n$ matrix. Nevertheless, matrix multiplication on modern GPUs can be performed much more efficiently.
-
-The performance of Muon in training large language models was tested \cite{liu2025muon} against AdamW. The testing demonstrated excellent performance by Muon, which was approximately 2 times more efficient in terms of FLOPs required to reach a certain loss value. This is even more remarkable when considering the cost of one iteration: Muon requires an additional $O(mn \min\{m, n\})$ FLOPs per $m \times n$ matrix, while AdamW needs only $O(mn)$.
-
-Another interesting discovery about the Muon optimizer is that it accelerates grokking \cite{tveit2025muonoptimizeracceleratesgrokking}. In the test problem, Muon achieved grokking significantly faster than AdamW in terms of passed epochs, with a mean grokking epoch of 102.89 for Muon and 153.09 for AdamW. The authors suggest that this may be due to the fact that Muon stimulates broader exploration by orthogonalizing the gradient matrix, thus avoiding memorization.
-
-Recently, theoretical guarantees for Muon convergence have been derived \cite{li2025noteconvergencemuon}. In particular, in the $L$-smooth convex case, it achieves $O(1/T^{\frac{1}{2}})$ (with full gradient) and $O(1/T^{\frac{1}{4}})$ (with stochastic gradient) bounds on the Frobenius norm of the gradient or the mathematical expectation of the gradient norm, respectively, where $T$ is the number of iterations.
-
-\subsection{Shampoo optimizer}
-
-Another optimizer that exploits the matrix (and even tensor) structure of weights in neural networks is the Shampoo optimizer. We avoid a detailed description of this method here and refer the reader to the original article \cite{gupta2018shampoopreconditionedstochastictensor}, but we outline the key properties of Shampoo and its relation to the Muon optimizer.
-
-The Shampoo optimizer uses left and right preconditioning for the gradient-like matrix, leveling its spectrum. The preconditioners are computed from the exponentially averaged gradients, and their computation requires $O(n^3 + m^3)$ per $m \times n$ matrix. This exponential averaging is a key feature that provides several distinct interpretations for the preconditioners. They can be viewed as an approximation of the Gauss-Newton component of the Hessian or the first step of the power iteration algorithm for computing the optimal Kronecker product approximation \cite{morwani2025a}. With exponential averaging turned off, the update step of Shampoo can be simplified and becomes identical to that of Muon \cite{jordan2024muon}.
-
-Convergence analysis is presented in the original article \cite{gupta2018shampoopreconditionedstochastictensor}. Shampoo achieves $O(1/T^{\frac{1}{2}})$ convergence for the loss function value in the $L$-smooth convex case, where $T$ is the number of iterations.
-
-\subsection{Synthesis and Neon's position}
-
-Recent developments in optimization techniques show that utilizing the matrix structure of weights in neural networks can be very beneficial. Optimizers following this path converge faster in terms of iterations or epochs and often even FLOPs, but have a high iteration cost. Neon seeks to decrease the iteration cost while preserving fast convergence.
-
-While the uniqie advantages and effects introduced by Neon are yet to be discovered, we can already say that our new optimizer introduces additional overhead of $O(mn)$ FLOPS on average per $m \times n$ weight matrix, which is much better then $O(m n \min\{m, n\})$ for Muon optimizer and $O(n^3 + m^3)$ for Shampoo. 
-
-\subsection{Optimization Strategies for Efficient Large Language Model Training}
-The unprecedented scale of modern Large Language Models (LLMs) has pushed traditional optimizers like AdamW \cite{Loshchilov2017FixingWD} to their limits in terms of computational efficiency and convergence speed \cite{liu2025muon,chen2025cosmoshybridadaptive}. This challenge has catalyzed research into more sophisticated optimization approaches that can maintain or improve performance while reducing training costs.
-
-The Muon optimizer  has emerged as a promising alternative based on matrix orthogonalization principles. Scaling Muon to billion-parameter LLMs required two key adaptations: the integration of L2 weight decay for stability and the implementation of per-parameter update scaling to handle diverse parameter distributions efficiently . Empirical evaluations demonstrate that Muon can match or exceed AdamW's model quality while requiring only about 52 of the training FLOPs. The successful training of the Moonlight model series, including a 16B-parameter Mixture-of-Experts model, validates Muon's practicality for production-scale applications \cite{liu2025muon}.
-
-Building on this foundation, hybrid approaches like COSMOS \cite{chen2025cosmoshybridadaptive} further enhance efficiency by combining optimization techniques based on gradient structure. COSMOS applies computationally intensive updates to a low-dimensional "leading eigensubspace" while using memory-efficient methods like Muon for the remaining parameters. This approach maintains convergence benefits while substantially reducing memory requirements. For distributed training environments, optimizers like Dion \cite{ahn2025dioncommunicationefficientoptimizerlarge} specifically target communication efficiency by minimizing data exchange between workers through distributed orthonormalization techniques.
-
-\section{Derivation of update rules}
-
-\begin{lemma}\label{lem:opt_star}
-Let $G \in \mathbb{R}^{m \times n}$ and $\lambda > 0$. Then, the following optimization problem
-\begin{equation*} 
-  f(\delta W) = \langle G, \delta W \rangle + \lambda \norm{\delta W}_*^2 \to \min_{\delta W}
-\end{equation*}
-has solution 
-\begin{equation*}
-  \delta W = -\frac{1}{2\lambda} u_1 \sigma_1 v_1^T\,,
-\end{equation*}
-where $\sigma_1$ is the largest singular value of $G$, and $u_1$ and $v_1$ are the corresponding singular vectors.
-\end{lemma}
-
-\begin{proof}
-Let us denote $r = \min\{m, n\}$. Then by Von Neumann's trace inequality,
-\begin{equation*}
-    \vert\langle G, \delta W \rangle\vert \leq \sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W)
-    \Rightarrow
-    \langle G, \delta W \rangle \geq -\sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W)\,.
-\end{equation*}
-Thus, expressing nuclear norm through singular values, we can write down
-\begin{equation*}
-    f(\delta W) \geq -\sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W) + \lambda\left(\sum_{i=1}^{r}\sigma_i(\delta W)\right)^2 \geq \min_{d_1,\dots,d_r \geq 0}-\sum_{i=1}^r \sigma_i(G)d_i + \lambda\left(\sum_{i=1}^{r}d_i\right)^2.
-\end{equation*}
-By Karush-Kuhn-Tucker theorem, necessary conditions of minimum are
-\begin{equation*}
-    \left(d_i \geq 0\ \text{and}\ -\sigma_i(G) + 2\lambda\sum_{j=1}^{r}d_j = 0\right)\ \text{or}\ \left(d_i = 0\ \text{and}\ -\sigma_i(G) + 2\lambda\sum_{j=1}^{r}d_j \geq 0\right) \,\, i = 1,\dots,r\,.
-\end{equation*}
-These conditions simplify to 
-\begin{equation*}
-    \sum_{i \in S}d_i = \sigma_1(G)\,,\ \begin{cases}
-        d_i \geq 0 & \text{if}\ \sigma_i(G) = \sigma_1(G)\,, \\
-        d_i = 0 & \text{otherwise}\,.
-    \end{cases}
-\end{equation*}
-All points satisfying those conditions deliver minimum, and
-\begin{equation*}
-    f(\delta W) \geq -\frac{\sigma_1^2(G)}{4\lambda}\,.
-\end{equation*}
-
-Now let
-\begin{equation*}
-    \delta W^* = -\frac{1}{2\lambda} u_1 \sigma_1(G) v_1^T\,.
-\end{equation*}
-Inserting it to $f(\delta W)$ gives
-\begin{equation*}
-    f\left(\delta W^*\right) = -\frac{\sigma_1(G)^2}{2\lambda} + \frac{\sigma_1(G)^2}{4\lambda} = -\frac{\sigma_1(G)^2}{4\lambda}
-\end{equation*}
-This matches the derived lower bound. Thus, $\delta W^*$ minimizes $f(\delta W)$.
-\end{proof}
-
-\begin{lemma}\label{lem:opt_F_star}
-Let $G \in \mathbb{R}^{m \times n}$, $r = \min\{m. n\}$ and $\lambda > 0$. Then, the following optimization problem
-\begin{equation*} 
-  f(\delta W) = \langle G, \delta W \rangle + \lambda \norm{\delta W}_{F*}^2 \to \min_{\delta W}\,,
-\end{equation*}
-where $\norm{\cdot}_{F*}$ is defined in \eqref{eqn:F_star} has solution 
-\begin{equation}
-\delta W = -\frac{1}{\lambda}UDV^T
-\end{equation} 
-with $D = \text{diag}(d_i)$, where $d_i = [\sigma_i - \tau]_+$, and $\tau$ is given by
-\begin{equation}
-    \sum_{i=1}^r [\sigma_i - \tau]_+ = \tau\,.
-\end{equation}
-\end{lemma}
-
-\begin{proof}
-Analogously to the proof of Lemma~\ref{lem:opt_star}, we can use Von Neumann's trace inequality to write down
-\begin{equation*}
-    f(\delta W) \geq -\sum_{i=1}^r \sigma_i(G)\sigma_i(\delta W) + \frac{\lambda}{2}\left(\sum_{i=1}^{r}\sigma_i(\delta W)\right)^2 + \frac{\lambda}{2}\sum_{i=1}^{r}\sigma_i^2(\delta W)\,,
-\end{equation*}
-\begin{equation}\label{eqn:f_min_F_star}
-    f(\delta W) \geq \frac{1}{\lambda}\min_{d_1,\dots,d_r \geq 0}-\sum_{i=1}^r \sigma_i(G)d_i + \frac{1}{2}\left(\sum_{i=1}^{r}d_i\right)^2 + \frac{1}{2}\left(\sum_{i=1}^{r}d_i^2\right)\,,
-\end{equation}
-By Karush-Kuhn-Tucker theorem, neccesary conditions of minimum are
-\begin{equation*}
-    \left(d_i \geq 0\ \text{and}\ -\sigma_i(G) + \sum_{j=1}^{r}d_j +  d_i = 0\right)\ \text{or}\ \left(d_i = 0\ \text{and}\ -\sigma_i(G) + \sum_{j=1}^{r}d_j + d_i \geq 0\right) \,\, i = 1,\dots,r\,.
-\end{equation*}
-Denoting $\tau = \sum_{i = 1}^r d_i$ gives $d_i = [\sigma_i(G) - \tau]_+$, where $\tau$ satisfies
-\begin{equation}
-    \sum_{i=1}^n [\sigma_i(G) - \tau]_+ = \tau\,.
-\end{equation}
-Inserting found minimum point into~\eqref{eqn:f_min_F_star} yields
-\begin{equation*}
-    f(\delta W) \geq -\sum_{i = 1}^r d_i(\tau + d_i) + \frac{\tau^2}{2\lambda} + \frac{1}{2\lambda}\sum_{i=1}^{r}d_i^2 = -\frac{1}{2 \lambda} \left( \tau^2 + \sum_{i=1}^r d_i^2 \right)\,.
-\end{equation*}
-
-Now let
-\begin{equation}
-\delta W^* = -\frac{1}{\lambda}UDV^T
-\end{equation} 
-with $D = \text{diag}(d_i)$. Inserting it to $f(\delta W)$ gives
-\begin{equation*}
-    f(\delta W^*) = -\sum_{i = 1}^r d_i(\tau + d_i) + \frac{\tau^2}{2\lambda} + \frac{1}{2\lambda}\sum_{i=1}^{r}d_i^2 = -\frac{1}{2 \lambda} \left( \tau^2 + \sum_{i=1}^r d_i^2 \right)\,.
-\end{equation*}
-This matches the derived lower bound. Thus, $\delta W^*$ minimizes $f(\delta W)$.
-\end{proof}
-
-\section{Quality metrics}
-\begin{enumerate}
-    \item The derivation is theoretically solid
-    \item The numerical procedure used to compute a step is grounded and has estimated time overhead (say, in FLOPS)
-    \item The code with Neon trains MLP and CNN (and NanoGPT, but it's a bonus) less than 3 times slower than Adam
-    \item Instruction of setting the parameters of the algorithm are presented and justified
-    \item The announced article has full structure (Abstract, Introduction, Theory, Experiments, Conclusion, Appendix)
-    \item If results are positive, it is written with NeurIPS template.
-\end{enumerate}
-
-\section{Preliminary plan}
-\paragraph{Week April 28 - May 4}
-\begin{itemize}
-    \item For Alexey: solve how to tune the algorithms for MLP and CNN, try formulating theory (and an appropriate model of the problem) why Muon and Neon are so successful, and create the drafts of the proofs. Register at NeurIPS site.
-    
-    \item For Ivan: write the theory for an update from the algebra point of view (as for an article)
-    
-    \item For Nikolay: write the theory for computing an update, and implement the method, if required
-    
-    \item For Alexander: reproduce results of Jordan on NanoGPT and ResNet (CIFAR-10), learn to train both models with Neon.
-\end{itemize}
-
-\paragraph{Week May 5 - May 11}
-\begin{itemize}
-    \item For Alexey: finalize the proofs. Verify them via small experiments on MLP and CNN. Write with Alexander Experiments for the article.
-    
-    \item For Ivan: join Nikolay to finalize algebra part of the article. Estimate FLOPS, memory and other overheads (produce O bounds)
-    
-    \item For Nikolay: write a draft of the poster (before May 6), and work with Ivan
-    
-    \item For Alexander: agressively test algorithms, prove that Neon outperforms competitors and prepare the results for the article.
-    
-    \item For everybody: write and edit the article
-    
-    \item May 11: submit an abstract to NeurIPS.
-    
-    \item May 12-14: the article is being polished.
-    
-    \item May 15: the article must be sent.
-\end{itemize}
-
-\section{Prototyping phase report}
-\begin{enumerate}
-    \item Update rule is derived, see idea
-    \item Update rule methods are tested: power iteration vs Lanczos (see \ref{tab:matrix_methods})
-    \item Recorded the distribution of singular values of gradients during NanoGPT training (see Firgures ~\ref{fig:svd_all}, \ref{fig:svd_all}).
-    \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/svd_evolution_all.png}}
-        \caption{Singular values of $50257\times 1280$ layer via 200 iterations}
-        \label{fig:svd_all}
-    \end{figure}
-    \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/svd_evolution.png}}
-        \caption{Singular values of  of $50257\times 1280$ layer for 5-th,45-th, 65-th,175-th and 200-th iteration}
-        \label{fig:svd}
-    \end{figure} 
-    
-    \item NanoGPT is tested on Muon and Adam. For now, Neon (rank-1 version) does not converge (see Figures ~\ref{fig:train_loss} \ref{fig:val_loss})
-    \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/loss_train.png}}
-        \caption{Train loss}
-        \label{fig:train_loss}
-    \end{figure}
-    \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/loss_val.png}}
-        \caption{Validation loss}
-        \label{fig:val_loss}
-    \end{figure} 
-
-
-    The pictures show the best results achieved so far. The experiments were conducted with two 4090 24GB GPUs for nanotgpt-large on the tiny stories dataset.
-    
-    \item Neon (rank-1 version), Muon, AdamW and SGD are compared on MLP and CNN (see Figures~\ref{fig:mlp_epochs}, \ref{fig:cnn_epochs}, \ref{fig:mlp_time}, and~\ref{fig:cnn_time}). All methods work correctly, but again there is the problem with which one is the fastest (for now, it's SGD).
-    \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp0605/loss_vs_epochs_mlp.pdf}}
-        \caption{MLP: self.linear1 = nn.Linear(32*32*3, 512), self.linear2 = nn.Linear(512, 10), self.activ = nn.GELU()}
-        \label{fig:mlp_epochs}
-    \end{figure}
-    \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/accuracy_vs_epochs_moderate.png}}
-        \caption{CNN: 2 convolutional blocks, 2 fully connected layers, activation + dropout}
-        \label{fig:cnn_epochs}
-    \end{figure}
-    \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp0605/accuracy_vs_time_mlp.pdf}}
-        \caption{MLP: wallclock time measurements}
-        \label{fig:mlp_time}
-    \end{figure}
-    \begin{figure}[h!]
-        \center{\includegraphics[width=0.8\linewidth]{figs/mlp24/accuracy_vs_time_moderate.png}}
-        \caption{CNN: wallclock time measurements}
-        \label{fig:cnn_time}
-    \end{figure}
-    \begin{table}[h!]
-        \centering
-        \begin{tabular}{c|c|c|c}
-        \hline
-        Method                              & rtol        & k & time,s \\
-        \hline 
-        Power Iterations                    & 0.01        & 1 & 7.7\\ 
-        SVDS (thick-restart Lanczos method) & 0.01        & 1 & 0.18\\
-        PCA Low Rank (RSVD)                 & 0.01        & 1 & 1.15\\
-        SVDS (thick-restart Lanczos method) & 0.01        & 10 & 0.47\\
-        PCA Low Rank (RSVD)                 & 0.01        & 10 & 19.4\\
-        SVDS (thick-restart Lanczos method) & 0.01        & 100 & 1.96\\
-        PCA Low Rank (RSVD)                 & 0.01        & 100 & 170\\
-        \end{tabular}
-        \caption{k-rank updated comparison}
-        Comparison of different numerical methods to calculate k-rank update on $5000\times5000$ matrix of real numbers, rtol is an error in Frobenius norm relative to the k-rank approximation of truncated svd. During the research it was noted that rsvd can give good and fast approximation for singular values, but the matrix of approximation is far from the one given by truncated svd, while Lanczos method gives good and fast approximation for a matrix, but not so good approximation for singular values. 
-        \label{tab:matrix_methods_old}
-    \end{table}
-\end{enumerate}
-
-
-\appendix
-\section{Old Appendix}
-You may include other additional sections here.
-
-\fi
 
 \end{document}
