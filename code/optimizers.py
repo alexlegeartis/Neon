@@ -148,7 +148,7 @@ class Muon(torch.optim.Optimizer):
                 norm = p.data.norm()
                 if norm < 1e-10:
                     norm = 1e-10
-                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                p.data.mul_((len(p.data)**0.5 / norm)) # normalize the weight
                 update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 p.data.add_(update, alpha=-lr) # take a step
 

@@ -20,6 +20,7 @@ import torchvision
 import torchvision.transforms as T
 from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon, NuclearNormalizedMuon, MuonCringeMomentum
 from optimizers import SpectrallyNormalizedNeon
+from mlion import MLion
 
 #############################################
 #               Muon optimizer              #
@@ -345,7 +346,7 @@ def main(run, model):
     if run == 'warmup':
         # The only purpose of the first run is to warmup the compiled model, so we can use dummy data
         train_loader.labels = torch.randint(0, 10, size=(len(train_loader.labels),), device=train_loader.labels.device)
-    total_train_steps = ceil(8 * len(train_loader))
+    total_train_steps = ceil(12 * len(train_loader))
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
     # Create optimizers and learning rate schedulers
@@ -358,9 +359,11 @@ def main(run, model):
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
     # random mix, 93.3%, 11.26 s on bs 2000 with lr=0.4, mom=0.65
     # optimizer2 = RandomNormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # and 92.9% for bs 200
-    optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
     # optimizer2 = MuonCringeMomentum(filter_params, lr=0.24, momentum=0.6, nesterov=True) # it's not bad, but without Nesterov=true it does not work
-    # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
+    optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
+    # optimizer2 = MLion(filter_params, lr=0.4) # base Muon, 93% 11.4 s
+    
     switch_to_muon = True
     # optimizer2 = torch.optim.SGD(filter_params, momentum=0.85, nesterov=True, lr=0.001) # about 90%
     
