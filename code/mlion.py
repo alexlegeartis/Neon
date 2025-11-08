@@ -35,7 +35,7 @@ class MLion(Optimizer):
                 
                 update = zeropower_via_newtonschulz5(exp_avg.reshape(len(g), -1)).view(exp_avg.shape) # whiten the update
                 # p.add_(torch.sign(exp_avg), alpha=-lr)
-                p.add_(update, alpha=-lr * max(1, p.size(-2) / p.size(-1)) ** 0.5)
+                p.add_(update, alpha=-lr)#  * max(1, p.size(-2) / p.size(-1)) ** 0.5)
 
         return loss
 
