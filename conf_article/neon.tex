@@ -45,7 +45,7 @@ Moscow Institute of Physics and Technology (MIPT) \\
 \texttt{vinogradov.am@phystech.edu} \\
 \And
 Daniil Merkulov \\
-Moscow Institute of Physics and Technology (MIPT), Skoltech, HSE, Sber \\
+Moscow Institute of Physics and Technology (MIPT), Skoltech, HSE, AI4Science \\
 \texttt{daniil.merkulov@phystech.edu} \\
 \And
 Ivan Oseledets \\
@@ -113,9 +113,7 @@ AIRI, Skoltech \\
 \maketitle
 
 \begin{abstract}
-	% In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the Ky Fan k-norms, their affine combinations with the Frobenius norms, and corresponding duals to develop a new family of Muon-like algorithms we name {\it Fanions}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings.
-
-	In this article, we explore the use of matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan k-norms to introduce a \deleted[id=IK, comment={Redundant}]{new} family of Muon-like algorithms we name {\it Fanions}, which happen to be similar to Dion. \replaced[id=IK, comment={This rewrite clarifies the sentence structure, making it clear that the norms (not the algorithms) are being combined.}]{Subsequently, we construct a second family of algorithms, dubbed {\it F-Fanions}, based on the duals of convex combinations of Ky Fan k-norms and the Frobenius norm. One prominent member of this family is {\it F-Muon}.}{Then, we consider their convex combinations with the Frobenius norm and corresponding duals to develop a new family of algorithms we name {\it F-Fanions}, one of them being {\it F-Muon}.} We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that properly-tuned F-Muon is almost on par with Muon, \replaced[id=IK, comment={Alex, clarify this please. It's a very non-obvious and non-clear conclusion, especially when knowing that Muon itself only provides an approximate answer to the LMO. I provided an alternative phrase.}]{which questions the necessity of finding the exact solution to the problem in linear optimization oracle framework.}{which shows the flexibility in the choice of the norm and opens possibilities for easier-to-compute variants.}
+	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan k-norms to introduce a family of Muon-like algorithms we name {\it Fanions}, which happen to be similar to Dion. Subsequently, we construct a second family of {\it F-Fanions}, which are based on the duals of convex combinations of Ky Fan k-norms and the Frobenius norm. One prominent member of this family is {\it F-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that F-Muon is on par with Muon, which questions the exclusivity of a spectral norm.
 
 \end{abstract}
 
@@ -123,15 +121,13 @@ AIRI, Skoltech \\
 
 Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam \citep{kingma2014adam} and AdamW \citep{loshchilov2017decoupled}, recently proposed Muon \citep{jordan2024muon} has shown promising results on training very large models \citep{liu2025muon}. Its key difference from Adam and AdamW is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
 
-That is what can be said from a practical point of view. \replaced[id=IK, comment={Rewrote this to be more precise. The innovation wasn't just 'using' a norm, but deriving the update from a principled, constrained optimization problem. I think this better reflects the contribution of the Muon paper.}]{From a theoretical perspective, a key innovation of Muon was its principled derivation of the update rule, which emerges as the solution to an optimization problem constrained by the RMS-to-RMS norm (scaled version of spectral norm) \citep{bernstein2025deriving}}{From the perspective of theory, the main innovation of Muon has been an intentional usage of matrix norms, i.e. the spectral norm, to derive the algorithm's update}.
-
-\replaced[id = IK, comment={Subsequent paragraphs in the introduction are very heavily modified.}]{}{}
+That is what can be said from a practical point of view. From a theoretical perspective, a key innovation of Muon was its principled derivation of the update rule, which emerges as the solution to an optimization problem constrained by the RMS-to-RMS norm (scaled version of spectral norm) \citep{bernstein2025deriving}
 
 Motivated by the success of Muon, many generalizations and variations of it were proposed. Among the notable ones are Scion \citep{pethick2025training}, Dion \citep{ahn2025dioncommunicationefficientoptimizerlarge} and Gluon \citep{riabinin2025gluon}. Those researches target Muon's efficiency and establish convergence bounds. One central question, however, remains unanswered:
 
 \textit{In deriving Muon's update step, why constrain by the spectral norm? How would alternative norms affect performance and computational cost?}
 
-In this article, we tackle this question by first showing the connection between matrix norms and corresponding existing algorithms and discuss the theoretic bounds derived for those algorithms. We then leverage the family of norms dual to Ky Fan k-norms to derive a new class of algorithms with low-rank updates, which we call Fanions. Subsequently, we create a second, hybrid family named F-Fanions by constructing convex combinations of the Ky Fan norms with the Frobenius norm and taking dual of that composite norm. Working within the linear minimization oracle (\replaced[id = IK, comment={I think it's better this way.}]{LMO}{lmo}) framework we derive the explicit update formulas for both algorithm families. As it was done with Muon, we stipulate our algorithms to be fast to approximate, for which we utilize the Lanczos algorithm as described in \cref{sec:matrix-side}.
+In this article, we tackle this question by first showing the connection between matrix norms and corresponding existing algorithms and discuss the theoretic bounds derived for those algorithms. We then leverage the family of norms dual to Ky Fan k-norms to derive a new class of algorithms with low-rank updates, which we call Fanions. Subsequently, we create a second, hybrid family named F-Fanions by constructing convex combinations of the Ky Fan norms with the Frobenius norm and taking dual of that composite norm. Working within the linear minimization oracle (LMO) framework we derive the explicit update formulas for both algorithm families. As it was done with Muon, we stipulate our algorithms to be fast to approximate, for which we utilize the Lanczos algorithm as described in \cref{sec:matrix-side}.
 
 We then compare the performance of the algorithm families across various benchmarks (\cref{sec:experiments}):
 \begin{itemize}
@@ -144,29 +140,29 @@ Our experiments reveal important insights about the role of matrix norms in opti
 
 Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon achieves $94.01 \pm 0.14\%$ accuracy, essentially matching Muon's $94.00 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, only marginally worse than Muon's 3.279. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, answering affirmatively the central question posed above. This flexibility suggests potential for developing easier-to-compute variants of successful algorithms like Muon.
 
-\section{\added[id = IK, comment={I think it goes well into one big section.}]{Update Step as Constrained Optimization}}
+\section{Update Step as Constrained Optimization}
 
-\subsection{\replaced[id = IK, comment={Merged what previously had been section with two subsections into this one and improved the notation. Also removed the thing about trust region, it'll be referenced in succeeding sections.}]{Linear Minimization Oracle Framework}{Problem Statement}}
+\subsection{Linear Minimization Oracle Framework}
 
-Training a neural network involves optimizing a function of weight matrices. For simplicity, we consider the problem of minimizing a differentiable function of a single matrix:
-\begin{equation}\label{eq:mat}
-	F(\cdot)\colon \Rmn \to \R\,,\qquad F(\mX) \to \min_{\mX \in \Rmn}\,.
+Training a neural network is essentially an optimization of a function of several weight matrices. Let us start by considering the problem of minimizing a differentiable function of a {\it single} matrix:
+\begin{equation}\label{eq:matrix_problem}
+	F(\cdot)\colon \Rmn \to \R\,,\qquad F(\mX) \to \min_{\mX \in \Rmn}\,
 \end{equation}
-We equip the matrix space $\Rmn$ with a standard dot product $\<\cdot, \cdot> \to \R$ and a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which possibly does not coincide with the Frobenius norm $\normf{\cdot}$. The dual norm $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ associated with $\norm{\cdot}$ is defined as
+We equip the matrix space $\Rmn$ with a standard dot product $\<\cdot, \cdot> \to \R$ and a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which does not have to coincide with the Frobenius norm $\normf{\cdot}$. The dual norm $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ associated with $\norm{\cdot}$ is defined as
 \begin{equation}\label{eq:dual_norm}
-	\norm{\mG}^\dagger = \sup_{\mD \in \Rmn\,,\norm{\mD}\leq 1} \<\mG,\mD>\,.
+	\norm{\mG}^\dagger = \sup_{\mD \in \Rmn\,:\norm{\mD}\leq 1} \<\mG,\mD>\,.
 \end{equation}
 
-One approach to optimizing such functions is to employ an iterative algorithm based on Linear Minimization Oracle (LMO):
+Such problems can be solved with an iterative algorithm based on the Linear Minimization Oracle (LMO):
 \begin{equation}\label{eq:lmo}
 	\mathrm{LMO}(\mG) \in \argmin_{\mD \in \cS} \<\mG, \mD>\,,
 \end{equation}
 where $\mG$ is typically a gradient (possibly with momentum) of $F$ and $\cS \subset \Rmn$ is some set. The simple update formula then can look like
 \begin{equation}\label{eq:simple_update}
-	\mX^{k + 1} = \mX^k + \mathrm{LMO}\left(\nabla F\left(\mX^k\right)\right)\,.
+	\mX^{k + 1} = \mX^k + \gamma_k\mathrm{LMO}\left(\nabla F\left(\mX^k\right)\right)\,.
 \end{equation}
 
-In a typical neural network, the objective function $F$ depends on a set of weight matrices $\{ \mX_1, \mX_2, \ldots \}$. The optimization framework we have described is applied in a layer-wise fashion. At each iteration $k$, a stochastic gradient $g(\mX^k, \xi^k)$ is computed using a mini-batch of data $\xi^k$ via backpropagation. This yields a separate gradient component, $\mG_i^k$, for each matrix $\mX_i$. The LMO-based update rule is then applied to each matrix $\mX_i$ using its corresponding gradient component $\mG_i^k$.
+In a typical neural network, the objective function $F$ depends on a set of weight matrices $\{ \mW_1, \mW_2, \ldots \}$. The optimization framework we have described is applied in a layer-wise fashion. At each iteration $k$, a stochastic gradient $g(\mX^k, \xi^k)$ is computed using a mini-batch of data with the $\xi^k$ noise via backpropagation. This yields a separate gradient component, $\mG_i^k$, for each matrix $\mX_i$. The LMO-based update rule is then applied to each matrix $\mX_i$ using its corresponding gradient component $\mG_i^k$.
 
 The update rule used in Muon optimizer is uSCG \citep{pethick2025training}. In the most general case, which involves momentum, it can be written as
 \begin{equation}\label{eq:usgd_update}
@@ -286,8 +282,6 @@ In addition, one can consider F-KF-k-norm: $\norm{\cdot}_{\mathrm{F-KF-k}}$ = $\
 \subsection{Algorithms for Matrices $\leftrightarrow$ Algorithms for Vectors}
 
 lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms with common $p$ may be analogous to each other, as is illustrated by \cref{tbl:mat_vs_vec_lmo}. The analogies go beyond similarities in the updates. SignSGD is very close to Adam, as noted in \citet{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well in training large models. NSGD is the same for both matrix and vector cases. Greedy Coordinate Descent methods are not applied to high-dimensional problems, from this perspective, it is not surprising that Neon underperforms on such problems.
-
-\deleted[id = IK, comment={This is essentially like saying uh oh the optimization in multy-dimensional space is so hard, why there is no algorithm to reduce this problem to 1-d case.}]{Despite such similarities, no theory has been yet proposed that would reduce the matrix case to the optimization of a function of a singular values vector. If such a theory is developed, analysis of matrix algorithms like Muon will be greatly simplified.}
 
 \begin{table*}[t]
 	\caption{lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms. $g$ is the gradient. When it is a matrix, $g = \mU \mSigma \mV^\top$}
@@ -413,16 +407,16 @@ Finally, we take this set of tuned parameters and test on different $\alpha$, 5 
 	\label{fig:diff_alphas}
 \end{figure}
 
-The results are curious and could be represented by \cref{fig:cifar_ball}: lmo ball, which we plotted in a 2D space of singular values, has drastically changed, but the observed convergence after tuning has not degraded. These observations raise the question of how much lmo-based algorithms are sensitive to the constraint area, i.e. what will happen if the ball is corrupted. In this particular example, we have had a blurred ball, which proved as robust as the original ball.
+The results are curious and could be represented by \cref{fig:cifar_ball}: the LMO ball that we plotted in a 2D space of singular values has drastically changed, but the observed convergence after tuning has not degraded. These observations raise the question of how much lmo-based algorithms are sensitive to the constraint area, i.e. what will happen if the ball is corrupted. In this particular example, we have had a blurred ball, which proved as robust as the original ball.
 
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=0.6\textwidth]{figs/norms/fstardual_cifar.pdf} % adjust width as needed
-	\caption{Visualization of lmo balls for Muon and F-Muon.}
+	\caption{Visualization of the LMO balls for Muon and F-Muon.}
 	\label{fig:cifar_ball}
 \end{figure}
 
-The most pathological case is \replaced[id=IK, comment={In the pictures there are no experiments with $\alpha < 0$, but there is a one with $\alpha $}]{$\alpha > 1$}{$\alpha < 0$}, which corresponds to the lmo with an area that is not a norm ball! Despite this violation, the mixture of algorithms reaches almost the same accuracy as vanilla Muon.
+The most pathological case is $\alpha > 1$, which corresponds to the lmo with an area that is not a norm ball! Despite this violation, the mixture of algorithms reaches almost the same accuracy as vanilla Muon.
 
 \subsection{NanoGPT speedrun}
 We test F-Muon on NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.5$, the optimal parameters are {\tt lr=0.07, momentum=0.95}, while for Muon they were  {\tt lr=0.05, momentum=0.95}. After testing for 1750 steps, as it has been done on the speedruns, we get 3.281 cross-entropy loss, while on Muon, it falls below the target threshold 3.28 reaching 3.279. However, this difference is negligible, if one looks at \cref{fig:gpt_loss}. It is even more striking, considering the fact that F-Muon is an average of Muon and NSGD, and the later performed quite poorly.
