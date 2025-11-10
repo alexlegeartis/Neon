@@ -609,17 +609,23 @@ In fact, those balls can be described easier if we use the results from \citet{y
 
 
 \section{Updates derivations}
-Proof of \cref{lemma:nsgd_muon_update}:
-Since $\norm{\cdot}^\dagger = \normfstar{\cdot}^{\dagger\dagger} = \normfstar{\cdot}$, the goal is to reach $\normfstar{\mM^k} = \alpha \tr{\mSigma} + (1-\alpha) \normf{\mM^k}$.
+% we prove a general lemma instead
+%Proof of \cref{lemma:nsgd_muon_update}:
+%Since $\norm{\cdot}^\dagger = \normfstar{\cdot}^{\dagger\dagger} = \normfstar{\cdot}$, the goal is to reach $\normfstar{\mM^k} = \alpha \tr{\mSigma} + (1-\alpha) \normf{\mM^k}$.
 
-Let us note that $\Delta = \alpha \mU \mV^\top + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha \mU \mV^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \mSigma + (1-\alpha) \normf{\mM^k} = \normfstar{\mM^k}$, which completes the proof.
+%Let us note that $\Delta = \alpha \mU \mV^\top + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha \mU \mV^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \mSigma + (1-\alpha) \normf{\mM^k} = \normfstar{\mM^k}$, which completes the proof.
 
-Proof of \cref{lemma:neon_update} follows from \cref{eq:nsgd_neon_update} with $\alpha=1$. Indeed, $\normn{\cdot}^\dagger=1\cdot\norms{\cdot} + 0 \cdot \normf{\cdot} $.
+Proof of \cref{lemma:neon_update}:
+Since $\norm{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\norms{\mM^k} = \sigma_1$.
 
-Proof of \cref{lemma:nsgd_neon_update}:
-Since $\norm{\cdot}^\dagger = \normftwo{\cdot}^{\dagger\dagger} = \normftwo{\cdot}$, the goal is to reach $\normftwo{\mM^k} = \alpha \sigma_1 + (1-\alpha) \normf{\mM^k}$.
+Let us note that $\Delta = u_1 v_1^\top$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, u_1 v_1^\top> = \tr \diag({\sigma_1, 0, \dots, 0}) = \norms{\mM^k}$, which completes the proof.
 
-Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha u_1 v_1^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \diag({\sigma_1, 0, \dots, 0}) + (1-\alpha) \normf{\mM^k} = \normftwo{\mM^k}$, which completes the proof.
+
+% we prove a general lemma instead
+%Proof of \cref{lemma:nsgd_neon_update}:
+%Since $\norm{\cdot}^\dagger = \normftwo{\cdot}^{\dagger\dagger} = \normftwo{\cdot}$, the goal is to reach $\normftwo{\mM^k} = \alpha \sigma_1 + (1-\alpha) \normf{\mM^k}$.
+
+% Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha u_1 v_1^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \diag({\sigma_1, 0, \dots, 0}) + (1-\alpha) \normf{\mM^k} = \normftwo{\mM^k}$, which completes the proof.
 
 
 Proof of \cref{lemma:ky_fan_update}:
