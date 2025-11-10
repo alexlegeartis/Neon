@@ -113,7 +113,7 @@ AIRI, Skoltech \\
 \maketitle
 
 \begin{abstract}
-	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan k-norms to introduce a family of Muon-like algorithms we name {\it Fanions}, which happen to be similar to Dion. Subsequently, we construct a second family of {\it F-Fanions}, which are based on the duals of convex combinations of Ky Fan k-norms and the Frobenius norm. One prominent member of this family is {\it F-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that F-Muon is on par with Muon, which questions the exclusivity of a spectral norm.
+	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan k-norms to introduce a family of Muon-like algorithms we name {\it Fanions}, which happen to be similar to Dion. Subsequently, we construct a second family of {\it F-Fanions}, which are based on the duals of convex combinations of the Ky Fan k-norms and the Frobenius norm. One prominent member of this family is {\it F-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that F-Muon is on par with Muon, which questions the exclusivity of a spectral norm.
 
 \end{abstract}
 
@@ -123,11 +123,12 @@ Minimizing loss functions in unprecedentedly high-dimensional spaces has recentl
 
 That is what can be said from a practical point of view. From a theoretical perspective, a key innovation of Muon was its principled derivation of the update rule, which emerges as the solution to an optimization problem constrained by the RMS-to-RMS norm (scaled version of spectral norm) \citep{bernstein2025deriving}
 
+
 Motivated by the success of Muon, many generalizations and variations of it were proposed. Among the notable ones are Scion \citep{pethick2025training}, Dion \citep{ahn2025dioncommunicationefficientoptimizerlarge} and Gluon \citep{riabinin2025gluon}. Those researches target Muon's efficiency and establish convergence bounds. One central question, however, remains unanswered:
 
 \textit{In deriving Muon's update step, why constrain by the spectral norm? How would alternative norms affect performance and computational cost?}
 
-In this article, we tackle this question by first showing the connection between matrix norms and corresponding existing algorithms and discuss the theoretic bounds derived for those algorithms. We then leverage the family of norms dual to Ky Fan k-norms to derive a new class of algorithms with low-rank updates, which we call Fanions. Subsequently, we create a second, hybrid family named F-Fanions by constructing convex combinations of the Ky Fan norms with the Frobenius norm and taking dual of that composite norm. Working within the linear minimization oracle (LMO) framework we derive the explicit update formulas for both algorithm families. As it was done with Muon, we stipulate our algorithms to be fast to approximate, for which we utilize the Lanczos algorithm as described in \cref{sec:matrix-side}.
+In this article, we tackle this question by first showing the connection between matrix norms and corresponding existing algorithms and discuss the theoretic bounds derived for those algorithms. We then leverage the family of norms dual to Ky Fan k-norms to derive a new class of algorithms with low-rank updates, which we call Fanions. Subsequently, we create a second, hybrid family named F-Fanions by constructing convex combinations of the Ky Fan norms with the Frobenius norm and taking dual of that composite norm. Working within the linear minimization oracle (LMO) framework we derive the explicit update formulas for both algorithm families. As it was done with Muon, we stipulate our algorithms to be fast to approximate, for which we utilize the Lanczos algorithm as described in ~\cref{sec:matrix-side}.
 
 We then compare the performance of the algorithm families across various benchmarks (\cref{sec:experiments}):
 \begin{itemize}
@@ -140,9 +141,8 @@ Our experiments reveal important insights about the role of matrix norms in opti
 
 Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon achieves $94.01 \pm 0.14\%$ accuracy, essentially matching Muon's $94.00 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, only marginally worse than Muon's 3.279. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, answering affirmatively the central question posed above. This flexibility suggests potential for developing easier-to-compute variants of successful algorithms like Muon.
 
-\section{Update Step as Constrained Optimization}
 
-\subsection{Linear Minimization Oracle Framework}
+\section{Preliminaries: Linear Minimization Oracle Framework}
 
 Training a neural network is essentially an optimization of a function of several weight matrices. Let us start by considering the problem of minimizing a differentiable function of a {\it single} matrix:
 \begin{equation}\label{eq:matrix_problem}
@@ -162,16 +162,6 @@ where $\mG$ is typically a gradient (possibly with momentum) of $F$ and $\cS \su
 	\mX^{k + 1} = \mX^k + \gamma_k\mathrm{LMO}\left(\nabla F\left(\mX^k\right)\right)\,.
 \end{equation}
 
-In a typical neural network, the objective function $F$ depends on a set of weight matrices $\{ \mW_1, \mW_2, \ldots \}$. The optimization framework we have described is applied in a layer-wise fashion. At each iteration $k$, a stochastic gradient $g(\mX^k, \xi^k)$ is computed using a mini-batch of data with the $\xi^k$ noise via backpropagation. This yields a separate gradient component, $\mG_i^k$, for each matrix $\mX_i$. The LMO-based update rule is then applied to each matrix $\mX_i$ using its corresponding gradient component $\mG_i^k$.
-
-The update rule used in Muon optimizer is uSCG \citep{pethick2025training}. In the most general case, which involves momentum, it can be written as
-\begin{equation}\label{eq:usgd_update}
-	\begin{aligned}
-		\mM^{k}     & = \alpha_{k} g(\mX^k, \xi^k) + (1 - \alpha_k)\mM^{k - 1}\,, \\
-		\mX^{k + 1} & = \mX^k + \gamma_k\mathrm{LMO}(\mM^{k})\,.
-	\end{aligned}
-\end{equation}
-
 Here we are particularly interested in the case when $\cS$ is a ball in the $\norm{\cdot}$ norm:
 \begin{equation}\label{eq:ball}
 	\cS = \cB_\eta = \{ \mD \in \Rmn \mid \norm{\mD} \leq \eta \}\,.
@@ -186,33 +176,23 @@ And update for $\mX$ in \cref{eq:usgd_update} becomes
 \end{equation}
 This formula will later allow us to easily compute updates for various norms.
 
-\subsection{Different Norms $\norm{\cdot}$ imply different updates}
 
-In this subsection we will derive and discuss updates induced by the choice of the norm in \cref{eq:our_update}. To describe those updates, the singular value decomposition (SVD) of $\mM^k$ is required. We denote SVD of $\mM^k$ as $\mM^k = \mU \mSigma \mV^\top$, where $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and  $\mV = [v_1, v_2, \dots, v_r]$.
+In the next subsection we will derive and discuss updates induced by the choice of the norm in \cref{eq:our_update}. To describe those updates, the singular value decomposition (SVD) of $\mM^k$ is required. We denote SVD of $\mM^k$ as $\mM^k = \mU \mSigma \mV^\top$, where $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and $\mV = [v_1, v_2, \dots, v_r]$.
 
-\subsection{\texorpdfstring{$\normf{\mM^{k}}$ and Normalized SGD}{NSGD}}
+When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
 
-\begin{lemma}\label{lemma:nsgd_update}
-	When $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
+\begin{equation}\label{eq:muon_update}
+	\mX^{k+1} = \mX^{k} - \eta U V^\top
+\end{equation}.
+
+And when $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
 
 	\begin{equation}\label{eq:nsgd_update}
 		\mX^{k+1} = \mX^{k} - \eta \frac{\mM^k}{\normf{\mM^k}}
 	\end{equation}
 
-\end{lemma}
-
-The result is the same as in (Table 1, \citet{pethick2025training}), but here we use the Euclidean norm as $\normf{\mM^k} = \sqrt{\sum_{i=1}^{\min\{m,n\}}\sigma_i^2}$, which clearly is a matrix norm.
-
-\subsection{\texorpdfstring{$\norms{\mM^{k}}$ and Muon}{Muon}}
-\begin{lemma}\label{lemma:muon_update}
-	When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
-
-	\begin{equation}\label{eq:muon_update}
-		\mX^{k+1} = \mX^{k} - \eta U V^\top
-	\end{equation}
-\end{lemma}
-
-Though the update is well-known, we provide a much simpler proof in the appendix, when compared to \citet{bernstein2024oldoptimizernewnorm}.
+\section{Duals to Ky Fan norms instead of the spectral norm}
+%\subsection{Non-operator Norms $\norm{\cdot}$ lead to new updates}
 
 \subsection{\texorpdfstring{$\normn{\mM^{k}}$ and Neon}{Neon}}
 \begin{lemma}\label{lemma:neon_update}
@@ -222,48 +202,13 @@ Though the update is well-known, we provide a much simpler proof in the appendix
 		\mX^{k+1} = \mX^{k} - \eta u_1 v_1^\top
 	\end{equation}
 \end{lemma}
-We name the derived algorithm \emph{Neon}. In the section {\it The Matrix side of updates}, we will discuss how to compute the update efficiently.
-
-\subsection{\texorpdfstring{$\normfstar{\mM^{k}}^\dagger$ and F-Muon}{F-Muon}}
-We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
-
-\begin{equation}\label{eq:fstar_norm}
-	\normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
-\end{equation}
-
-where $\alpha \in [0, 1]$ defines a specific norm from the $F*$-family. $\normfstar{\cdot}^\dagger$ can be expressed as in \cref{eq:normfstardual}. However, its norm ball is a simple Minkowski sum of $\alpha \normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:fstardual}.
-
-\begin{lemma}\label{lemma:nsgd_muon_update}
-	When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
-
-	\begin{equation}\label{eq:nsgd_muon_update}
-		\mX^{k+1} = \mX^{k} - \eta (\alpha U V^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
-	\end{equation}
-\end{lemma}
-
-We name the derived algorithm \emph{F-Muon}. It turns out that F-Muon is a convex combination of Normalized SGD and Muon. The implications are significant and discussed in the following sections.
-
-\subsection{\texorpdfstring{$\normftwo{\mM^{k}}^\dagger$ and F-Neon}{F-Neon}}
-We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
-
-\begin{equation}\label{eq:ftwo_norm}
-	\normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
-\end{equation}
-
-where $\alpha \in [0, 1]$ defines a specific norm from the F2-family.$\normftwo{\cdot}^\dagger$ can be expressed as in \cref{eq:normftwodual}. However, its norm ball is a simple Minkowski sum of $\alpha \norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:ftwodual}.
-
-\begin{lemma}\label{lemma:nsgd_neon_update}
-	When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
-
-	\begin{equation}\label{eq:nsgd_neon_update}
-		\mX^{k+1} = \mX^{k} - \eta (\alpha u_1 v_1^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
-	\end{equation}
-\end{lemma}
-
-We name the derived algorithm \emph{F-Neon}. It turns out that F-Neon is a convex combination of Normalized SGD and Neon. The implications are significant and discussed in the following sections.
+We name the derived algorithm \emph{Neon}. In the section ~\cref{sec:matrix-side}, we will discuss how to compute the update efficiently.
 
 
 \subsection{\texorpdfstring{$\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}{Muon, Neon, and Centralized Dion without error feedback}}
+
+Now: what will we get if we try to generalize?
+
 We remind the reader that the Ky Fan k-norm (\citet{bhatia2013matrix}, p. 92), which we denote as $\normkfk{\cdot}$, is the sum of the k largest singular values of the matrix. It can be proved that $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96). Special cases of the Ky Fan k-norm are the Ky Fan 1-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
 
 \begin{lemma}\label{lemma:ky_fan_update}
@@ -273,14 +218,13 @@ We remind the reader that the Ky Fan k-norm (\citet{bhatia2013matrix}, p. 92), w
 		\mX^{t+1} = \mX^{t} - \eta \sum_{i=1}^{k}u_i v_i^\top
 	\end{equation}
 \end{lemma}
-In the section {\it The Matrix side of updates}, we will discuss how to compute the updates efficiently.
+In the section ~\cref{sec:matrix-side}, we will discuss how to compute the updates efficiently.
 
 We introduce the family of {\it Fanions}, which consists of {\it Fanion-$k$}, lmo-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. By this terminology and the lemma, Muon is a Fanion-$\min\{n,m\}$, while Neon is an Fanion-1. Moreover, the centralized version of rank-$r$ Dion \citep{ahn2025dioncommunicationefficientoptimizerlarge} without the error feedback and without scaling of the update, from the perspective of lmo, is actually a Fanion-$r$.
 
-In addition, one can consider F-KF-k-norm: $\norm{\cdot}_{\mathrm{F-KF-k}}$ = $\alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}$, the dual to which will produce algorithms like F-Dion without the error feedback. The resulting family can be named {\it F-Fanions}.
+Add more about Dion, and what its difference from us. I don't understand why their algorithm works well. I don't believe that the problem is with the error feedback.
 
-\subsection{Algorithms for Matrices $\leftrightarrow$ Algorithms for Vectors}
-
+\section{Algorithms for Matrices vs Algorithms for Vectors}
 lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms with common $p$ may be analogous to each other, as is illustrated by \cref{tbl:mat_vs_vec_lmo}. The analogies go beyond similarities in the updates. SignSGD is very close to Adam, as noted in \citet{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well in training large models. NSGD is the same for both matrix and vector cases. Greedy Coordinate Descent methods are not applied to high-dimensional problems, from this perspective, it is not surprising that Neon underperforms on such problems.
 
 \begin{table*}[t]
@@ -311,8 +255,132 @@ lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms with common $p$ may be
 	\egroup
 \end{table*}
 
+\section{Conic combination of LMO-algorithms is an LMO-algorithm}
 
-\section{Matrix side of updates}\label{sec:matrix-side}
+NSGD, Muon, and SignSGD work fair enough separately. Could we boost the quality if we combined them? To answer this question, we have to build a theoretical base for that.
+
+\subsection{Duals to Convex Combination of Norm}
+First, we need a well-known fact mentioned, for example, in \citet[Table 1]{yu2012arithmetic}. For the sake of completeness, we provide a proof of the fact.
+
+\begin{lemma}\label{lemma:dual_to_conv_comb}
+	Let $\norm{\cdot}_{(1)}$ and $\norm{\cdot}_{(2)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha,\beta \geq 0$. Define
+	$$
+		\norm{x} := \alpha \norm{x}_{(1)} + \beta \norm{x}_{(2)}.
+	$$
+	Then the dual unit ball of $\norm{\cdot}$ satisfies
+	$$
+		B_{\norm{\cdot}^\dagger}
+		= \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger},
+	$$
+	where $+$ denotes the Minkowski sum and $B_{\norm{\cdot}_{(i)}^\dagger}$ is the unit ball of the dual norm $\norm{\cdot}_{(i)}^\dagger$.
+\end{lemma}
+
+\begin{proof}
+	Write $f(x) = \alpha \norm{x}_{(1)}$ and $g(x) = \beta \norm{x}_{(2)}$, so
+	$$
+		\norm{x} = f(x)+g(x).
+	$$
+	Recall two standard facts:
+	\begin{enumerate}
+		\item For any norm $\norm{\cdot}$ and $\lambda>0$,
+		      $$
+			      (\lambda \norm{\cdot})^*(y) =
+			      \sup_{x}\bigl( \langle y,x \rangle - \lambda \norm{x}\bigr)
+			      = \delta_{\lambda B_{\norm{\cdot}^\dagger}}(y),
+		      $$
+		      i.e., the indicator function of the scaled dual ball.
+		\item The Fenchel conjugate of a sum satisfies
+		      $$
+			      (f+g)^*(y) = \inf_{u+v=y} \bigl(f^*(u) + g^*(v)\bigr).
+		      $$
+	\end{enumerate}
+	Applying these to $f$ and $g$, we have
+	$$
+		f^*(u) = \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u),
+		\quad
+		g^*(v) = \delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v).
+	$$
+	Thus
+	$$
+		\norm{\cdot}^*(y)
+		= (f+g)^*(y)
+		= \inf_{u+v=y}
+		\bigl(
+		\delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u)
+		+
+		\delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v)
+		\bigr)
+		=
+		\delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}+\beta B_{\norm{\cdot}_{(2)}^\dagger}}(y).
+	$$
+	But by definition, the conjugate of a norm is exactly the indicator of its dual unit ball:
+	$$
+		\norm{\cdot}^*(y) = \delta_{B_{\norm{\cdot}^\dagger}}(y).
+	$$
+	Therefore,
+	$$
+		B_{\norm{\cdot}^\dagger} = \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}.
+	$$
+\end{proof}
+
+Consequently,
+\begin{equation}\label{eq:dual_to_conv_comb}
+	\norm{y}^\dagger
+	= \inf\bigl\{ t \ge 0 : y \in t\bigl(\alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}\bigr) \bigr\}
+	= \inf_{z,t}\bigl\{t \ge 0: z \in t \alpha B_{\norm{\cdot}_{(1)}^\dagger}, y - z \in t \beta B_{\norm{\cdot}_{(1)}^\dagger}\bigr\}
+\end{equation}
+
+Now we can work with different norms.
+
+\subsection{General case}
+We have norm \#1 with update \#1 and norm \#2 with update \#2. We prove the lemma that says that the update of their conic combination is a conic combination of updates \#1 and \#2.
+
+\subsection{Frobeniusize them: F-Muon and F-Neon}
+Let us consider a mixture of Fanions with another excellent LMO-algorithm, NSGD.
+
+We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
+
+\begin{equation}\label{eq:fstar_norm}
+	\normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
+\end{equation}
+
+where $\alpha \in [0, 1]$ defines a specific norm from the $F*$-family. $\normfstar{\cdot}^\dagger$ can be expressed as in \cref{eq:normfstardual}. However, its norm ball is a simple Minkowski sum of $\alpha \normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:fstardual}.
+
+\begin{lemma}\label{lemma:nsgd_muon_update}
+	When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+
+	\begin{equation}\label{eq:nsgd_muon_update}
+		\mX^{k+1} = \mX^{k} - \eta (\alpha U V^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
+	\end{equation}
+\end{lemma}
+
+We name the derived algorithm \emph{F-Muon}.
+
+We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
+
+\begin{equation}\label{eq:ftwo_norm}
+	\normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
+\end{equation}
+
+where $\alpha \in [0, 1]$ defines a specific norm from the F2-family.$\normftwo{\cdot}^\dagger$ can be expressed as in \cref{eq:normftwodual}. However, its norm ball is a simple Minkowski sum of $\alpha \norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:ftwodual}.
+
+\begin{lemma}\label{lemma:nsgd_neon_update}
+	When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
+
+	\begin{equation}\label{eq:nsgd_neon_update}
+		\mX^{k+1} = \mX^{k} - \eta (\alpha u_1 v_1^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
+	\end{equation}
+\end{lemma}
+
+We name the derived algorithm \emph{F-Neon}. F-Neon is a convex combination of Normalized SGD and Neon.
+
+
+In general, one can consider F-KF-k-norm: $\norm{\cdot}_{\mathrm{F-KF-k}}$ = $\alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}$, the dual to which will produce algorithms like F-Dion without the error feedback. The resulting family can be named {\it F-Fanions}.
+
+\subsection{Add SignSGD: S-Muon and S-Neon}
+Trivial formulas, but a need for more experiments.
+
+\section{Computing the updates}\label{sec:matrix-side}
 To compute the algorithms' updates, we use thick-restarted Lanczos method for singular value problem (TRLan) on $\mM^{k\top}\mM^k$ or $\mM^k \mM^{k\top}$ matrices (the one with less size is picked), implemented in CuPy lSibrary \citep{cupy_svds_ref} and described in \citet{simonz1998thick}.
 
 This method is designed for efficiently approximating the largest singular values and vectors of large matrices. Its thick-restart strategy retains the most informative Ritz vectors at each cycle, which accelerates convergence while avoiding excessive memory growth. We are specifically interested in this algorithm because it allows us to extract several largest singular values and related singular vectors of the matrix to make a Neon step. Moreover, TRLan is stable GPU-friendly algorithm because it mainly operates with matrix-vector multiplications (MVs), which are higly-parallel, and does not require full reorthogonalization against the whole Krylov basis by managing  short recurrent formulas and incorparating thick restarting.
@@ -345,7 +413,7 @@ The practical drawback of the TRLAn is the absence of its implementation in PyTo
 
 \section{Experiments}\label{sec:experiments}
 \subsection{Randomized Linear Least Squares}
-We first compare F-Fanions on the following L-smooth problem:
+First, we compare F-Fanions on the following L-smooth problem:
 
 \begin{equation}\label{eq:lls}
 	F(\mX) = \frac{1}{2} \<(\mX-\mS), \mM (\mX - \mS) \mN> \to \min_{\mX \in \Rmn}\
@@ -445,6 +513,8 @@ We suppose that the reason for the recorded by us discrepancy between Neon and M
 
 	{\bf The Ky Fan Norm and Dion.} Rank-$k$ Centralized Dion, Algorithm 1 from \citet{ahn2025dioncommunicationefficientoptimizerlarge}, without an error feedback and scaling of the update, turns out to be an lmo-based algorithm under the $\normkfk{\cdot}^\dagger$ norm, which we described in {\it Different norms imply different updates}. Reported by the authors necessity of using error feedback to obtain satisfactory accuracy may take place in the cases of our algorithms as well, for example, F-Neon. This we leave to future research.
 
+	{\bf Orthogonal research} Fanions, F-Fanions, and S-Fanions benefit from the general theoretical description of \citet{riabinin2025gluon}. They could be transformed to Drop-Fanions etc. (cite Drop-Muon article), they could be viewed as Broximal Point Methods (cite the article), they could be subject to EF (cite the EF for all). Of course, they could be clipped (cite ClipScion), and they could be analyzed when the LMO is not calculated accurately (cite Beyond the Ideal).
+
 \section{Conclusion}
 In this article, we have generalized several successful algorithms, like Muon and Dion, to the lmo-based algorithms in the $\normkfk{\cdot}^\dagger$ norm. Also we have proposed the technique of ``regularizing'' the updates with NSGD, a trick to increase the robustness of the algorithms, which is motivated by the consideration of the $\normfstar{\cdot}$, $\normftwo{\cdot}$, and general $\norm{\cdot}_{\mathrm{F-KF-k}}$ norms. Generalizations of well-known norms and subsequent combinations of them may further improve performance of lmo-based algorithms. If a theory is developed that explains the discrepancy between performance of different algorithms based on the matrix norms, one will probably be able to intentionally construct norms optimal to given architectures and probably even their parameters.
 
@@ -455,80 +525,21 @@ IO suggested using the nuclear norm in the \citet{bernstein2024oldoptimizernewno
 \bibliographystyle{icomp2024_conference}
 
 \appendix
+\section{LMO for Neural Networks}
+In a typical neural network, the objective function $F$ depends on a set of weight matrices $\{ \mW_1, \mW_2, \ldots \}$. The optimization framework we have described is applied in a layer-wise fashion. At each iteration $k$, a stochastic gradient $g(\mX^k, \xi^k)$ is computed using a mini-batch of data with the $\xi^k$ noise via backpropagation. This yields a separate gradient component, $\mG_i^k$, for each matrix $\mX_i$. The LMO-based update rule is then applied to each matrix $\mX_i$ using its corresponding gradient component $\mG_i^k$.
+
+The update rule used in Muon optimizer is uSCG \citep{pethick2025training}. In the most general case, which involves momentum, it can be written as
+\begin{equation}\label{eq:usgd_update}
+	\begin{aligned}
+		\mM^{k}     & = \alpha_{k} g(\mX^k, \xi^k) + (1 - \alpha_k)\mM^{k - 1}\,, \\
+		\mX^{k + 1} & = \mX^k + \gamma_k\mathrm{LMO}(\mM^{k})\,.
+	\end{aligned}
+\end{equation}
 
 
 \section{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
-First, we need a well-known fact mentioned, for example, in \citet[Table 1]{yu2012arithmetic}. For the sake of completeness, we provide a proof of the fact.
 
-\begin{lemma}\label{lemma:dual_to_conv_comb}
-	Let $\norm{\cdot}_{(1)}$ and $\norm{\cdot}_{(2)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha,\beta \geq 0$. Define
-	$$
-		\norm{x} := \alpha \norm{x}_{(1)} + \beta \norm{x}_{(2)}.
-	$$
-	Then the dual unit ball of $\norm{\cdot}$ satisfies
-	$$
-		B_{\norm{\cdot}^\dagger}
-		= \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger},
-	$$
-	where $+$ denotes the Minkowski sum and $B_{\norm{\cdot}_{(i)}^\dagger}$ is the unit ball of the dual norm $\norm{\cdot}_{(i)}^\dagger$.
-\end{lemma}
-
-\begin{proof}
-	Write $f(x) = \alpha \norm{x}_{(1)}$ and $g(x) = \beta \norm{x}_{(2)}$, so
-	$$
-		\norm{x} = f(x)+g(x).
-	$$
-	Recall two standard facts:
-	\begin{enumerate}
-		\item For any norm $\norm{\cdot}$ and $\lambda>0$,
-		      $$
-			      (\lambda \norm{\cdot})^*(y) =
-			      \sup_{x}\bigl( \langle y,x \rangle - \lambda \norm{x}\bigr)
-			      = \delta_{\lambda B_{\norm{\cdot}^\dagger}}(y),
-		      $$
-		      i.e., the indicator function of the scaled dual ball.
-		\item The Fenchel conjugate of a sum satisfies
-		      $$
-			      (f+g)^*(y) = \inf_{u+v=y} \bigl(f^*(u) + g^*(v)\bigr).
-		      $$
-	\end{enumerate}
-	Applying these to $f$ and $g$, we have
-	$$
-		f^*(u) = \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u),
-		\quad
-		g^*(v) = \delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v).
-	$$
-	Thus
-	$$
-		\norm{\cdot}^*(y)
-		= (f+g)^*(y)
-		= \inf_{u+v=y}
-		\bigl(
-		\delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u)
-		+
-		\delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v)
-		\bigr)
-		=
-		\delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}+\beta B_{\norm{\cdot}_{(2)}^\dagger}}(y).
-	$$
-	But by definition, the conjugate of a norm is exactly the indicator of its dual unit ball:
-	$$
-		\norm{\cdot}^*(y) = \delta_{B_{\norm{\cdot}^\dagger}}(y).
-	$$
-	Therefore,
-	$$
-		B_{\norm{\cdot}^\dagger} = \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}.
-	$$
-\end{proof}
-
-Consequently,
-\begin{equation}\label{eq:dual_to_conv_comb}
-	\norm{y}^\dagger
-	= \inf\bigl\{ t \ge 0 : y \in t\bigl(\alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}\bigr) \bigr\}
-	= \inf_{z,t}\bigl\{t \ge 0: z \in t \alpha B_{\norm{\cdot}_{(1)}^\dagger}, y - z \in t \beta B_{\norm{\cdot}_{(1)}^\dagger}\bigr\}
-\end{equation}
-
-Thus, we immediately find $\normfstar{\cdot}^\dagger$, which is related to F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we get
+Based on the lemma, we immediately find $\normfstar{\cdot}^\dagger$, which is related to F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we get
 \begin{equation}\label{eq:normfstardual}
 	\normfstar{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \norms{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
 \end{equation}
@@ -542,6 +553,7 @@ Similarly, we find $\normftwo{\cdot}^\dagger$, which is related to F-Neon update
 
 If $\alpha = 1$, then $\mZ = \mY$, and we get $\normftwo{\mY}^\dagger = \normn{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normftwo{\mY}^\dagger = \normf{\mY}$.
 
+Unfortunately, $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$ do not have a closed-form expression.
 
 \section{Visualization of different matrix norms}
 \subsection{Duals to F* and F2 norms}
@@ -597,9 +609,6 @@ In fact, those balls can be described easier if we use the results from \citet{y
 
 
 \section{Updates derivations}
-
-Proof of \cref{lemma:muon_update} follows from \cref{eq:nsgd_muon_update} with $\alpha=1$. Indeed, $\norms{\cdot}^\dagger=1\cdot\normn{\cdot} + 0 \cdot \normf{\cdot} $.
-
 Proof of \cref{lemma:nsgd_muon_update}:
 Since $\norm{\cdot}^\dagger = \normfstar{\cdot}^{\dagger\dagger} = \normfstar{\cdot}$, the goal is to reach $\normfstar{\mM^k} = \alpha \tr{\mSigma} + (1-\alpha) \normf{\mM^k}$.
 
