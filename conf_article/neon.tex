@@ -80,11 +80,11 @@ AIRI, Skoltech \\
 \DeclarePairedDelimiter{\sqne}{\|}{\|_2^2}
 %\DeclarePairedDelimiter{\norme}{\|}{\|_2}
 \DeclarePairedDelimiter{\normf}{\|}{\|_\mathrm{F}}
-\DeclarePairedDelimiter{\normkfk}{\|}{\|_\mathrm{KF-k}}
+\DeclarePairedDelimiter{\normkfk}{\|}{\|_{\text{KF-}k}}
 \DeclarePairedDelimiter{\normfstar}{\|}{\|_\mathrm{F*}}
 \DeclarePairedDelimiter{\normftwo}{\|}{\|_\mathrm{F2}}
-\DeclarePairedDelimiter{\sqns}{\|}{\|_{\mathrm{op}}^2}
-\DeclarePairedDelimiter{\norms}{\|}{\|_{\mathrm{op}}}
+\DeclarePairedDelimiter{\sqns}{\|}{\|_{\mathrm{2}}^2}
+\DeclarePairedDelimiter{\norms}{\|}{\|_{\mathrm{2}}}
 \DeclarePairedDelimiter{\sqnn}{\|}{\|_{\mathrm{nuc}}^2}
 \DeclarePairedDelimiter{\sqnf}{\|}{\|_{\mathrm{F}}^2}
 \DeclarePairedDelimiter{\normn}{\|}{\|_{\mathrm{nuc}}}
@@ -144,72 +144,81 @@ Most notably, our experiments on real-world tasks demonstrate that the choice of
 
 \section{Preliminaries: Linear Minimization Oracle Framework}
 
-Training a neural network is essentially an optimization of a function of several weight matrices. Let us start by considering the problem of minimizing a differentiable function of a {\it single} matrix:
+Training a neural network is essentially an optimization of a function of several weight matrices and a few vectors. Let us start by considering the problem of minimizing a differentiable function of a {\it single} matrix:
 \begin{equation}\label{eq:matrix_problem}
 	F(\cdot)\colon \Rmn \to \R\,,\qquad F(\mX) \to \min_{\mX \in \Rmn}\,
 \end{equation}
-We equip the matrix space $\Rmn$ with a standard dot product $\<\cdot, \cdot> \to \R$ and a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which does not have to coincide with the Frobenius norm $\normf{\cdot}$. The dual norm $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ associated with $\norm{\cdot}$ is defined as
+We equip the matrix space $\Rmn$ with a standard dot product $\<\cdot, \cdot> \to \R$ and a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which does not have to coincide with the Frobenius norm $\normf{\cdot}$. The dual norm $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ that is associated with $\norm{\cdot}$ is defined as
 \begin{equation}\label{eq:dual_norm}
 	\norm{\mG}^\dagger = \sup_{\mD \in \Rmn\,:\norm{\mD}\leq 1} \<\mG,\mD>\,.
 \end{equation}
 
 Such problems can be solved with an iterative algorithm based on the Linear Minimization Oracle (LMO):
 \begin{equation}\label{eq:lmo}
-	\mathrm{LMO}(\mG) \in \argmin_{\mD \in \cS} \<\mG, \mD>\,,
+	\mathrm{LMO}(\mM^k) \in \argmin_{\mD \in \cS} \<\mM^k, \mD>\,,
 \end{equation}
-where $\mG$ is typically a gradient (possibly with momentum) of $F$ and $\cS \subset \Rmn$ is some set. The simple update formula then can look like
+where $\mM^k$ is a gradient (or a momentum) of $F$ in $\mX^k$ and $\cS \subset \Rmn$ is some set. The update of the algorithm is defined as follows:
 \begin{equation}\label{eq:simple_update}
-	\mX^{k + 1} = \mX^k + \gamma_k\mathrm{LMO}\left(\nabla F\left(\mX^k\right)\right)\,.
+	\mX^{k + 1} = \mX^k + \gamma_k\mathrm{LMO}\left(\mM\right)\,.
 \end{equation}
 
-Here we are particularly interested in the case when $\cS$ is a ball in the $\norm{\cdot}$ norm:
-\begin{equation}\label{eq:ball}
-	\cS = \cB_\eta = \{ \mD \in \Rmn \mid \norm{\mD} \leq \eta \}\,.
-\end{equation}
-In this case it can be easily shown that
-\begin{equation} \label{eq:lmo_in_norm_ball}
-	\argmin_{\mD \in \cS} \<\mG, \mD> = - \eta \{ \mD \in \cB_1 \mid \<\mG, \mD> = \norm{\mG}^\dagger\}\,.
-\end{equation}
-And update for $\mX$ in \cref{eq:usgd_update} becomes
+We are particularly interested in the case when $\cS$ is a ball in the norm $\norm{\cdot}$:
+
+$$\cS = \cB_\eta \in \{ \mD \in \Rmn \mid \norm{\mD} \leq \eta \}.$$
+In this case,
+
+$$\argmin_{\mD \in \cS} \<\mM^k, \mD> = - \eta \{ \mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}$$
+
+and update for $\mX^k$ in \cref{eq:simple_update} simplifies to
 \begin{equation}\label{eq:our_update}
-	\mX^{k+1} = \mX^{k} - \gamma_k\eta \{\mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,.
+	\mX^{k+1} = \mX^{k} - \eta_k \{\mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,
 \end{equation}
-This formula will later allow us to easily compute updates for various norms.
 
+By this formula, it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$. For example, when the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \cref{eq:our_update} turns into
 
-In the next subsection we will derive and discuss updates induced by the choice of the norm in \cref{eq:our_update}. To describe those updates, the singular value decomposition (SVD) of $\mM^k$ is required. We denote SVD of $\mM^k$ as $\mM^k = \mU \mSigma \mV^\top$, where $\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and $\mV = [v_1, v_2, \dots, v_r]$.
-
-When $\norm{\cdot} = \norms{\cdot}$, \cref{eq:our_update} turns into:
+\begin{equation}\label{eq:nsgd_update}
+	\mX^{k+1} = \mX^{k} - \eta_k \frac{\mM^k}{\normf{\mM^k}},
+\end{equation} which recovers Normalized SGD (NSGD). When one has the spectral norm $\norms{\cdot}$, one gets
 
 \begin{equation}\label{eq:muon_update}
-	\mX^{k+1} = \mX^{k} - \eta U V^\top
-\end{equation}.
-
-And when $\norm{\cdot} = \normf{\cdot}$, \cref{eq:our_update} turns into:
-
-	\begin{equation}\label{eq:nsgd_update}
-		\mX^{k+1} = \mX^{k} - \eta \frac{\mM^k}{\normf{\mM^k}}
-	\end{equation}
+	\mX^{k+1} = \mX^{k} - \eta_k U V^\top,
+\end{equation} which is Muon without the $\sqrt{m/n}$ factor.
+Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^k$ ($\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \space \sigma_2, \dots, \sigma_r)$, and $\mV = [v_1, v_2, \dots, v_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
 
 \section{Duals to Ky Fan norms instead of the spectral norm}
-%\subsection{Non-operator Norms $\norm{\cdot}$ lead to new updates}
 
 \subsection{\texorpdfstring{$\normn{\mM^{k}}$ and Neon}{Neon}}
+After having considered $\normf{\mM^k}$ and $\norms{\mM^k}$, it is natural to look at the nuclear norm $\normn{\mM^k}$.
 \begin{lemma}\label{lemma:neon_update}
 	When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
 
 	\begin{equation}\label{eq:neon_update}
-		\mX^{k+1} = \mX^{k} - \eta u_1 v_1^\top
+		\mX^{k+1} = \mX^{k} - \eta_k u_1 v_1^\top
 	\end{equation}
 \end{lemma}
-We name the derived algorithm \emph{Neon}. In the section ~\cref{sec:matrix-side}, we will discuss how to compute the update efficiently.
+\begin{proof}
+Since $\norm{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\norms{\mM^k} = \sigma_1$.
+
+Let us note that $\Delta = u_1 v_1^\top$ delivers this value. Indeed, $\normn{\Delta}=1$ and by the trace property and orthogonality of the singular vectors, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, u_1 v_1^\top> = \tr \diag({\sigma_1, 0, \dots, 0}) = \norms{\mM^k}$, which completes the proof.
+\end{proof}
+
+We name the derived algorithm \emph{Neon}. In the~\cref{sec:matrix-side}, we will discuss how to compute the Neon's update.
 
 
 \subsection{\texorpdfstring{$\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}{Muon, Neon, and Centralized Dion without error feedback}}
 
-Now: what will we get if we try to generalize?
+Neon's and Muon's updates seem to be complete opposites: one has rank one, while the other is full-rank. It would be interesting to derive algorithms with updates of various ranks.
 
-We remind the reader that the Ky Fan k-norm (\citet{bhatia2013matrix}, p. 92), which we denote as $\normkfk{\cdot}$, is the sum of the k largest singular values of the matrix. It can be proved that $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96). Special cases of the Ky Fan k-norm are the Ky Fan 1-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
+\textbf{Schatten norms}
+\citet{cesista2025schattenp} considered Schatten-$p$ norms $\norm{\mM^k}_{S_p} = \left(\sum_{i=1}^{\min(m, n)}\sigma_i^p\right)^{1/p}$. The update was as follows: $$X^{k+1} = X^k - \eta_k \mU \frac{\diag\left(\sigma_1^{q-1},\dots, \sigma_{\min(m,n)}^{q-1}\right)}{\norm{\mM^k}^{q-1}_{S_q}}\mV^\top$$ for $q$: $\frac{1}{p} + \frac{1}{q} = 1$. This formula recovers Neon when $p\rightarrow1$ provided that $\sigma_1 > \sigma_2$, which is true on real data; NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
+
+However, Schatten norms do not fill the gap rank: indeed, when $p > 1$, the rank of the update is full, while when $p=1$ ($p \rightarrow 1$) it is one. Moreover, it is not clear how to calculate the update for $p \neq 1, 2, \infty$: it seems one has to know all $\sigma_i$ to compute the update, which makes the problem as hard as the full SVD.
+
+\textbf{Ky Fan norms}
+There is another family of matrix norms, which might help us: Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ is $\sum_{i=1}^{k}\sigma_i$, i.e. the sum of the $k$ largest singular values of the matrix. Special cases of the Ky Fan $k$-norm are the Ky Fan $1$-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
+
+\textbf{Duals to Ky Fan norms}
+While Schatten norms are closed under dualization and $\norm{\mM^k}_{S_p}^\dagger = \norm{\mM^k}_{S_q}$, for Ky Fan norms it is not generally the case: $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96). $k = 1$ and $k=\min(m, n)$ are exceptional: for $k=1$ the dual norm is $\normn{\cdot}$ with $k = \min(m, n)$ and for $k = \min(m, n)$ the dual norm is $\norms{\cdot}$ with $k=1$. For each other $k$ $\normkfk{\cdot} \neq \norm{\cdot}_{\text{KF-}k'}$ for any $k'$: $k'=\min(m, n)$ and $k'= 1$ correspond to the already discussed cases, while for other $k'$ one can change $\norm{\mM^k}_{\text{KF-}k'}$ by moving a small value between $\sigma_{k'}$ and $\sigma_{k'+1}$. During this change, $\norms{\mM^k}$ and $\normn{\mM^k}$ will remain constant, hence $\normkfk{\mM^k}$ will not change as well.
 
 \begin{lemma}\label{lemma:ky_fan_update}
 	When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \cref{eq:our_update} turns into:
@@ -335,6 +344,8 @@ Now we can work with different norms.
 \subsection{General case}
 We have norm \#1 with update \#1 and norm \#2 with update \#2. We prove the lemma that says that the update of their conic combination is a conic combination of updates \#1 and \#2.
 
+Then prove a lemma for any set of norms \#1, \dots, \#n (by induction)
+
 \subsection{Frobeniusize them: F-Muon and F-Neon}
 Let us consider a mixture of Fanions with another excellent LMO-algorithm, NSGD.
 
@@ -378,7 +389,7 @@ We name the derived algorithm \emph{F-Neon}. F-Neon is a convex combination of N
 In general, one can consider F-KF-k-norm: $\norm{\cdot}_{\mathrm{F-KF-k}}$ = $\alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}$, the dual to which will produce algorithms like F-Dion without the error feedback. The resulting family can be named {\it F-Fanions}.
 
 \subsection{Add SignSGD: S-Muon and S-Neon}
-Trivial formulas, but a need for more experiments.
+Trivial formulas, but we need more experiments.
 
 \section{Computing the updates}\label{sec:matrix-side}
 To compute the algorithms' updates, we use thick-restarted Lanczos method for singular value problem (TRLan) on $\mM^{k\top}\mM^k$ or $\mM^k \mM^{k\top}$ matrices (the one with less size is picked), implemented in CuPy lSibrary \citep{cupy_svds_ref} and described in \citet{simonz1998thick}.
@@ -615,10 +626,6 @@ In fact, those balls can be described easier if we use the results from \citet{y
 
 %Let us note that $\Delta = \alpha \mU \mV^\top + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha \mU \mV^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \mSigma + (1-\alpha) \normf{\mM^k} = \normfstar{\mM^k}$, which completes the proof.
 
-Proof of \cref{lemma:neon_update}:
-Since $\norm{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\norms{\mM^k} = \sigma_1$.
-
-Let us note that $\Delta = u_1 v_1^\top$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, u_1 v_1^\top> = \tr \diag({\sigma_1, 0, \dots, 0}) = \norms{\mM^k}$, which completes the proof.
 
 
 % we prove a general lemma instead
