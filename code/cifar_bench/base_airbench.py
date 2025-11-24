@@ -19,8 +19,8 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
 from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon, NuclearNormalizedMuon, MuonCringeMomentum
-from optimizers import SpectrallyNormalizedNeon
-from mlion import MLion
+from optimizers import SpectrallyNormalizedNeon, MuonOrNSGD, RealFanion, NeonMuon, SingleDeviceNorMuon
+from mlion import MLion, NLion
 
 #############################################
 #               Muon optimizer              #
@@ -346,7 +346,7 @@ def main(run, model):
     if run == 'warmup':
         # The only purpose of the first run is to warmup the compiled model, so we can use dummy data
         train_loader.labels = torch.randint(0, 10, size=(len(train_loader.labels),), device=train_loader.labels.device)
-    total_train_steps = ceil(12 * len(train_loader))
+    total_train_steps = ceil(8 * len(train_loader))
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
     # Create optimizers and learning rate schedulers
@@ -359,10 +359,18 @@ def main(run, model):
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True)#, fused=True)
     # random mix, 93.3%, 11.26 s on bs 2000 with lr=0.4, mom=0.65
     # optimizer2 = RandomNormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # and 92.9% for bs 200
-    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0%
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0% for bs = 2000; 51.2 +-11 for bs = 10000; 92.56% for bs=200
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # 57 +- 13% for bs = 10000, 93.58% for bs = 2000
     # optimizer2 = MuonCringeMomentum(filter_params, lr=0.24, momentum=0.6, nesterov=True) # it's not bad, but without Nesterov=true it does not work
-    optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s
-    # optimizer2 = MLion(filter_params, lr=0.4) # base Muon, 93% 11.4 s
+    # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s; 57 +- 12% for bs = 10000; 92.5% for bs=200
+    # optimizer2 = SingleDeviceNorMuon(filter_params, lr=0.24, momentum=0.6) # no speedup
+    # optimizer2 = RealFanion(filter_params, lr=0.24, momentum=0.6, k_share=0.1, nesterov=True) # often Muon, rare Neon. No improvement in the quality
+    # optimizer2 = NeonMuon(filter_params, lr=0.4, momentum=0.6, neon_share=0.5, nesterov=True) # almost on par with Muon
+    optimizer2 = NeonMuon(filter_params, lr=0.24, momentum=0.6, neon_share=0.1, nesterov=True, sgd_coeff=0) # almost on par with Muon
+    
+    # optimizer2 = MLion(filter_params, lr=0.24, weight_decay=0.1, betas=(0.9, 0.99)) # 93.84% 11.4 s
+    # optimizer2 = MLion(filter_params, lr=0.1) # 92.6%
+    # optimizer2 = NLion(filter_params, lr=0.4) # 64+-6%, this is rubbish
     
     switch_to_muon = True
     # optimizer2 = torch.optim.SGD(filter_params, momentum=0.85, nesterov=True, lr=0.001) # about 90%
@@ -375,7 +383,7 @@ def main(run, model):
     # optimizer2 = NuclearNormalizedMuon(filter_params, lr=3, momentum=0.6, sgd_coeff=1, nesterov=True) # Nuclear NSGD, 89%
 
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.3, momentum=0.65, nesterov=True, sgd_coeff=0) # 68.2%, lr is a bit high
-    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0) # 34%, lr is a bit high
+    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0) # 69%, lr is a bit high
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=5, momentum=0.65, nesterov=True, sgd_coeff=0) # 72.3%
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, k=20, momentum=0.65, nesterov=True, sgd_coeff=0) # 89.0%, very slow
 
@@ -383,15 +391,29 @@ def main(run, model):
     # optimizer2 = Neon(filter_params, neon_mode='fast', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6) # 87.9%, must be the same as upper
     # optimizer2 = Neon(filter_params, neon_mode='kyfan', k=5, lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.6) # 87.6%
 
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=1, momentum_decay=0.9, sgd_coeff=0) # 68.5%, but with 4.8% variance
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=1, momentum_decay=0.95, sgd_coeff=0) # 67.2%, but with 5% variance
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=1, momentum_decay=0.8, sgd_coeff=0) # 66.9%, but with 5% variance
+    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.45, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 87.5%
+    # optimizer2 = Neon(filter_params, neon_mode='kyfan', lr=0.6, momentum=0.65, nesterov=True, sgd_coeff=0.5) #88.5%
 
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=10, momentum_decay=0.9, sgd_coeff=0) # 84.5%, with 0.4% variance
-    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance
+    # optimizer2 = Dion(filter_params, lr=0.4, rank=1, momentum_decay=0.95, sgd_coeff=0) # 78.1%
+    # optimizer2 = Dion(filter_params, lr=0.4, rank=1, momentum_decay=0.9, sgd_coeff=0) # ~78%, higher variance
+    # optimizer2 = Dion(filter_params, lr=0.4, rank=1, momentum_decay=0.5, sgd_coeff=0) # ~78%
+    # optimizer2 = Dion(filter_params, lr=0.4, rank=1, momentum_decay=0.2, sgd_coeff=0) # 74%, very high variace
+    # optimizer2 = Dion(filter_params, lr=0.4, rank=1, momentum_decay=0.95, sgd_coeff=0.5) # 89.5%
+
+    # optimizer2 = Dion(filter_params, lr=0.24, momentum=0.65, rank=1, momentum_decay=0.95, sgd_coeff=0) # 77.2%
+    # optimizer2 = Dion(filter_params, lr=0.24, momentum=0.65, rank=2, momentum_decay=0.95, sgd_coeff=0) # 82.4%
+    #optimizer2 = Dion(filter_params, lr=0.24, momentum=0.65, rank=10, momentum_decay=0.95, sgd_coeff=0) # 89.9%
+    # optimizer2 = Dion(filter_params, lr=0.24, momentum=0.6, rank=20, momentum_decay=0.95, sgd_coeff=0) # 91.1%
+    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=1, momentum_decay=0.9, sgd_coeff=0) # 68.5%, but with 4.8% variance - wrong EF
+    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=1, momentum_decay=0.95, sgd_coeff=0) # 67.2%, but with 5% variance - wrong EF
+    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=1, momentum_decay=0.8, sgd_coeff=0) # 66.9%, but with 5% variance - wrong EF
+
+    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=10, momentum_decay=0.9, sgd_coeff=0) # 84.5%, with 0.4% variance - wrong EF
+    # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance - wrong EF
     
 
-    # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 94%, on par with Muon
+    # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 93.95%, on par with Muon for bs=2000, 50+-5% for bs=10000
+
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
     
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible
@@ -498,7 +520,7 @@ if __name__ == "__main__":
     # model.compile(mode='max-autotune')
 
     print_columns(logging_columns_list, is_head=True)
-    main('warmup', model)
+    # main('warmup', model)
     accs = torch.tensor([main(run, model) for run in range(5)]) # num of repetitions in the test
     print('Mean: %.4f    Std: %.4f' % (accs.mean(), accs.std()))
 

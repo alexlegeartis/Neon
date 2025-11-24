@@ -1,0 +1,6 @@
+algorithm_name,learning_rate,below_thresh_iter
+NeonMuon,0.01,4100
+NeonMuon,0.021147425268811283,2800
+NeonMuon,0.044721359549995794,-1
+NeonMuon,0.09457416090031759,-1
+NeonMuon,0.20000000000000004,-1

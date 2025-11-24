@@ -1,0 +1,6 @@
+algorithm_name,learning_rate,below_thresh_iter
+F-Neon,0.20000000000000004,-1
+F-Neon,0.2514866859365871,8000
+F-Neon,0.31622776601683794,7500
+F-Neon,0.39763536438352537,7200
+F-Neon,0.5,8200

@@ -5,7 +5,7 @@ import numpy as np
 
 import torch
 
-from optimizers import Muon, Neon, NormalizedMuon, RandomNormalizedMuon
+from optimizers import Muon, Neon, NormalizedMuon, RandomNormalizedMuon, NeonMuon
 from mlion import MLion, Lion
 from L_smooth_tests.optimizer_runner import MatrixProblem, run_optimizer_on_problem
 from L_smooth_tests.benchmark_plotter import build_default_panels, plot_from_descriptions, plot_and_save_default_panels, save_experiments_to_csv
@@ -105,19 +105,21 @@ def main() -> None:
     # Inverse-square-root scheduler: lr(T) = lr0 / sqrt(T)
     def inv_sqrt_lr(T: int, base_lr: float) -> float:
         return base_lr / T**(1/2)
+    def const_lr(T: int, base_lr: float) -> float:
+        return base_lr
 
     # Define experiment specifications
     colors = cm.tab20b(np.linspace(0, 1, 5))[::-1]
     experiment_specs: Dict[str, Dict[str, Any]] = {
-        "NSGD": dict(
-            optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(lr=0.1, momentum=0.6, nesterov=True, sgd_coeff=1),
-            num_iterations=iter_num_fro,
-            record_interval=100,
-            verbose=True,
-            lr_scheduler=inv_sqrt_lr,
-            color="gray"
-        ),
+        # "NSGD": dict(
+        #     optimizer_class=NormalizedMuon,
+        #     optimizer_kwargs=dict(lr=0.077, momentum=0.6, nesterov=True, sgd_coeff=1),
+        #     num_iterations=iter_num_fro,
+        #     record_interval=100,
+        #     verbose=True,
+        #     lr_scheduler=const_lr,
+        #     color="gray"
+        # ),
         #  "Random F-Muon": dict(
         #     optimizer_class=RandomNormalizedMuon,
         #     optimizer_kwargs=dict(lr=1, momentum=0.95, nesterov=True, sgd_coeff=0.5),
@@ -126,24 +128,43 @@ def main() -> None:
         #     verbose=True,
         #     lr_scheduler=inv_sqrt_lr,
         # ),
-        
-        # "Neon": dict(
-        #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=1, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5),
+        # "NeonMuon": dict(
+        #     optimizer_class=NeonMuon,
+        #     optimizer_kwargs=dict(lr=0.021, nesterov=True, momentum=0.6, iter_num=5, neon_share=0.5),
         #     num_iterations=iter_num_nuc,
         #     record_interval=100,
         #     verbose=True,
-        #     lr_scheduler=inv_sqrt_lr,
+        #     lr_scheduler=const_lr,
+        #     requires_cuda=True,
+        #     color=colors[0]
+        # ),
+        "F-NeonMuon": dict(
+            optimizer_class=NeonMuon,
+            optimizer_kwargs=dict(lr=0.05, nesterov=True, momentum=0.6, iter_num=5, neon_share=0.5, sgd_coeff=0.33),
+            num_iterations=iter_num_nuc,
+            record_interval=100,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
+            color=colors[0]
+        ),
+        # "Neon": dict(
+        #     optimizer_class=Neon,
+        #     optimizer_kwargs=dict(lr=0.1, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5),
+        #     num_iterations=iter_num_nuc,
+        #     record_interval=100,
+        #     verbose=True,
+        #     lr_scheduler=const_lr,
         #     requires_cuda=True,
         #     color=colors[0]
         # ),
         # "F-Neon": dict(
         #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=1, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5),
+        #     optimizer_kwargs=dict(lr=0.4, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5),
         #     num_iterations=iter_num_nuc,
         #     record_interval=100,
         #     verbose=True,
-        #     lr_scheduler=inv_sqrt_lr,
+        #     lr_scheduler=const_lr,
         #     requires_cuda=True,
         #     color=colors[0]
         # ),
@@ -208,40 +229,40 @@ def main() -> None:
         #     color=colors[3]
         # ),
 
-        "MLion": dict(
-            optimizer_class=MLion,
-            optimizer_kwargs=dict(lr=0.1),
-            num_iterations=iter_num_op,
-            record_interval=100,
-            verbose=True,
-            lr_scheduler=inv_sqrt_lr,
-            color=colors[3]
-        ),
-        "Lion": dict(
-            optimizer_class=Lion,
-            optimizer_kwargs=dict(lr=0.1),
-            num_iterations=iter_num_op,
-            record_interval=100,
-            verbose=True,
-            lr_scheduler=inv_sqrt_lr,
-            color=colors[3]
-        ),
+        # "MLion": dict(
+        #     optimizer_class=MLion,
+        #     optimizer_kwargs=dict(lr=0.1),
+        #     num_iterations=iter_num_op,
+        #     record_interval=100,
+        #     verbose=True,
+        #     lr_scheduler=inv_sqrt_lr,
+        #     color=colors[3]
+        # ),
+        # "Lion": dict(
+        #     optimizer_class=Lion,
+        #     optimizer_kwargs=dict(lr=0.1),
+        #     num_iterations=iter_num_op,
+        #     record_interval=100,
+        #     verbose=True,
+        #     lr_scheduler=inv_sqrt_lr,
+        #     color=colors[3]
+        # ),
         "Muon": dict(
             optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(lr=0.1, momentum=0.6, nesterov=True),
+            optimizer_kwargs=dict(lr=0.0129, momentum=0.6, nesterov=True),
             num_iterations=iter_num_op,
             record_interval=100,
             verbose=True,
-            lr_scheduler=inv_sqrt_lr,
+            lr_scheduler=const_lr,
             color=colors[4]
         ),
         "F-Muon": dict(
             optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(lr=0.1, momentum=0.6, nesterov=True, sgd_coeff=0.5),
+            optimizer_kwargs=dict(lr=0.0359, momentum=0.6, nesterov=True, sgd_coeff=0.5),
             num_iterations=iter_num_fro,
             record_interval=100,
             verbose=True,
-            lr_scheduler=inv_sqrt_lr,
+            lr_scheduler=const_lr,
             color=colors[4]
         ),
         # "SGD": dict(

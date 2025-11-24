@@ -183,7 +183,7 @@ MODEL_CONFIGS = {
         'input_size': 32 * 32 * 3,
         'hidden_sizes': [2048, 1024, 512],
         'output_size': 10,
-        'dropout': 0.1
+        'dropout': 0
     },
 }
 
@@ -316,11 +316,7 @@ def evaluate(model, loader, tta_level=0):
 
 def main(run, model):
 
-    batch_size = 2000
-    bias_lr = 0.053
-    head_lr = 0.67
-    wd = 2e-6 * batch_size
-
+    batch_size = 10
     test_loader = CifarLoader("cifar10", train=False, batch_size=2000)
     train_loader = CifarLoader("cifar10", train=True, batch_size=batch_size, aug=dict(flip=True, translate=2))
     if run == "warmup":
@@ -330,7 +326,9 @@ def main(run, model):
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
     # optimizer2 = NormalizedMuon(model.parameters(), lr=0.1, momentum=0.6, nesterov=True, sgd_coeff=0)
-    optimizer2 = Muon(model.parameters(), lr=0.1, momentum=0.6, nesterov=True)
+    opt_mode = 'custom'
+    optimizer2 = Muon(model.parameters(), lr=0.1, momentum=0, nesterov=False)
+
     
     # optimizer2 = torch.optim.Adam(model.parameters(), lr=0.0001)
     optimizers = [optimizer2]
@@ -370,11 +368,78 @@ def main(run, model):
         model.train()
         for inputs, labels in train_loader:
             outputs = model(inputs) # , whiten_bias_grad=(step < whiten_bias_train_steps))
-            F.cross_entropy(outputs, labels, label_smoothing=0.2, reduction="sum").backward()
-            for group in optimizer2.param_groups:
-                group["lr"] = group["initial_lr"] * (1 - step / total_train_steps)
-            for opt in optimizers:
-                opt.step()
+            if opt_mode == 'custom':
+                losses = F.cross_entropy(outputs, labels, label_smoothing=0.2, reduction="none")
+
+                # Prepare storage for accumulated gradients
+                param_sums = [torch.zeros_like(p) for p in model.parameters()]
+                us = [[] for p in model.parameters()]
+                vs = [[] for p in model.parameters()]
+
+                for i in range(len(losses)):
+                    # Compute gradient for single sample
+                    grads = torch.autograd.grad(
+                        losses[i],
+                        model.parameters(),
+                        retain_graph=True,   # keep graph for next sample
+                        create_graph=False,
+                        allow_unused=True
+                    )
+                    # Compute global L2 norm of this sample’s gradient
+                    # grad_norm = torch.sqrt(sum((g.norm() ** 2 for g in grads if g is not None)) + 1e-12)
+
+                    # Add normalized gradient to accumulation
+                    for idx, g in enumerate(grads):
+                        # print("New parameter group")
+                        if g is not None:
+                            if len(g.shape) >= 2:
+                                x = torch.rand(g.shape[1], device=g.device)
+                                for _ in range(100):
+                                    x = g.T @ (g @ x)
+                                    x /= torch.norm(x)
+                                v1 = x
+                                u1 = (g @ v1) / torch.norm(g @ v1)
+                                U, S, Vt = torch.linalg.svd(g, full_matrices=False)
+
+                                # Rank-1 approximation
+                                sigma1 = S[0]
+                                u1 = U[:, 0]
+                                v1 = Vt[0, :]
+                                # for u in us[idx]:
+                                #     print(u @ u1, "Derivatives")
+                                # for v in vs[idx]:
+                                #     print(v @ v1, "Activations")
+                                us[idx].append(u1)
+                                vs[idx].append(v1)
+                            param_sums[idx] += g / (g.norm() + 1e-12) / inputs.shape[0]
+
+                    # Now param_sums contains sum of normalized per-sample grads
+                for idx, p in enumerate(model.parameters()):
+                    if len(param_sums[idx].shape) >=2:
+                                print(torch.linalg.matrix_rank(param_sums[idx], rtol=1e-6))
+                                U, S, Vt = torch.linalg.svd(param_sums[idx], full_matrices=False)
+                                us_vs = [(U[:, i], Vt[i, :].T) for i in range(U.shape[1])]
+                                for u_real, v_real in us_vs[:10]:
+                                    for u in us[idx]:
+                                        print("Us:", u @ u_real)
+                                    for v in vs[idx]:
+                                        print("Vs:", v @ v_real)
+                                    print("End of the pair\n")
+                                print("End of the group\n")
+
+                            
+                    # p -= 0.1 * param_sums[idx]
+                    p.data.add_(param_sums[idx], alpha=-0.1)
+                    # print(p.grad.shape, param_sums[idx].shape)
+
+            else:
+                F.cross_entropy(outputs, labels, label_smoothing=0.2, reduction="sum").backward()
+                for group in optimizer2.param_groups:
+                    group["lr"] = group["initial_lr"] * (1 - step / total_train_steps)
+                for opt in optimizers:
+                    opt.step()
+            train_acc = (outputs.detach().argmax(1) == labels).float().mean().item()
+            print(train_acc)
             model.zero_grad(set_to_none=True)
             step += 1
             if step >= total_train_steps:

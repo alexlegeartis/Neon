@@ -27,6 +27,7 @@ def run_optimizer_on_problem(
     optimizer_kwargs: Dict[str, Any],
     problem: MatrixProblem,
     X_init: torch.Tensor,
+    loss_threshold: float = 0,
     num_iterations: int = 500,
     record_interval: int = 1,
     verbose: bool = False,
@@ -43,7 +44,7 @@ def run_optimizer_on_problem(
       - grad_spectral_norms: list[float]   (||∇f(X)||_2)
       - grad_nuclear_norms: list[float]    (||∇f(X)||_* )
     """
-    print(f"Testing {name}")
+    print(f"\nTesting {name}")
     X = X_init.clone()
 
     optimizer = optimizer_class([X], **optimizer_kwargs)
@@ -61,6 +62,7 @@ def run_optimizer_on_problem(
     start_time = time.time()
     overhead_time = 0.0  # time spent on costly gradient norm computations (excluded from timing)
     
+    iteration_reach_loss_thresh = -1
     for t in range(num_iterations):
         # Compute gradient and set it manually
         grad = problem.gradient(X)
@@ -71,7 +73,11 @@ def run_optimizer_on_problem(
                 cur_time = time.time() - start_time - overhead_time
                 iterations.append(t)
                 cumulative_time.append(cur_time)
-                losses.append(problem.objective(X).item())
+                loss = problem.objective(X).item()
+                losses.append(loss)
+                if loss < loss_threshold and iteration_reach_loss_thresh < 0:
+                    iteration_reach_loss_thresh = t
+                    print(f"Loss lower than {loss_threshold} on {t}th iteration")
                 grad_now = problem.gradient(X)
                 # Frobenius, spectral, and nuclear norms
                 _oh_start = time.time()
@@ -110,7 +116,7 @@ def run_optimizer_on_problem(
         X.grad = None
 
     print(f"Gradient norm computation overhead (excluded from timing): {overhead_time:.6f}s")
-
+    print(f"Last loss: {losses[-1]}")
     return {
         "iterations": iterations,
         "cumulative_time": cumulative_time,
@@ -119,6 +125,7 @@ def run_optimizer_on_problem(
         "grad_spectral_norms": grad_spectral_norms,
         "grad_nuclear_norms": grad_nuclear_norms,
         "final_X": X,
+        "below_thresh_iter": iteration_reach_loss_thresh,
     }
 
 
