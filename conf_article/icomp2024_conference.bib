@@ -23,6 +23,13 @@
   year = {2025}
 }
 
+@misc{pethick2025understandingdion,
+  author = {Thomas Pethick},
+  title = {Understanding Dion},
+  url = {https://pethick.dk/posts/2025-08-18-understanding-dion/},
+  year = {2025}
+}
+
 % muon performance
 @article{liu2025muon,
   title={Muon is scalable for llm training},
@@ -75,10 +82,9 @@
       url={https://arxiv.org/abs/2502.17410}, 
 }
 
-% distributed muon
-@misc{ahn2025dioncommunicationefficientoptimizerlarge,
-      title={Dion: A Communication-Efficient Optimizer for Large Models}, 
-      author={Kwangjun Ahn and Byron Xu},
+@misc{ahn2025dion,
+      title={Dion: Distributed Orthonormalized Updates}, 
+      author={Kwangjun Ahn and Byron Xu and Natalie Abreu and Ying Fan and Gagik Magakyan and Pratyusha Sharma and Zheng Zhan and John Langford},
       year={2025},
       eprint={2504.05295},
       archivePrefix={arXiv},
@@ -116,8 +122,7 @@ url={https://openreview.net/forum?id=c6zI3Cp8c6}
 }
 
 % also nuclear norm, but for SAM, power iterations
-@article{
-pethick2025sam,
+@article{pethick2025sam,
 title={{\ensuremath{\nu}SAM}: Memory-Efficient Sharpness-Aware Minimization via Nuclear Norm Constraints},
 author={Thomas Pethick and Parameswaran Raman and Lenon Minorics and Mingyi Hong and Shoham Sabach and Volkan Cevher},
 journal={Transactions on Machine Learning Research},
@@ -133,6 +138,17 @@ note={}
   author={Pethick, Thomas and Xie, Wanyun and Antonakopoulos, Kimon and Zhu, Zhenyu and Silveti-Falls, Antonio and Cevher, Volkan},
   journal={arXiv preprint arXiv:2502.07529},
   year={2025}
+}
+
+% non-euclidean norm clipping analysis
+@misc{pethick2025generalizedgradientnormclipping,
+      title={Generalized Gradient Norm Clipping \& Non-Euclidean $(L_0,L_1)$-Smoothness}, 
+      author={Thomas Pethick and Wanyun Xie and Mete Erdogan and Kimon Antonakopoulos and Tony Silveti-Falls and Volkan Cevher},
+      year={2025},
+      eprint={2506.01913},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2506.01913}, 
 }
 
 % trust-region and Muon, L-smooth bounds
@@ -158,13 +174,6 @@ note={}
   year={2017}
 }
 
-% Non-Euclidean setup, Clip-Scion
-@article{pethick2025generalized,
-  title={Generalized Gradient Norm Clipping \& Non-Euclidean $(L\_0, L\_1) $-Smoothness},
-  author={Pethick, Thomas and Xie, Wanyun and Erdogan, Mete and Antonakopoulos, Kimon and Silveti-Falls, Tony and Cevher, Volkan},
-  journal={arXiv preprint arXiv:2506.01913},
-  year={2025}
-}
 
 % replacement for Newton-Schulz
 @article{amsel2025polar,
@@ -326,6 +335,7 @@ note={}
   journal={International Conference on Machine Learning},
   year={2019}
 }
+%-----------------------------------------------------
 
 @misc{cesista2025schattenp,
   author = {Franz Louis Cesista},
@@ -335,5 +345,67 @@ note={}
   day = {7},
   url = {https://leloykun.github.io/ponder/steepest-descent-schatten-p/},
 }
+
+% update not all layers
+@misc{gruntkowska2025dropmuon,
+      title={Drop-Muon: Update Less, Converge Faster}, 
+      author={Kaja Gruntkowska and Yassine Maziane and Zheng Qu and Peter Richtárik},
+      year={2025},
+      eprint={2510.02239},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2510.02239}, 
+}
+
+% inexact lmo analysis
+@misc{shulgin2025inexactmuon,
+      title={Beyond the Ideal: Analyzing the Inexact Muon Update}, 
+      author={Egor Shulgin and Sultan AlRashed and Francesco Orabona and Peter Richtárik},
+      year={2025},
+      eprint={2510.19933},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2510.19933}, 
+}
+
+% x_k+1 = argmin f(z) for z in B(x_k, t_k)
+@misc{gruntkowska2025noneuclideanbroximal,
+      title={Non-Euclidean Broximal Point Method: A Blueprint for Geometry-Aware Optimization}, 
+      author={Kaja Gruntkowska and Peter Richtárik},
+      year={2025},
+      eprint={2510.00823},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/2510.00823}, 
+}
+
+% works for all LMO
+@misc{gruntkowska2025efmuon,
+      title={Error Feedback for Muon and Friends}, 
+      author={Kaja Gruntkowska and Alexander Gaponov and Zhirayr Tovmasyan and Peter Richtárik},
+      year={2025},
+      eprint={2510.00643},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2510.00643}, 
+}
+
+% dp sign
+@InProceedings{jang2024dplogsign,
+  title = 	 {Rethinking {DP}-{SGD} in Discrete Domain: Exploring Logistic Distribution in the Realm of sign{SGD}},
+  author =       {Jang, Jonggyu and Hwang, Seongjin and Yang, Hyun Jong},
+  booktitle = 	 {Proceedings of the 41st International Conference on Machine Learning},
+  pages = 	 {21241--21265},
+  year = 	 {2024},
+  editor = 	 {Salakhutdinov, Ruslan and Kolter, Zico and Heller, Katherine and Weller, Adrian and Oliver, Nuria and Scarlett, Jonathan and Berkenkamp, Felix},
+  volume = 	 {235},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {21--27 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v235/main/assets/jang24a/jang24a.pdf},
+  url = 	 {https://proceedings.mlr.press/v235/jang24a.html},
+  abstract = 	 {Deep neural networks (DNNs) have a risk of remembering sensitive data from their training datasets, inadvertently leading to substantial information leakage through privacy attacks like membership inference attacks. DP-SGD is a simple but effective defense method, incorporating Gaussian noise into gradient updates to safeguard sensitive information. With the prevalence of large neural networks, DP-signSGD, a variant of DP-SGD, has emerged, aiming to curtail memory usage while maintaining security. However, it is noteworthy that most DP-signSGD algorithms default to Gaussian noise, suitable only for DP-SGD, without scant discussion of its appropriateness for signSGD. Our study delves into an intriguing question: <b>"Can we find a more efficient substitute for Gaussian noise to secure privacy in DP-signSGD?"</b> We propose an answer with a Logistic mechanism, which conforms to signSGD principles and is interestingly evolved from an exponential mechanism. In this paper, we provide both theoretical and experimental evidence showing that our method surpasses DP-signSGD.}
+}
+
 
 @Comment{jabref-meta: databaseType:bibtex;}

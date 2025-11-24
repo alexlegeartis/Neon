@@ -124,7 +124,7 @@ Minimizing loss functions in unprecedentedly high-dimensional spaces has recentl
 That is what can be said from a practical point of view. From a theoretical perspective, a key innovation of Muon was its principled derivation of the update rule, which emerges as the solution to an optimization problem constrained by the RMS-to-RMS norm (scaled version of spectral norm) \citep{bernstein2025deriving}
 
 
-Motivated by the success of Muon, many generalizations and variations of it were proposed. Among the notable ones are Scion \citep{pethick2025training}, Dion \citep{ahn2025dioncommunicationefficientoptimizerlarge} and Gluon \citep{riabinin2025gluon}. Those researches target Muon's efficiency and establish convergence bounds. One central question, however, remains unanswered:
+Motivated by the success of Muon, many generalizations and variations of it were proposed. Among the notable ones are Scion \citep{pethick2025training}, Dion \citep{ahn2025dion} and Gluon \citep{riabinin2025gluon}. Those researches target Muon's efficiency and establish convergence bounds. One central question, however, remains unanswered:
 
 \textit{In deriving Muon's update step, why constrain by the spectral norm? How would alternative norms affect performance and computational cost?}
 
@@ -209,16 +209,24 @@ We name the derived algorithm \emph{Neon}. In the~\cref{sec:matrix-side}, we wil
 
 Neon's and Muon's updates seem to be complete opposites: one has rank one, while the other is full-rank. It would be interesting to derive algorithms with updates of various ranks.
 
-\textbf{Schatten norms}
-\citet{cesista2025schattenp} considered Schatten-$p$ norms $\norm{\mM^k}_{S_p} = \left(\sum_{i=1}^{\min(m, n)}\sigma_i^p\right)^{1/p}$. The update was as follows: $$X^{k+1} = X^k - \eta_k \mU \frac{\diag\left(\sigma_1^{q-1},\dots, \sigma_{\min(m,n)}^{q-1}\right)}{\norm{\mM^k}^{q-1}_{S_q}}\mV^\top$$ for $q$: $\frac{1}{p} + \frac{1}{q} = 1$. This formula recovers Neon when $p\rightarrow1$ provided that $\sigma_1 > \sigma_2$, which is true on real data; NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
+\textbf{Schatten norms.}
+\citet{cesista2025schattenp} considered Schatten-$p$ norms $\norm{\mM^k}_{S_p} = \left(\sum_{i=1}^{\min(m, n)}\sigma_i^p\right)^{1/p}$, which produce the update:
+$$X^{k+1} = X^k - \eta_k \mU \frac{\diag\left(\sigma_1^{q-1},\dots, \sigma_{\min(m,n)}^{q-1}\right)}{\left(\sum_{i=1}^{\min(m,n)}{\sigma_i^q}\right)^{\frac{q-1}{q}}}\mV^\top$$
+for $q$: $\frac{1}{p} + \frac{1}{q} = 1$. This formula recovers Neon when $p\rightarrow1$ provided that $\sigma_1 > \sigma_2$, which is true on real data; NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
 
 However, Schatten norms do not fill the gap rank: indeed, when $p > 1$, the rank of the update is full, while when $p=1$ ($p \rightarrow 1$) it is one. Moreover, it is not clear how to calculate the update for $p \neq 1, 2, \infty$: it seems one has to know all $\sigma_i$ to compute the update, which makes the problem as hard as the full SVD.
 
-\textbf{Ky Fan norms}
+\textbf{Ky Fan norms.}
 There is another family of matrix norms, which might help us: Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ is $\sum_{i=1}^{k}\sigma_i$, i.e. the sum of the $k$ largest singular values of the matrix. Special cases of the Ky Fan $k$-norm are the Ky Fan $1$-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
 
-\textbf{Duals to Ky Fan norms}
-While Schatten norms are closed under dualization and $\norm{\mM^k}_{S_p}^\dagger = \norm{\mM^k}_{S_q}$, for Ky Fan norms it is not generally the case: $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96). $k = 1$ and $k=\min(m, n)$ are exceptional: for $k=1$ the dual norm is $\normn{\cdot}$ with $k = \min(m, n)$ and for $k = \min(m, n)$ the dual norm is $\norms{\cdot}$ with $k=1$. For each other $k$ $\normkfk{\cdot} \neq \norm{\cdot}_{\text{KF-}k'}$ for any $k'$: $k'=\min(m, n)$ and $k'= 1$ correspond to the already discussed cases, while for other $k'$ one can change $\norm{\mM^k}_{\text{KF-}k'}$ by moving a small value between $\sigma_{k'}$ and $\sigma_{k'+1}$. During this change, $\norms{\mM^k}$ and $\normn{\mM^k}$ will remain constant, hence $\normkfk{\mM^k}$ will not change as well.
+Let us derive the update for an arbitrary $k$. Since $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96), the goal is to reach $\max\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i, \sigma_1\}$. $\Delta = u_1 v_1^\top$ from Neon delivers $\sigma_1$, while $\Delta = \frac{1}{k}\sum_{i=1}^{\min(m,n)}u_i v_i^\top$ from Muon (with an extra factor of $1/k$) delivers $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
+$$\mX^{t+1} = \mX^{t} - \eta_t u_1 v_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\eta_t}{k}\mU \mV^\top,$$
+depending on which one better minimizes the function $F(\mX^t) + \mM^t(\mX^{t+1} - \mX^t)$.
+
+The rank gap is not closed by the Ky Fan norms because the obtained update is either one-rank or full-rank.
+
+\textbf{Duals to Ky Fan norms.}
+While Schatten norms are closed under dualization and $\norm{\mM^k}_{S_p}^\dagger = \norm{\mM^k}_{S_q}$, for Ky Fan norms it is not generally the case. $k = 1$ and $k=\min(m, n)$ are exceptional: for $k=1$ the dual norm is $\normn{\cdot}$ with $k = \min(m, n)$ and for $k = \min(m, n)$ the dual norm is $\norms{\cdot}$ with $k=1$. For each other $k$, $\normkfk{\cdot} \neq \norm{\cdot}_{\text{KF-}k'}$ for any $k'$: $k'=\min(m, n)$ and $k'= 1$ correspond to the already discussed cases, while for other $k'$ one can change $\norm{\mM^k}_{\text{KF-}k'}$ by moving a small value between $\sigma_{k'}$ and $\sigma_{k'+1}$. During this change, $\norms{\mM^k}$ and $\normn{\mM^k}$ will remain constant, hence $\normkfk{\mM^k}$ will not change as well.
 
 \begin{lemma}\label{lemma:ky_fan_update}
 	When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \cref{eq:our_update} turns into:
@@ -227,42 +235,14 @@ While Schatten norms are closed under dualization and $\norm{\mM^k}_{S_p}^\dagge
 		\mX^{t+1} = \mX^{t} - \eta \sum_{i=1}^{k}u_i v_i^\top
 	\end{equation}
 \end{lemma}
-In the section ~\cref{sec:matrix-side}, we will discuss how to compute the updates efficiently.
 
-We introduce the family of {\it Fanions}, which consists of {\it Fanion-$k$}, lmo-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. By this terminology and the lemma, Muon is a Fanion-$\min\{n,m\}$, while Neon is an Fanion-1. Moreover, the centralized version of rank-$r$ Dion \citep{ahn2025dioncommunicationefficientoptimizerlarge} without the error feedback and without scaling of the update, from the perspective of lmo, is actually a Fanion-$r$.
+\begin{proof}
+Since $\norm{\cdot}^\dagger = \normkfk{\cdot}^{\dagger\dagger} = \normkfk{\cdot}$, the goal to reach $\normkfk{\mM^t}$.
 
-Add more about Dion, and what its difference from us. I don't understand why their algorithm works well. I don't believe that the problem is with the error feedback.
+Let us note that $\Delta = \sum_{i=1}^{k} u_i v_i^\top$ delivers the value. Indeed, $\<\mM^t, \Delta> =\<\mU \mSigma \mV^\top, \sum_{i=1}^{k} u_i v_i^\top> = \sum_{i,j=1}^{r, k}\<u_i \sigma_i v_i^\top, u_j v_j^\top> = \sum_{i=1}^{k}\sigma_i = \normkfk{\mM^t}$, which completes the proof.
+\end{proof}
+These updates constitute a family {\it Fanions}, LMO-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. The algorithm for a particular $k$ we will call {\it Fanion-$k$}. Thus, Muon is a Fanion-$\min\{m,n\}$, while Neon is a Fanion-1. Moreover, the unsharded version of the rank-$r$ Dion (Algorithm 1 from \citet{ahn2025dion}) without the error feedback and without scaling of the update is actually a Fanion-$r$ (see \citet{pethick2025understandingdion}, where Dion is written down in a notation more similar to ours).
 
-\section{Algorithms for Matrices vs Algorithms for Vectors}
-lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms with common $p$ may be analogous to each other, as is illustrated by \cref{tbl:mat_vs_vec_lmo}. The analogies go beyond similarities in the updates. SignSGD is very close to Adam, as noted in \citet{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well in training large models. NSGD is the same for both matrix and vector cases. Greedy Coordinate Descent methods are not applied to high-dimensional problems, from this perspective, it is not surprising that Neon underperforms on such problems.
-
-\begin{table*}[t]
-	\caption{lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms. $g$ is the gradient. When it is a matrix, $g = \mU \mSigma \mV^\top$}
-	\label{tbl:mat_vs_vec_lmo}
-	\bgroup
-	\def\arraystretch{1.2}
-	\resizebox{\textwidth}{!}{
-		\begin{tabular}{|l|c|c|c|}
-			\hline
-			Method                             & lmo constraint set $\mathcal D$ & lmo                                                         & Reference                            \\
-			\hline
-			\hline
-			Normalized SGD                     & $l_2$-ball, $S_2$-ball          & $-\eta \tfrac{g}{\norm{g}_2} = -\eta \tfrac{g}{\norm{g}_F}$ & \citep{hazan2015beyond}              \\
-			Momentum Normalized SGD            & Ball in $l_2$, or Ball in $S_2$ & $-\eta \tfrac{g}{\norm{g}_2} = -\eta\tfrac{g}{\norm{g}_F}$  & \citep{cutkosky2020momentum}         \\
-			\hline
-			SignSGD                            & Ball in Max-norm $l_\infty$     & $-\eta \sign(g)$                                            & \citep[Thm. 1]{bernstein2018signsgd} \\
-			Signum                             & Ball in Max-norm $l_\infty$     & $-\eta \sign(g)$                                            & \citep[Thm. 3]{bernstein2018signsgd} \\
-			\hdashline
-			Muon                               & Ball in Spectral $S_\infty$     & $-\eta UV^\top$                                             & \citep{jordan2024muon}               \\
-			\hline
-			Gauss-Southwell Coordinate Descent & Ball in $l_1$                   & $-\eta \sum_{i \in \argmax|g_i^t|} \sign(g_i^t)e_i$                       & \citep[p. 19]{shi2016primer}         \\
-			\hdashline
-			Neon                               & Ball in Nuclear $S_1$           & $-\eta u_1 v_1^\top$                                        & This work                            \\
-			\hline
-		\end{tabular}
-	}
-	\egroup
-\end{table*}
 
 \section{Conic combination of LMO-algorithms is an LMO-algorithm}
 
@@ -509,7 +489,40 @@ We test F-Muon on NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.
 
 Again, as on the CIFAR airbench, if we set $\alpha=-0.1$, F* to which is not a norm, we get a 3.2818 loss, which is not higher than for $\alpha=0.3$, for example.
 
-\section{Related Work}
+\section{Algorithms for Vectors $\rightarrow$ Algorithms for Matrices}
+
+One cannot but notice the similarity between the updates LMO optimizers in the vector $l_p$ and the matrix Schatten $S_p$ norms, which is illustrated by \cref{tbl:mat_vs_vec_lmo}. However, the parallels are not limited to this similarity and can be traced even in the empirical observations. SignSGD is very close to Adam, as noted in \citet{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well in training large models. NSGD is the same for both matrix and vector cases. Greedy Coordinate Descent is not applied to high-dimensional problems, so from this perspective it is not surprising that one-rank Neon underperforms on such problems.
+
+
+\begin{table*}[t]
+	\caption{lmo optimizers in Schatten $S_p$ norms and in $l_p$ norms. $g$ is the gradient. When it is a matrix, $g = \mU \mSigma \mV^\top$}
+	\label{tbl:mat_vs_vec_lmo}
+	\bgroup
+	\def\arraystretch{1.2}
+	\resizebox{\textwidth}{!}{
+		\begin{tabular}{|l|c|c|c|}
+			\hline
+			Method                             & lmo constraint set $\mathcal D$ & lmo                                                         & Reference                            \\
+			\hline
+			\hline
+			Normalized SGD                     & $l_2$-ball, $S_2$-ball          & $-\eta \tfrac{g}{\norm{g}_2} = -\eta \tfrac{g}{\norm{g}_F}$ & \citep{hazan2015beyond}              \\
+			Momentum Normalized SGD            & Ball in $l_2$, or Ball in $S_2$ & $-\eta \tfrac{g}{\norm{g}_2} = -\eta\tfrac{g}{\norm{g}_F}$  & \citep{cutkosky2020momentum}         \\
+			\hline
+			SignSGD                            & Ball in Max-norm $l_\infty$     & $-\eta \sign(g)$                                            & \citep[Thm. 1]{bernstein2018signsgd} \\
+			Signum                             & Ball in Max-norm $l_\infty$     & $-\eta \sign(g)$                                            & \citep[Thm. 3]{bernstein2018signsgd} \\
+			\hdashline
+			Muon                               & Ball in Spectral $S_\infty$     & $-\eta UV^\top$                                             & \citep{jordan2024muon}               \\
+			\hline
+			Gauss-Southwell Coordinate Descent & Ball in $l_1$                   & $-\eta \sum_{i \in \argmax|g_i^t|} \sign(g_i^t)e_i$                       & \citep[p. 19]{shi2016primer}         \\
+			\hdashline
+			Neon                               & Ball in Nuclear $S_1$           & $-\eta u_1 v_1^\top$                                        & This work                            \\
+			\hline
+		\end{tabular}
+	}
+	\egroup
+\end{table*}
+
+\section{Related Work and Discussion}
 As Muon \citep{jordan2024muon} is a very successful and popular optimizer for functions of weight matrices, a lot of reseach has been put into, first, further improving its performance, and, second, in explaining its success.
 
 	{\bf Improvements of Muon.} Regarding the first point, in less than a year, a large number of applications and improvements of Muon has been proposed. \citet{liu2025muon} adapted the algorthm for training language models larger than NanoGPT. \citet{shah2025practical} organized efficient hyperparameter transfer by combining Muon with maximal update parametrization. To construct their COSMOS optimizer, \citet{chen2025cosmoshybridadaptive} applied computationally intensive updates of SOAP optimizer to a low-dimensional "leading eigensubspace" while using memory-efficient methods like Muon for the remaining parameters. \citet{amsel2025polar} proposed a more efficient alternative to Newton-Schulz operations. \citet{si2025adamuon} introduced AdaMuon which combines element-wise adaptivity with orthogonal updates. We suppose that the described above or similar techniques can be applied to our optimizers as well. For example, F-Muon also benefits from faster alternatives to Newton-Schulz iterations, and Neon may be a great substitute to Muon in COSMOS, because, as we have shown in {\it the Matrix side of the updates}, Lanczos algorithms is much faster than Newton-Schulz iterations on large matrices.
@@ -520,14 +533,17 @@ Similar drawback has a recent article \citet{riabinin2025gluon}, where L-smoothn
 
 We suppose that the reason for the recorded by us discrepancy between Neon and Muon performance, both of which are described by Scion or Gluon frameworks, lies in the structure of the norm ball, which must be an object of further research.
 
-	{\bf The nuclear norm in lmo.} As we found out only when writing this article, the nuclear norm has been already explored in the context of the linear minimization oracle. \citet{pethick2025sam} applied it to create $\nu$SAM, a new sharpness-aware minimization technique. The update from their Lemma 3.1 coincides with the update of Neon, but is used for completely different purposes. In addition, \citet{pethick2025sam} use power iterations to find $u_1$ and $v_1^\top$, while we suggest utilizing much more efficient and precise Lanczos algorithm.
+	{\bf The LMO and Error Feedback.} We already mentioned that rank-$k$ unsharded Dion without error feedback and scaling of the update is Fanion-$k$. Since error feedback for Dion is very important as discovered by the ablation study in \citet{ahn2025dion}, F-Fanions and S-Fanions will benefit from it as well. In the context of federated learning, error feedback is effective even for compressed Muon \citep{gruntkowska2025efmuon}. The advantage of Fanions and S-Fanions is that less bits are required to transmit the updates: $\sum_{i=1}^k u_i v_i^\top$ is easily transmitted as $\{u_1, v_1, \dots, u_k, v_k\}$ ($(m+n)\times k$ floats), while the sign part is as usual coded in $m \times n$ bits. Thus, the compression is "built-in". Moreover, there is an intriguing possibility to construct differentially private Fanions and S-Fanions with the specific more optimal non-Gaussian noise, as was done with DP-signSGD \citep{jang2024dplogsign}. This we leave for future research.
 
-	{\bf The Ky Fan Norm and Dion.} Rank-$k$ Centralized Dion, Algorithm 1 from \citet{ahn2025dioncommunicationefficientoptimizerlarge}, without an error feedback and scaling of the update, turns out to be an lmo-based algorithm under the $\normkfk{\cdot}^\dagger$ norm, which we described in {\it Different norms imply different updates}. Reported by the authors necessity of using error feedback to obtain satisfactory accuracy may take place in the cases of our algorithms as well, for example, F-Neon. This we leave to future research.
+	{\bf The nuclear norm in the LMO.} As we found out only when transforming our results into an article, the nuclear norm has already been explored in the context of the linear minimization oracle. \citet{pethick2025sam} applied it to create $\nu$SAM, a new sharpness-aware minimization technique. It would be interesting to substitute $\normn{\cdot}$ with $\normkfk{\cdot}^\dagger$ in their approach: $k > 1$ might increase accuracy boost, while preserving a small memory footprint and a small time overhead, if Dion-style power iterations are used.
 
-	{\bf Orthogonal research} Fanions, F-Fanions, and S-Fanions benefit from the general theoretical description of \citet{riabinin2025gluon}. They could be transformed to Drop-Fanions etc. (cite Drop-Muon article), they could be viewed as Broximal Point Methods (cite the article), they could be subject to EF (cite the EF for all). Of course, they could be clipped (cite ClipScion), and they could be analyzed when the LMO is not calculated accurately (cite Beyond the Ideal).
+	
+	{\bf Orthogonal research} Fanions, F-Fanions, and S-Fanions benefit from the general theoretical description of \citet{riabinin2025gluon}. They could be transformed to Drop-Fanions by updating only some layers as in \citet{gruntkowska2025dropmuon}. They could be viewed as approximations of the Non-Euclidean Broximal Point Method for the corresponding norms \citep{gruntkowska2025noneuclideanbroximal}. One can clip them to produce ClippedScion-like algorithms \citep{pethick2025generalizedgradientnormclipping}. Finally, the results from \citet{shulgin2025inexactmuon} can be used to theoretically derive faster yet working approximate schemes to calculate the LMO; power iterations with a very limited number of iterations is a good thing to start with.
 
 \section{Conclusion}
 In this article, we have generalized several successful algorithms, like Muon and Dion, to the lmo-based algorithms in the $\normkfk{\cdot}^\dagger$ norm. Also we have proposed the technique of ``regularizing'' the updates with NSGD, a trick to increase the robustness of the algorithms, which is motivated by the consideration of the $\normfstar{\cdot}$, $\normftwo{\cdot}$, and general $\norm{\cdot}_{\mathrm{F-KF-k}}$ norms. Generalizations of well-known norms and subsequent combinations of them may further improve performance of lmo-based algorithms. If a theory is developed that explains the discrepancy between performance of different algorithms based on the matrix norms, one will probably be able to intentionally construct norms optimal to given architectures and probably even their parameters.
+
+We suggest that future works that deal with the non-Euclidean LMO explain in corollaries to their convergence theorems the empirical superiority of Muon to other Fanions. Without that, it is hard to believe that the bounds are relevant for practitioners.
 
 \section{Author Contributions}
 IO suggested using the nuclear norm in the \citet{bernstein2024oldoptimizernewnorm} framework. DM supervised the project and helped with editing the article. IK, NK, and AV participated mainly on the first stage of research, when it has been a project in the optimization course at MIPT. IK suggested using composite norms (though not F2 and F*) and KKT conditions to find the resulting updates. NK suggested Lanczos algorithm as the fastest tool to compute Neon's updates and conducted experiments to prove it. AV tested Neon on the finetuning of NanoGPT. All other work was done by AK.
@@ -619,7 +635,7 @@ In fact, those balls can be described easier if we use the results from \citet{y
 \end{figure}
 
 
-\section{Updates derivations}
+%\section{Updates derivations}
 % we prove a general lemma instead
 %Proof of \cref{lemma:nsgd_muon_update}:
 %Since $\norm{\cdot}^\dagger = \normfstar{\cdot}^{\dagger\dagger} = \normfstar{\cdot}$, the goal is to reach $\normfstar{\mM^k} = \alpha \tr{\mSigma} + (1-\alpha) \normf{\mM^k}$.
@@ -635,10 +651,6 @@ In fact, those balls can be described easier if we use the results from \citet{y
 % Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha u_1 v_1^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \diag({\sigma_1, 0, \dots, 0}) + (1-\alpha) \normf{\mM^k} = \normftwo{\mM^k}$, which completes the proof.
 
 
-Proof of \cref{lemma:ky_fan_update}:
-Since $\norm{\cdot}^\dagger = \normkfk{\cdot}^{\dagger\dagger} = \normkfk{\cdot}$, the goal to reach $\normkfk{\mM^t}$.
-
-Let us note that $\Delta = \sum_{i=1}^{k} u_i v_i^\top$ delivers the value. Indeed, $\<\mM^t, \Delta> =\<\mU \mSigma \mV^\top, \sum_{i=1}^{k} u_i v_i^\top> = \sum_{i,j=1}^{r, k}\<u_i \sigma_i v_i^\top, u_j v_j^\top> = \sum_{i=1}^{k}\sigma_i = \normkfk{\mM^t}$, which completes the proof.
 
 \section{More plots for Linear Least Squares}
 \label{sec:lls_plots_section}
