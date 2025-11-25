@@ -372,49 +372,80 @@ In general, one can consider F-KF-k-norm: $\norm{\cdot}_{\mathrm{F-KF-k}}$ = $\a
 Trivial formulas, but we need more experiments.
 
 \section{Computing the Updates}\label{sec:matrix-side}
-To compute the algorithms' updates, we use thick-restarted Lanczos method for singular value problem (TRLan) on $\mM^{k\top}\mM^k$ or $\mM^k \mM^{k\top}$ matrices (the one with less size is picked), implemented in CuPy lSibrary \citep{cupy_svds_ref} and described in \citet{simonz1998thick}.
+We employ the thick-restarted Lanczos method for the symmetric eigenvalue problem (thick-restart Lanczos, TRLan) to compute the low-rank updates of Fanions. We apply TRLan to either $\mM^{k\top}\mM^k$ or $\mM^k \mM^{k\top}$ (whichever matrix is smaller). We use the CuPy implementation of \texttt{cupy.sparse.linalg.svds} \citep{cupy_svds_ref} which internally relies on TRLan \citep{simonz1998thick}. 
 
-This method is designed for efficiently approximating the largest singular values and vectors of large matrices. Its thick-restart strategy retains the most informative Ritz vectors at each cycle, which accelerates convergence while avoiding excessive memory growth. We are specifically interested in this algorithm because it allows us to extract several largest singular values and related singular vectors of the matrix to make a Neon step. Moreover, TRLan is stable GPU-friendly algorithm because it mainly operates with matrix-vector multiplications (MVs), which are higly-parallel, and does not require full reorthogonalization against the whole Krylov basis by managing  short recurrent formulas and incorparating thick restarting.
+TRLan is specifically designed for efficiently approximating the largest singular values and corresponding singular vectors of very large matrices. The thick-restart strategy retains the most informative Ritz vectors across restarts, which dramatically accelerates convergence while keeping memory consumption moderate. TRLan is particularly attractive in our GPU setting because its dominant cost is a modest number of highly parallelizable matrix-vector multiplications (matvecs) and it avoids full reorthogonalization against the entire Krylov basis by using short recurrence relations combined with thick restarting.
 
-Per-cycle complexity is $O(mn^2 + n^2k + nk^2)$, where m and n are dimensions of the target matrix and n is the smaller one, k is retained subspace's size.
+The per-restart complexity is $\mathcal{O}(mn^2 + n^2k + nk^2)$, where $m \geq n$ are the dimensions of the target matrix and $k$ is the size of the retained subspace (typically $k \ll n$).
 
-In \cref{tbl:matrix_methods}, we compare performance of TRLan, RSVD, and power iterations on calculating k-rank update, which is used in k-Fanion. The results highlight that TrLan is much faster that its competitors.
+In Table~\ref{tbl:matrix_methods}, we compare TRLan against randomized SVD (RSVD) and simple power iterations when computing the rank-$k$ update used in Fanion-$k$ and related algorithms. Experiments are performed on dense random matrices with i.i.d. $\mathcal{N}(0,1)$ entries and use CPU implementations for fair comparison. 
+We report:
+\begin{itemize}
+  \item $err_1$: relative error in the Frobenius norm of $\sum_i^k u_i v_i^T$,
+  \item $err_2$: relative error in the Frobenius norm of $\sum_i^k \sigma_i u_i v_i^T$.\end{itemize} 
 
-During the research it was noted that RSVD can give good and fast approximation for singular values, but the matrix of approximation is far from the one given by truncated SVD, while TRLan gives good and fast approximation of a matrix, but not so good approximation for singular values. That means that TRLan may be not a perfect choice for algorithms like Dion, where $\sigma_i$ are required for error feedback.
+On $500\times500$ matrices, TRLan and RSVD require comparable wall-clock time, but TRLan delivers orders-of-magnitude lower error and far fewer matvecs. On larger $5000\times5000$ matrices the advantage becomes even more pronounced: TRLan is 3-4 times faster than RSVD while using $\sim$30 times fewer matvecs at comparable or better accuracy.
 
-The practical drawback of the TRLAn is the absence of its implementation in PyTorch.
-\begin{table}[h!]
+An interesting empirical observation is that RSVD tends to approximate the \emph{singular values} themselves reasonably well but the reconstructed low-rank matrix noticeably deviates from the truncated SVD, whereas TRLan provides an excellent approximation to the truncated SVD matrix itself (low $err_2$) at the cost of occasionally less accurate individual singular values. This makes TRLan the preferred choice for algorithms like Neon/Fanion-$k$ that only need the low-rank term $\sum \sigma_i u_i v_i^\top$, but less ideal for methods (e.g., Dion) that explicitly require accurate $\sigma_i$ for error feedback or step-size control.
+
+A current practical limitation is the lack of a native PyTorch implementation of thick-restart Lanczos; existing PyTorch-based randomized SVD routines cannot match TRLan's accuracy/efficiency combination for the matrix reconstruction task.
+
+For reference, Table~\ref{tbl:newton_schulz_reference} shows results for the Newton-Schulz polar decomposition iteration on the same matrices, $err_1$ is the relative error of $UV^T$ (29-30 iterations to converge, significantly higher matvec count than TRLan).
+
+
+
+\begin{table}[ht]
 	\centering
-	\begin{tabular}{c|c|c|c}
-		\hline
-		Method                              & rtol & k   & time,s \\
-		\hline
-		Power Iterations                    & 0.01 & 1   & 7.7    \\
-		SVDS (thick-restart Lanczos method) & 0.01 & 1   & 0.18   \\
-		PCA Low Rank (RSVD)                 & 0.01 & 1   & 1.15   \\
-		SVDS (thick-restart Lanczos method) & 0.01 & 10  & 0.47   \\
-		PCA Low Rank (RSVD)                 & 0.01 & 10  & 19.4   \\
-		SVDS (thick-restart Lanczos method) & 0.01 & 100 & 1.96   \\
-		PCA Low Rank (RSVD)                 & 0.01 & 100 & 170    \\
+	\begin{tabular}{|c|c|c|c|c|c|c|c|}
+	  \hline
+	  Matrix sizes & $k$  & Method           & Time (s) & Matvecs & Iterations & $err_1$         & $err_2$       \\
+	  \hline
+	  $500 \times 500$      & 5  & Power Iterations           & 0.062   & 2005    & 200        & 9.2$\cdot 10^{-3}$ & 9.1$\cdot10^{-3}$\\
+	  $500 \times 500$      & 5  & RSVD             & 0.017   & 1170    & 38         & 9.8$\cdot 10^{-3}$ & 9.6$\cdot10^{-3}$\\
+	  $500 \times 500$      & 5  & TRLan            & 0.018   & 131     & 65         & 9.6$\cdot 10^{-5}$ & 9.4$\cdot10^{-5}$\\
+	  \hdashline
+	  $500 \times 500$      & 50 & Power Iterations           & 0.44    & 43750   & 437      & 9.9$\cdot 10^{-3}$ & 9.0$\cdot10^{-3}$\\
+	  $500 \times 500$      & 50 & RSVD             & 0.61    & 6120    & 50      & 9.9$\cdot 10^{-3}$ & 9.1$\cdot10^{-3}$\\
+	  $500 \times 500$      & 50 & TRLan            & 0.16    & 462     & 231      & 3.3$\cdot 10^{-7}$ & 3.0$\cdot10^{-7}$\\
+	  \hdashline 
+	  $5000 \times 5000$    & 5  & Power Iterations           & 9.6     & 9065    & 906      & 8.6$\cdot 10^{-3}$ & 8.6$\cdot10^{-3}$\\
+	  $5000 \times 5000$    & 5  & RSVD             & 2.1     & 5640    & 187      & 9.7$\cdot 10^{-3}$ & 9.7$\cdot10^{-3}$\\
+	  $5000 \times 5000$    & 5  & TRLan            & 0.70    & 205     & 102      & 7.7$\cdot 10^{-3}$ & 7.7$\cdot10^{-3}$\\
+	  \hline
 	\end{tabular}
-	\caption{k-rank updated comparison}
-	Comparison of different numerical methods to calculate k-rank update on $5000\times5000$ matrix of real numbers, rtol is an error in Frobenius norm relative to the k-rank approximation.
-	\label{tbl:matrix_methods}
-\end{table}
-
+  \caption{Comparison of methods for computing rank-$k$ updates on dense random matrices (CPU, double precision). Lower is better in all columns.}
+  \label{tbl:matrix_methods}
+  \end{table}
+  
+  \begin{table}[ht]
+  \centering
+  \begin{tabular}{|c|c|c|c|c|}
+  \hline
+  Matrix size    & Time (s) & Matvecs & Iterations & $err_1$ \\
+  \hline
+  $500 \times 500$     & 0.041    & 27 000  & 27         & 4.8e-3  \\
+  $5000 \times 5000$   & 26.4     & 290 000 & 29         & 6.5e-3  \\
+  \hline
+  \end{tabular}
+  \caption{Newton–Schulz iteration on the same matrices (for reference).}
+  \label{tbl:newton_schulz_reference}
+  \end{table}
+  
 \section{Experiments}\label{sec:experiments}
 \subsection{Randomized Linear Least Squares}
-First, we compare F-Fanions on the following L-smooth problem:
+First, we compare F-Fanions on the following convex L-smooth problem:
 
 \begin{equation}\label{eq:lls}
 	F(\mX) = \frac{1}{2} \<(\mX-\mS), \mM (\mX - \mS) \mN> \to \min_{\mX \in \Rmn}\
 \end{equation}
 
-where $\mX \in \Rmn$, $m=500$ and $n=500$ are typical dimensions of a neural network weight matrix, $S \in \Rmn$, $\mM \in \mathbb{S}^m_{+}$ and $\mN \in \mathbb{S}^n_{+}$ are positive-semidefinite matrices. The spectra of $\mM$ and $\mN$ are uniformly distributed in the (0, 1) interval. We set $\mS=0$, and $\mX^0 \sim 0.1 \gN(0, \mI)$.
+where $\mX \in \Rmn$, $m=500$ and $n=500$ are typical dimensions of a neural network weight matrix, $\mS \in \Rmn$, $\mM \in \mathbb{S}^m_{+}$ and $\mN \in \mathbb{S}^n_{+}$ are positive-semidefinite matrices. The spectra of $\mM$ and $\mN$ are uniformly distributed in the (0, 1) interval. We set $\mS=0$, and $\mX^0 \sim 0.1 \gN(0, \mI)$.
 
 We run different Fanions and their respective F-Fanions with $\alpha=1/2$: Neon (Fanion-1), Fanion-2, Fanion-5, Fanion-100, and Muon (Fanion-500). We test them against Normalized SGD, which is also a F-Fanion with $\alpha = 0$ and an arbitrary $k$.
 
-Since theoretical bounds \citep{kovalev2025understanding, riabinin2025gluon} rely on a very loose norm bound $\norm{\cdot}\le \rho \normf{\cdot}$, we do not derive learning rate from smoothness. Rather, we set the learning rate of $1/\sqrt{T}$ for each optimizer and the momentum of 0.6. 12 000 iterations for each algorithm ensure that the rate at some point gets low enough for each algorithm to converge. The results are presented in \cref{fig:lls} and ~\cref{sec:lls_plots_section}.
+Since theoretical bounds \citep{kovalev2025understanding, riabinin2025gluon} rely on a very loose norm bound $\norm{\cdot}\le \rho \normf{\cdot}$, we do not derive learning rate or momentum from the smoothness constants. Rather, we find such \texttt{lr, momentum} pair that the loss threshold $0.01$ is reached in a minimal number of iterations. This setting is the most realistic, and at the same time aligns with the corollaries of the convergence theorems where constant learning rate and momentum coefficients are proposed.
+
+12 000 iterations for each algorithm ensure that the rate at some point gets low enough for each algorithm to converge. The results are presented in \cref{fig:lls} and ~\cref{sec:lls_plots_section}.
 
 In terms of the loss minimization, F-Muon had the fastest convergence. In terms of the Frobenius norm of the gradient, the lowest was observed for NSGD. Then go F-Neon (F-Fanion-1), F-Fanion-2, F-Fanion-5, F-Fanion-100, and F-Muon (Fanion-500). It is noticeable that all F-Fanions have lower Frobenius norms of the gradients than their respective Fanioins. The same behavior will be recorded in the next section.
 
@@ -478,7 +509,7 @@ The results are curious and could be represented by \cref{fig:cifar_ball}: the L
 The most pathological case is $\alpha > 1$, which corresponds to the lmo with an area that is not a norm ball! Despite this violation, the mixture of algorithms reaches almost the same accuracy as vanilla Muon.
 
 \subsection{NanoGPT speedrun}
-We test F-Muon on NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.5$, the optimal parameters are {\tt lr=0.07, momentum=0.95}, while for Muon they were  {\tt lr=0.05, momentum=0.95}. After testing for 1750 steps, as it has been done on the speedruns, we get 3.281 cross-entropy loss, while on Muon, it falls below the target threshold 3.28 reaching 3.279. However, this difference is negligible, if one looks at \cref{fig:gpt_loss}. It is even more striking, considering the fact that F-Muon is an average of Muon and NSGD, and the later performed quite poorly.
+We test F-Muon on the NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.5$, the optimal parameters are {\tt lr=0.07, momentum=0.95}, while for Muon they were {\tt lr=0.05, momentum=0.95}. After testing for 1750 steps we get 3.281 cross-entropy loss. For Muon, it falls below the target threshold 3.28 and reaches 3.279. However, this difference is negligible, if one looks at \cref{fig:gpt_loss}. It is even more striking, considering the fact that F-Muon is an average of Muon and NSGD, and the latter performed quite poorly.
 
 \begin{figure}[h]
 	\centering
