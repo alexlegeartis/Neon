@@ -119,7 +119,7 @@ def soft_threshold(x: torch.Tensor, lam: float) -> torch.Tensor:
 
 # the same as in airbench_muon.py
 class Muon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True):
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -128,6 +128,7 @@ class Muon(torch.optim.Optimizer):
             raise ValueError("Nesterov momentum requires a momentum")
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -145,15 +146,16 @@ class Muon(torch.optim.Optimizer):
                 buf.mul_(momentum).add_(g)
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
-                norm = p.data.norm()
-                if norm < 1e-10:
-                    norm = 1e-10
-                p.data.mul_((len(p.data)**0.5 / norm)) # normalize the weight
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 p.data.add_(update, alpha=-lr) # take a step
 
 class Muon2(torch.optim.Optimizer): # not ready yet!, we must have access to gradients by sample!
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True):
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -162,6 +164,7 @@ class Muon2(torch.optim.Optimizer): # not ready yet!, we must have access to gra
             raise ValueError("Nesterov momentum requires a momentum")
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
+        self.norm_weight = norm_weight
 
     def step(self, grad_list):
         for group in self.param_groups:
@@ -179,15 +182,16 @@ class Muon2(torch.optim.Optimizer): # not ready yet!, we must have access to gra
                 buf.mul_(momentum).add_(g)
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
-                norm = p.data.norm()
-                if norm < 1e-10:
-                    norm = 1e-10
-                p.data.mul_((len(p.data)**0.5 / norm)) # normalize the weight
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 p.data.add_(update, alpha=-lr) # take a step
 
 class MuonCringeMomentum(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True):
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -196,6 +200,7 @@ class MuonCringeMomentum(torch.optim.Optimizer):
             raise ValueError("Nesterov momentum requires a momentum")
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -214,10 +219,11 @@ class MuonCringeMomentum(torch.optim.Optimizer):
                 g_old = g
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
-                norm = p.data.norm()
-                if norm < 1e-10:
-                    norm = 1e-10
-                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 p.data.add_(update, alpha=-lr) # take a step
                 buf.mul_(momentum).add_(g_old - lr * update)
@@ -226,12 +232,13 @@ class MuonCringeMomentum(torch.optim.Optimizer):
 # this function also supports F-Neon
 class Neon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, k=1, tau = 0, nesterov=False,
-                 neon_mode='fast', iter_num=1, sgd_coeff=0):
+                 neon_mode='fast', iter_num=1, sgd_coeff=0, norm_weight=True):
         self.tau = tau
         self.k = k # target number of SVD componenets which we preserve
         self.lanczos_iter_num = iter_num
         self.type = neon_mode # fast (vanilla Neon), accurate (old F*-Neon), Ky-Fan (~Dion)
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -259,10 +266,11 @@ class Neon(torch.optim.Optimizer):
                 g = g.add(buf, alpha=momentum) if group['nesterov'] else buf
 
                 # Add numerical stability
-                norm = p.data.norm()
-                if norm < 1e-8:
-                    continue
-                p.data.mul_(len(p.data)**0.5 / norm)
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-8:
+                        continue
+                    p.data.mul_(len(p.data)**0.5 / norm)
                 
                 g_resh = g.reshape(len(g), -1)
                 n, m = g_resh.shape # d_out and d_in
@@ -288,10 +296,11 @@ class Neon(torch.optim.Optimizer):
 
 # the same as F-Muon, the copy is in airbench_muon.py
 class NormalizedMuon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, norm_weight=True):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -310,10 +319,11 @@ class NormalizedMuon(torch.optim.Optimizer):
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
                 eps = 1e-12
-                norm = p.data.norm()
-                if norm < 1e-10:
-                    norm = 1e-10
-                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 if self.sgd_coeff != 1:
                     # zeropower expects 2D input: reshape and restore
@@ -339,10 +349,11 @@ class NormalizedMuon(torch.optim.Optimizer):
 
 
 class MuonSGDStyle(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, norm_weight=True):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -361,10 +372,11 @@ class MuonSGDStyle(torch.optim.Optimizer):
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
                 eps = 1e-12
-                norm = p.data.norm()
-                if norm < 1e-10:
-                    norm = 1e-10
-                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 g_normalized = g / (g.norm() + eps)
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 if self.sgd_coeff != 1:
@@ -378,10 +390,11 @@ class MuonSGDStyle(torch.optim.Optimizer):
 
 
 class NuclearNormalizedMuon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, norm_weight=True):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -400,10 +413,11 @@ class NuclearNormalizedMuon(torch.optim.Optimizer):
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
                 eps = 1e-12
-                norm = p.data.norm()
-                if norm < 1e-10:
-                    norm = 1e-10
-                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 uvt, nuc_norm = newtonschulz5_with_nuclear(g.reshape(len(g), -1))
                 uvt = uvt.view(g.shape)
@@ -418,7 +432,7 @@ class NuclearNormalizedMuon(torch.optim.Optimizer):
 
 # generated by Cursor, but I checked the logic. Unfortunately, I do not see much help, only increased variance
 class Dion(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, rank=1, momentum_decay=0.9, sgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, rank=1, momentum_decay=0.9, sgd_coeff=0, norm_weight=True):
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -435,6 +449,7 @@ class Dion(torch.optim.Optimizer):
         self.rank = rank
         self.momentum_decay = momentum_decay
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -458,10 +473,11 @@ class Dion(torch.optim.Optimizer):
                 g = g.add(buf) # now actually m in terms of Dion
 
                 # Add numerical stability - do we need it here?
-                norm = p.data.norm()
-                if norm < 1e-8:
-                    continue
-                p.data.mul_(len(p.data)**0.5 / norm)
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-8:
+                        continue
+                    p.data.mul_(len(p.data)**0.5 / norm)
                 
                 # Reshape gradient to matrix form
                 g_reshaped = g.reshape(len(g), -1)
@@ -485,10 +501,11 @@ class Dion(torch.optim.Optimizer):
 
 # it is not an LMO-based algorithm, only an archive
 class SGDMuon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, norm_weight=True):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -506,17 +523,19 @@ class SGDMuon(torch.optim.Optimizer):
                 buf.mul_(momentum).add_(g)
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
-                p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
+                if self.norm_weight:
+                    p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
                 update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
                 update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g
                 p.data.add_(update, alpha=-lr) # take a step
 
             
 class SignSGDMuon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, norm_weight=True):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -534,7 +553,8 @@ class SignSGDMuon(torch.optim.Optimizer):
                 buf.mul_(momentum).add_(g)
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
-                p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
+                if self.norm_weight:
+                    p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
                 update = (1 - self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * 0.001
@@ -542,10 +562,11 @@ class SignSGDMuon(torch.optim.Optimizer):
 
 
 class RandomNormalizedMuon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, norm_weight=True):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -564,10 +585,11 @@ class RandomNormalizedMuon(torch.optim.Optimizer):
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
                 eps = 1e-12
-                norm = p.data.norm()
-                if norm < 1e-10:
-                    norm = 1e-10
-                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 if self.sgd_coeff < torch.rand(1).item():
                     update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
@@ -580,12 +602,13 @@ class RandomNormalizedMuon(torch.optim.Optimizer):
 
 class SpectrallyNormalizedNeon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, k=1, tau = 0, nesterov=False,
-                iter_num = 100, sgd_coeff=0):
+                iter_num = 100, sgd_coeff=0, norm_weight=True):
         self.tau = tau
         self.k = k # target number of SVD componenets which we preserve
         self.lanczos_iter_num = iter_num
         self.type = 'kyfan'
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -613,10 +636,11 @@ class SpectrallyNormalizedNeon(torch.optim.Optimizer):
                 g = g.add(buf, alpha=momentum) if group['nesterov'] else buf
 
                 # Add numerical stability
-                norm = p.data.norm()
-                if norm < 1e-8:
-                    continue
-                p.data.mul_(len(p.data)**0.5 / norm)
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-8:
+                        continue
+                    p.data.mul_(len(p.data)**0.5 / norm)
                 
                 g_resh = g.reshape(len(g), -1)
                 n, m = g_resh.shape # d_out and d_in
@@ -637,10 +661,11 @@ def radius_for_volume(n, vol):
     return (vol * coef) ** (1/n)
 
 class MuonOrNSGD(torch.optim.Optimizer): # in strange 
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, nsgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, nsgd_coeff=0, norm_weight=True):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.nsgd_coeff = nsgd_coeff # here it is for the norm with conv(ball_op, sgd_coeff * ball_Fro)
+        self.norm_weight = norm_weight
 
     def step(self):
         for group in self.param_groups:
@@ -659,10 +684,11 @@ class MuonOrNSGD(torch.optim.Optimizer): # in strange
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
                 eps = 1e-12
-                norm = p.data.norm()
-                if norm < 1e-10:
-                    norm = 1e-10
-                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 g_norm = g.norm()
                 g_normalized = g / (g_norm + eps)
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
@@ -682,10 +708,11 @@ class MuonOrNSGD(torch.optim.Optimizer): # in strange
 
 class RealFanion(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, k_share=1, nesterov=False,
-                 iter_num=1, sgd_coeff=0):
+                 iter_num=1, sgd_coeff=0, norm_weight=True):
         self.k_share = k_share # target number of SVD componenets which we preserve
         self.lanczos_iter_num = iter_num
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -713,10 +740,11 @@ class RealFanion(torch.optim.Optimizer):
                 g = g.add(buf, alpha=momentum) if group['nesterov'] else buf
 
                 # Add numerical stability
-                norm = p.data.norm()
-                if norm < 1e-8:
-                    continue
-                p.data.mul_(len(p.data)**0.5 / norm)
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-8:
+                        continue
+                    p.data.mul_(len(p.data)**0.5 / norm)
                 
                 g_resh = g.reshape(len(g), -1)
                 n, m = g_resh.shape # d_out and d_in
@@ -741,10 +769,11 @@ class RealFanion(torch.optim.Optimizer):
 
 class NeonMuon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, neon_share=1, nesterov=False,
-                 iter_num=1, sgd_coeff=0):
+                 iter_num=1, sgd_coeff=0, norm_weight=True):
         self.neon_share = neon_share # target number of SVD componenets which we preserve
         self.lanczos_iter_num = iter_num
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -772,10 +801,11 @@ class NeonMuon(torch.optim.Optimizer):
                 g = g.add(buf, alpha=momentum) if group['nesterov'] else buf
 
                 # Add numerical stability
-                norm = p.data.norm()
-                if norm < 1e-8:
-                    continue
-                p.data.mul_(len(p.data)**0.5 / norm)
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-8:
+                        continue
+                    p.data.mul_(len(p.data)**0.5 / norm)
                 
                 g_resh = g.reshape(len(g), -1)
                 n, m = g_resh.shape # d_out and d_in
@@ -848,9 +878,10 @@ class SingleDeviceNorMuon(torch.optim.Optimizer):
     """
     Muon variant for usage in non-distributed settings.
     """
-    def __init__(self, params, lr=0.02, weight_decay=0, momentum=0.95, beta2=0.95):
+    def __init__(self, params, lr=0.02, weight_decay=0, momentum=0.95, beta2=0.95, norm_weight=True):
         defaults = dict(lr=lr, weight_decay=weight_decay, momentum=momentum, beta2=beta2)
         super().__init__(params, defaults)
+        self.norm_weight = norm_weight
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -870,11 +901,12 @@ class SingleDeviceNorMuon(torch.optim.Optimizer):
                 if len(state) == 0:
                     state["momentum_buffer"] = torch.zeros_like(p)
                     state["second_momentum_buffer"] = torch.zeros_like(p[...,0:1], dtype=torch.float32) # added dtype=torch.float32
-                eps = 1e-12
-                norm = p.data.norm()
-                if norm < 1e-10:
-                    norm = 1e-10
-                p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight - added for CIFAR
+                if self.norm_weight:
+                    eps = 1e-12
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight - added for CIFAR
                 
                 update = normuon_update(p.grad, state["momentum_buffer"], state["second_momentum_buffer"], beta=group["momentum"], beta2=group["beta2"])
                 if group["weight_decay"] and had_grad:
