@@ -16,6 +16,7 @@
 \usepackage{changes}
 \definechangesauthor[name={Ivan Kozyrev}, color=orange]{IK}
 \newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
 \newcommand{\norm}[1]{\lVert #1\rVert}
 \newcommand{\abs}[1]{\lvert #1 \rvert}
 
@@ -159,36 +160,38 @@ Such problems can be solved with an iterative algorithm based on the Linear Mini
 \end{equation}
 where $\mM^k$ is a gradient (or a momentum) of $F$ in $\mX^k$ and $\cS \subset \Rmn$ is some set. The update of the algorithm is defined as follows:
 \begin{equation}\label{eq:simple_update}
-	\mX^{k + 1} = \mX^k + \gamma_k\mathrm{LMO}\left(\mM\right)\,.
+	\mX^{k + 1} = \mX^k + \gamma_k\mathrm{LMO}\left(\mM^k\right)\,.
 \end{equation}
 
-We are particularly interested in the case when $\cS$ is a ball in the norm $\norm{\cdot}$:
+We are particularly interested in the case when $\cS$ is a unit ball in the norm $\norm{\cdot}$:
 
-$$\cS = \cB_\eta \in \{ \mD \in \Rmn \mid \norm{\mD} \leq \eta \}.$$
+$$
+\cS = \cB_{\norm{\cdot}} = \{ \mD \in \Rmn \mid \norm{\mD} \leq 1 \}\,.
+$$
 In this case,
-
-$$\argmin_{\mD \in \cS} \<\mM^k, \mD> = - \eta \{ \mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}$$
-
+$$
+\argmin_{\mD \in \cS} \<\mM^k, \mD> = - \{ \mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,,
+$$
 and update for $\mX^k$ in \cref{eq:simple_update} simplifies to
 \begin{equation}\label{eq:our_update}
-	\mX^{k+1} = \mX^{k} - \eta_k \{\mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,
+	\mX^{k+1} = \mX^{k} - \gamma_k \{\mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,.
 \end{equation}
 
-By this formula, it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$. For example, when the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \cref{eq:our_update} turns into
-
+Using this formula it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$. For example, when the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \cref{eq:our_update} turns into
 \begin{equation}\label{eq:nsgd_update}
-	\mX^{k+1} = \mX^{k} - \eta_k \frac{\mM^k}{\normf{\mM^k}},
-\end{equation} which recovers Normalized SGD (NSGD). When one has the spectral norm $\norms{\cdot}$, one gets
-
+	\mX^{k+1} = \mX^{k} - \eta_k \frac{\mM^k}{\normf{\mM^k}}\,,
+\end{equation} 
+which recovers Normalized SGD (NSGD). When one has the spectral norm $\norms{\cdot}$, one gets
 \begin{equation}\label{eq:muon_update}
-	\mX^{k+1} = \mX^{k} - \eta_k U V^\top,
-\end{equation} which is Muon without the $\sqrt{m/n}$ factor.
+	\mX^{k+1} = \mX^{k} - \eta_k U V^\top\,,
+\end{equation} 
+which is Muon without the $\sqrt{m/n}$ factor.
 Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^k$ ($\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \space \sigma_2, \dots, \sigma_r)$, and $\mV = [v_1, v_2, \dots, v_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
 
 \section{Duals to Ky Fan Norms Instead of the Spectral Norm}
 
 \subsection{\texorpdfstring{$\normn{\mM^{k}}$ and Neon}{Neon}}
-After having considered $\normf{\mM^k}$ and $\norms{\mM^k}$, it is natural to look at the nuclear norm $\normn{\mM^k}$.
+After considering $\normf{\mM^k}$ and $\norms{\mM^k}$, it is natural to look at the nuclear norm $\normn{\mM^k}$.
 \begin{lemma}\label{lemma:neon_update}
 	When $\norm{\cdot} = \normn{\cdot}$, \cref{eq:our_update} turns into:
 
@@ -220,7 +223,9 @@ However, Schatten norms do not fill the gap rank: indeed, when $p > 1$, the rank
 There is another family of matrix norms, which might help us: Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ is $\sum_{i=1}^{k}\sigma_i$, i.e. the sum of the $k$ largest singular values of the matrix. Special cases of the Ky Fan $k$-norm are the Ky Fan $1$-norm, which is the sprectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
 
 Let us derive the update for an arbitrary $k$. Since $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96), the goal is to reach $\max\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i, \sigma_1\}$. $\Delta = u_1 v_1^\top$ from Neon delivers $\sigma_1$, while $\Delta = \frac{1}{k}\sum_{i=1}^{\min(m,n)}u_i v_i^\top$ from Muon (with an extra factor of $1/k$) delivers $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
-$$\mX^{t+1} = \mX^{t} - \eta_t u_1 v_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\eta_t}{k}\mU \mV^\top,$$
+$$
+\mX^{t+1} = \mX^{t} - \eta_t u_1 v_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\eta_t}{k}\mU \mV^\top\,,
+$$
 depending on which one better minimizes the function $F(\mX^t) + \mM^t(\mX^{t+1} - \mX^t)$.
 
 The rank gap is not closed by the Ky Fan norms because the obtained update is either one-rank or full-rank.
@@ -314,59 +319,46 @@ First, we need a well-known fact mentioned, for example, in \citet[Table 1]{yu20
 	which proves the lemma.
 \end{proof}
 
-\begin{lemma}\label{lemma:lin_colm_alg}
-	Let $\norm{\cdot}_{(1)}, \dots, \norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1, \dots, \alpha_n$ be non-negative reals. Consider Linear Minimization Oracles $\mathrm{LMO}_{1}, \dots, \mathrm{LMO}_{n}$, corresponding to these norms. Then, $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{i}$ is the LMO corresponding to the norm $\norm{\cdot}^\dagger$ dual to the $\sum_{i = 1}^n \alpha_i \norm{\cdot}_{(i)}^\dagger$.
+\begin{lemma}\label{lemma:lin_comb_lmo}
+	Let $\norm{\cdot}_{(1)}, \dots, \norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1, \dots, \alpha_n$ be non-negative reals. Consider Linear Minimization Oracles $\mathrm{LMO}_{1}, \dots, \mathrm{LMO}_{n}$, corresponding to the unit balls of these norms. Then, $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{i}$ is the LMO corresponding to the norm $\norm{\cdot}$ dual to the $\sum_{i = 1}^n \alpha_i \norm{\cdot}_{(i)}^\dagger$.
 \end{lemma}
 	
 \begin{proof}
-	From \cref{lemma:dual_to_conv_comb} we know the general form of the unit ball in the $\norm{\cdot}$ norm: $\cB_{\norm{\cdot}} = \sum_{i = 1}^n \alpha_i \cB_{\norm{\cdot}_{(i)}^\dagger}$. Thus, the linear function minimization objective on a $\norm{\cdot}$ norm ball can be transformed as follows:
+	Using \cref{lemma:dual_to_conv_comb} and the fact $\norm{\cdot}^{\dagger \dagger} = \norm{\cdot}$, we can obtain general form of the unit ball in the $\norm{\cdot}$ norm: $\cB_{\norm{\cdot}} = \sum_{i = 1}^n \alpha_i \cB_{\norm{\cdot}_{(i)}}$. Thus, the linear function minimization objective on a $\norm{\cdot}$ norm ball can be transformed as follows:
 	$$
-	\argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD> = \argmin_{\mD_1 \in \alpha_i \cB_i,\dots,\mD_n \in \alpha_n\cB_n}\<\mM, \sum_{i = 1}^n\mD_i> = \sum_{i = 1}^n \argmin_{D_i \in \cB_i}\<\mM, \mD_i>\,.
+	\argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD> = \argmin_{\mD_1 \in \alpha_i \cB_{\norm{\cdot}_{(1)}},\dots,\mD_n \in \alpha_n\cB_{\norm{\cdot}_{(n)}}}\<\mM, \sum_{i = 1}^n\mD_i> = \sum_{i = 1}^n \argmin_{D_i \in \cB_{\norm{\cdot}_{(i)}}}\<\mM, \mD_i>\,,
 	$$
-	This immediately implies $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{i} \in \argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD>$, which proves the claim of the lemma.
+	where the last summation denotes the Minkowski sum. This immediately implies $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{i} \in \argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD>$, which proves the claim of the lemma.
 \end{proof}
 
+Applying it to optimization algorithms we obtain the following corollary.
+
+\begin{corollary}\label{corollary:lin_comb_alg}
+	Let there be a finite family of LMO based algorithms indexed by $i = 1,\dots,n$, where the update of the $i$-th algorithm is defined by 
+	$$
+	\mX^{k + 1} - \mX^{k} = \gamma_k \mathrm{LMO}_{i}(\mM^{k})\,,
+	$$
+	and $\mathrm{LMO}_i$ corresponds to the unit ball of norm $\norm{\cdot}_i$. For arbitrary non-negative $\alpha_1,\dots,\alpha_n$, the algorithm with the update given by 
+	$$
+	\mX^{k + 1} - \mX^{k} = \gamma_k \sum_{i = 1}^n \alpha_k \mathrm{LMO}_{\norm{\cdot}_{(i)}}(\mM^k)
+	$$
+	is an LMO-algorithm itself, with LMO corresponding to the unit ball of the norm $\norm{\cdot}$ dual to the norm given by $\sum_{i = 1}^n \alpha_i \norm{\cdot}_{(i)}^\dagger$.
+\end{corollary}
+
 \subsection{Frobeniusize Them: F-Muon and F-Neon}
-Let us construct the concrete examples of algorithms given by linear combinations of LMO-algorithms. It follows from \cref{lemma:lin_colm_alg} that those algorithms can also be viewed as LMO-algorithms.
+Let us construct the concrete examples of algorithms given by linear combinations of LMO-algorithms. It follows from \cref{corollary:lin_comb_alg} that those algorithms can also be viewed as LMO-algorithms.
 
-Consider a mixture of Fanions with another excellent LMO-algorithm, NSGD. We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
-
+Combining Fanions-$k$ with another excellent LMO-algorithm, NSGD, we obtain the family of algorithms with updates defined by
+\begin{equation}\label{eq:nsgd_muon_update}
+		\mX^{t+1} = \mX^{t} - \gamma \left(\alpha \sum_{i = 1}^k u_i v_i^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}}\right)\,,
+\end{equation}
+where $u_1, \dots, u_k$ ($v_1, \dots, v_k$) are first $k$ left (right) sighular vectors of $\mM^k$. By \cref{corollary:lin_comb_alg}, this is an LMO-algorithm corresponding to the unit ball of the norm $\norm{\cdot}_{\mathrm{F-KF-k}}$, given by
 \begin{equation}\label{eq:fstar_norm}
-	\normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
+	\norm{\cdot}_{\mathrm{F-KF-k}}^\dagger = \alpha \normkfk{\cdot}^\dagger + (1-\alpha)\normf{\cdot}^\dagger\,.
 \end{equation}
+We name the derived algorithms \emph{F-Fanions}. A bit of information and visualizations related to the $\normfstar{\cdot}$ norm is presented in the appendix (see \cref{eq:normfstardual}, \cref{fig:fstardual}).
 
-where $\alpha \in [0, 1]$ defines a specific norm from the $F*$-family. $\normfstar{\cdot}^\dagger$ can be expressed as in \cref{eq:normfstardual}. However, its norm ball is a simple Minkowski sum of $\alpha \normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:fstardual}.
-
-\begin{lemma}\label{lemma:nsgd_muon_update}
-	When $\norm{\cdot} = \normfstar{\cdot}^\dagger$, \cref{eq:our_update} turns into:
-
-	\begin{equation}\label{eq:nsgd_muon_update}
-		\mX^{k+1} = \mX^{k} - \eta (\alpha U V^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
-	\end{equation}
-\end{lemma}
-
-We name the derived algorithm \emph{F-Muon}.
-
-We define $\normftwo{\cdot}$ as a convex combination of $\norms{\cdot}$ and $\normf{\cdot}$:
-
-\begin{equation}\label{eq:ftwo_norm}
-	\normftwo{\mX} = \alpha \norms{\mX} + (1-\alpha)\normf{\mX},
-\end{equation}
-
-where $\alpha \in [0, 1]$ defines a specific norm from the F2-family.$\normftwo{\cdot}^\dagger$ can be expressed as in \cref{eq:normftwodual}. However, its norm ball is a simple Minkowski sum of $\alpha \norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$ balls \cref{fig:ftwodual}.
-
-\begin{lemma}\label{lemma:nsgd_neon_update}
-	When $\norm{\cdot} = \normftwo{\cdot}^\dagger$, \cref{eq:our_update} turns into:
-
-	\begin{equation}\label{eq:nsgd_neon_update}
-		\mX^{k+1} = \mX^{k} - \eta (\alpha u_1 v_1^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}})
-	\end{equation}
-\end{lemma}
-
-We name the derived algorithm \emph{F-Neon}. F-Neon is a convex combination of Normalized SGD and Neon.
-
-
-In general, one can consider F-KF-k-norm: $\norm{\cdot}_{\mathrm{F-KF-k}}$ = $\alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}$, the dual to which will produce algorithms like F-Dion without the error feedback. The resulting family can be named {\it F-Fanions}.
+Two edge members of this family, with $k = 1$ and $k = \min\{m, n\}$ correspondingly, are \emph{F-Neon} and \emph{F-Muon}.
 
 \subsection{Add SignSGD: S-Muon and S-Neon}
 Trivial formulas, but we need more experiments.
