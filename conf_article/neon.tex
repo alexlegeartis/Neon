@@ -137,7 +137,7 @@ We then compare the performance of the algorithm families across various benchma
 	\item Pre-training NanoGPT on FineWeb dataset.
 \end{itemize}
 
-Our experiments reveal important insights about the role of matrix norms in optimization. On a synthetic least squares problem, we observe a striking discrepancy: while some algorithms converge slowly in terms of loss, they may converge quickly in terms of gradient norm, and vice versa. This suggests that existing theoretical guarantees may not fully explain practical algorithm performance.
+Our experiments reveal important insights about the role of matrix norms in optimization. \textcolor{red}{On a synthetic least squares problem, we observe a striking discrepancy: while some algorithms converge slowly in terms of loss, they may converge quickly in terms of gradient norm, and vice versa}. This suggests that existing theoretical guarantees may not fully explain practical algorithm performance.
 
 Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon achieves $94.01 \pm 0.14\%$ accuracy, essentially matching Muon's $94.00 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, only marginally worse than Muon's 3.279. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, answering affirmatively the central question posed above. This flexibility suggests potential for developing easier-to-compute variants of successful algorithms like Muon.
 
@@ -185,7 +185,7 @@ By this formula, it is easy to compute updates for algorithms induced by various
 \end{equation} which is Muon without the $\sqrt{m/n}$ factor.
 Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^k$ ($\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \space \sigma_2, \dots, \sigma_r)$, and $\mV = [v_1, v_2, \dots, v_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
 
-\section{Duals to Ky Fan norms instead of the spectral norm}
+\section{Duals to Ky Fan Norms Instead of the Spectral Norm}
 
 \subsection{\texorpdfstring{$\normn{\mM^{k}}$ and Neon}{Neon}}
 After having considered $\normf{\mM^k}$ and $\norms{\mM^k}$, it is natural to look at the nuclear norm $\normn{\mM^k}$.
@@ -243,93 +243,93 @@ Let us note that $\Delta = \sum_{i=1}^{k} u_i v_i^\top$ delivers the value. Inde
 \end{proof}
 These updates constitute a family {\it Fanions}, LMO-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. The algorithm for a particular $k$ we will call {\it Fanion-$k$}. Thus, Muon is a Fanion-$\min\{m,n\}$, while Neon is a Fanion-1. Moreover, the unsharded version of the rank-$r$ Dion (Algorithm 1 from \citet{ahn2025dion}) without the error feedback and without scaling of the update is actually a Fanion-$r$ (see \citet{pethick2025understandingdion}, where Dion is written down in a notation more similar to ours).
 
+\section{Conic Combination of LMO-algorithms is an LMO-algorithm}
 
-\section{Conic combination of LMO-algorithms is an LMO-algorithm}
+Simply applying norm dual to the Ky Fank $k$-norm however, is not enough to provide family of algorithms diverse enough for our cause. Next we consider linear combinations of algorithms from LMO framework, which happen to be LMO-algorithms too, as we show in succeeding paragraphs.
 
-NSGD, Muon, and SignSGD work fair enough separately. Could we boost the quality if we combined them? To answer this question, we have to build a theoretical base for that.
-
-\subsection{Duals to Convex Combination of Norm}
-First, we need a well-known fact mentioned, for example, in \citet[Table 1]{yu2012arithmetic}. For the sake of completeness, we provide a proof of the fact.
+\subsection{General Case}
+First, we need a well-known fact mentioned, for example, in \citet[Table 1]{yu2012arithmetic}. For the sake of completeness, we provide a proof here.
 
 \begin{lemma}\label{lemma:dual_to_conv_comb}
-	Let $\norm{\cdot}_{(1)}$ and $\norm{\cdot}_{(2)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha,\beta \geq 0$. Define
+	Let $\norm{\cdot}_{(1)},\dots,\norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1,\dots,\alpha_n$ be non-negative reals. Define
 	$$
-		\norm{x} := \alpha \norm{x}_{(1)} + \beta \norm{x}_{(2)}.
+		\norm{x} := \sum_{i = 1}^n \alpha_i \norm{x}_{(i)}.
 	$$
 	Then the dual unit ball of $\norm{\cdot}$ satisfies
 	$$
-		B_{\norm{\cdot}^\dagger}
-		= \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger},
+		\cB_{\norm{\cdot}^\dagger}
+		= \sum_{i = 1}^n \alpha_i \cB_{\norm{\cdot}_{(i)}^\dagger}
 	$$
-	where $+$ denotes the Minkowski sum and $B_{\norm{\cdot}_{(i)}^\dagger}$ is the unit ball of the dual norm $\norm{\cdot}_{(i)}^\dagger$.
+	where $\sum$ denotes the Minkowski sum and $\cB_{\norm{\cdot}_{(i)}^\dagger}$ is the unit ball of the dual norm $\norm{\cdot}_{(i)}^\dagger$.
 \end{lemma}
 
 \begin{proof}
-	Write $f(x) = \alpha \norm{x}_{(1)}$ and $g(x) = \beta \norm{x}_{(2)}$, so
-	$$
-		\norm{x} = f(x)+g(x).
-	$$
-	Recall two standard facts:
+	Let us first prove the lemma for the case $n = 2$. Denote $f(x) = \alpha_1 \norm{x}_{(1)}$ and $g(x) = \alpha_2 \norm{x}_{(2)}$, such that $\norm{x} = f(x) + g(x)$. Recall two standard facts:
 	\begin{enumerate}
 		\item For any norm $\norm{\cdot}$ and $\lambda>0$,
 		      $$
 			      (\lambda \norm{\cdot})^*(y) =
 			      \sup_{x}\bigl( \langle y,x \rangle - \lambda \norm{x}\bigr)
-			      = \delta_{\lambda B_{\norm{\cdot}^\dagger}}(y),
+			      = \delta_{\lambda \cB_{\norm{\cdot}^\dagger}}(y)\,,
 		      $$
 		      i.e., the indicator function of the scaled dual ball.
 		\item The Fenchel conjugate of a sum satisfies
 		      $$
-			      (f+g)^*(y) = \inf_{u+v=y} \bigl(f^*(u) + g^*(v)\bigr).
+			      (f+g)^*(y) = \inf_{u+v=y} \bigl(f^*(u) + g^*(v)\bigr)\,.
 		      $$
 	\end{enumerate}
 	Applying these to $f$ and $g$, we have
 	$$
-		f^*(u) = \delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u),
+		f^*(u) = \delta_{\alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger}}(u)\,,
 		\quad
-		g^*(v) = \delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v).
+		g^*(v) = \delta_{\alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}}(v)\,.
 	$$
-	Thus
+	Thus,
 	$$
 		\norm{\cdot}^*(y)
 		= (f+g)^*(y)
 		= \inf_{u+v=y}
 		\bigl(
-		\delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}}(u)
+		\delta_{\alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger}}(u)
 		+
-		\delta_{\beta B_{\norm{\cdot}_{(2)}^\dagger}}(v)
+		\delta_{\alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}}(v)
 		\bigr)
 		=
-		\delta_{\alpha B_{\norm{\cdot}_{(1)}^\dagger}+\beta B_{\norm{\cdot}_{(2)}^\dagger}}(y).
+		\delta_{\alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger}+\alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}}(y).
 	$$
-	But by definition, the conjugate of a norm is exactly the indicator of its dual unit ball:
+	By definition, the conjugate of a norm is exactly the indicator of its dual unit ball: 
 	$$
-		\norm{\cdot}^*(y) = \delta_{B_{\norm{\cdot}^\dagger}}(y).
+	\norm{\cdot}^*(y) = \delta_{\cB_{\norm{\cdot}^\dagger}}(y)\,.
 	$$
-	Therefore,
+	Therefore, $\cB_{\norm{\cdot}^\dagger} = \alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger} + \alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}$.
+
+	Now we prove the general case by induction. The base case ($n=2$) is already proven. Suppose that the assumption of the lemma holds for $n = k$. Then, for $n = k + 1$, 
 	$$
-		B_{\norm{\cdot}^\dagger} = \alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}.
+	\norm{x} = \sum_{i = 1}^k \alpha_i \norm{x}_{(i)} + \alpha_{k + 1}\norm{x}_{(k + 1)} = \norm{x}_{(1:k)} + \alpha_{k + 1}\norm{x}_{(k + 1)}\,.
 	$$
+	Applying the result for $n=2$ combined with the induction assumption, we obtain
+	$$
+	\cB_{\norm{\cdot}^\dagger} = \cB_{\norm{\cdot}_{(1:k)}^\dagger} + \alpha_{k + 1} \cB_{\norm{\cdot}_{(k + 1)}^\dagger} = \sum_{i = 1}^{k + 1} \alpha_i \cB_{\norm{\cdot}_{(i)}^\dagger}\,,
+	$$
+	which proves the lemma.
 \end{proof}
 
-Consequently,
-\begin{equation}\label{eq:dual_to_conv_comb}
-	\norm{y}^\dagger
-	= \inf\bigl\{ t \ge 0 : y \in t\bigl(\alpha B_{\norm{\cdot}_{(1)}^\dagger} + \beta B_{\norm{\cdot}_{(2)}^\dagger}\bigr) \bigr\}
-	= \inf_{z,t}\bigl\{t \ge 0: z \in t \alpha B_{\norm{\cdot}_{(1)}^\dagger}, y - z \in t \beta B_{\norm{\cdot}_{(1)}^\dagger}\bigr\}
-\end{equation}
+\begin{lemma}\label{lemma:lin_colm_alg}
+	Let $\norm{\cdot}_{(1)}, \dots, \norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1, \dots, \alpha_n$ be non-negative reals. Consider Linear Minimization Oracles $\mathrm{LMO}_{1}, \dots, \mathrm{LMO}_{n}$, corresponding to these norms. Then, $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{i}$ is the LMO corresponding to the norm $\norm{\cdot}^\dagger$ dual to the $\sum_{i = 1}^n \alpha_i \norm{\cdot}_{(i)}^\dagger$.
+\end{lemma}
+	
+\begin{proof}
+	From \cref{lemma:dual_to_conv_comb} we know the general form of the unit ball in the $\norm{\cdot}$ norm: $\cB_{\norm{\cdot}} = \sum_{i = 1}^n \alpha_i \cB_{\norm{\cdot}_{(i)}^\dagger}$. Thus, the linear function minimization objective on a $\norm{\cdot}$ norm ball can be transformed as follows:
+	$$
+	\argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD> = \argmin_{\mD_1 \in \alpha_i \cB_i,\dots,\mD_n \in \alpha_n\cB_n}\<\mM, \sum_{i = 1}^n\mD_i> = \sum_{i = 1}^n \argmin_{D_i \in \cB_i}\<\mM, \mD_i>\,.
+	$$
+	This immediately implies $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{i} \in \argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD>$, which proves the claim of the lemma.
+\end{proof}
 
-Now we can work with different norms.
+\subsection{Frobeniusize Them: F-Muon and F-Neon}
+Let us construct the concrete examples of algorithms given by linear combinations of LMO-algorithms. It follows from \cref{lemma:lin_colm_alg} that those algorithms can also be viewed as LMO-algorithms.
 
-\subsection{General case}
-We have norm \#1 with update \#1 and norm \#2 with update \#2. We prove the lemma that says that the update of their conic combination is a conic combination of updates \#1 and \#2.
-
-Then prove a lemma for any set of norms \#1, \dots, \#n (by induction)
-
-\subsection{Frobeniusize them: F-Muon and F-Neon}
-Let us consider a mixture of Fanions with another excellent LMO-algorithm, NSGD.
-
-We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
+Consider a mixture of Fanions with another excellent LMO-algorithm, NSGD. We define $\normfstar{\cdot}$ as a convex combination of $\normn{\cdot}$ and $\normf{\cdot}$:
 
 \begin{equation}\label{eq:fstar_norm}
 	\normfstar{\mX} = \alpha \normn{\mX} + (1-\alpha)\normf{\mX},
@@ -371,7 +371,7 @@ In general, one can consider F-KF-k-norm: $\norm{\cdot}_{\mathrm{F-KF-k}}$ = $\a
 \subsection{Add SignSGD: S-Muon and S-Neon}
 Trivial formulas, but we need more experiments.
 
-\section{Computing the updates}\label{sec:matrix-side}
+\section{Computing the Updates}\label{sec:matrix-side}
 To compute the algorithms' updates, we use thick-restarted Lanczos method for singular value problem (TRLan) on $\mM^{k\top}\mM^k$ or $\mM^k \mM^{k\top}$ matrices (the one with less size is picked), implemented in CuPy lSibrary \citep{cupy_svds_ref} and described in \citet{simonz1998thick}.
 
 This method is designed for efficiently approximating the largest singular values and vectors of large matrices. Its thick-restart strategy retains the most informative Ritz vectors at each cycle, which accelerates convergence while avoiding excessive memory growth. We are specifically interested in this algorithm because it allows us to extract several largest singular values and related singular vectors of the matrix to make a Neon step. Moreover, TRLan is stable GPU-friendly algorithm because it mainly operates with matrix-vector multiplications (MVs), which are higly-parallel, and does not require full reorthogonalization against the whole Krylov basis by managing  short recurrent formulas and incorparating thick restarting.
