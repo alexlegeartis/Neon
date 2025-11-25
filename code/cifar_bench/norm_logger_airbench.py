@@ -357,7 +357,8 @@ def set_seed(seed=42):
 #                Training                  #
 ############################################
 
-def log_grad_frobenius_norms(model, step=None, epoch=None, loss=None, outputs=None, labels=None, logger=None, silent=False, norm_data_list=None):
+def log_grad_frobenius_norms(model, step=None, epoch=None, loss=None, outputs=None, labels=None,
+                             logger=None, silent=False, norm_data_list=None, val_acc=None):
     """
     Compute and log Frobenius, spectral, and nuclear norms of gradients.
     
@@ -371,6 +372,7 @@ def log_grad_frobenius_norms(model, step=None, epoch=None, loss=None, outputs=No
         logger: Optional logger (e.g., tensorboard)
         silent: If True, don't print
         norm_data_list: Optional list to append norm data for DataFrame creation
+        val_acc: Optional validation accuracy measured alongside train accuracy
     
     Returns:
         Tuple of (norms_dicts, total_norms)
@@ -428,6 +430,9 @@ def log_grad_frobenius_norms(model, step=None, epoch=None, loss=None, outputs=No
         # Add train accuracy if computed
         if train_acc is not None:
             row_data['train_acc'] = train_acc
+        # Add val accuracy if computed
+        if val_acc is not None:
+            row_data['val_acc'] = val_acc
         # Add per-layer norms
         for name in frobenius_norms.keys():
             row_data[f'{name}_frobenius'] = frobenius_norms[name]
@@ -453,7 +458,8 @@ def log_grad_frobenius_norms(model, step=None, epoch=None, loss=None, outputs=No
     elif not silent:
         loss_str = f", Loss: {loss.item():.4f}" if loss is not None else ""
         train_acc_str = f", Train Acc: {train_acc:.4f}" if train_acc is not None else ""
-        print(f"[Step {step}] Total grad norms - Frobenius: {total_frobenius:.4f}, Spectral: {total_spectral:.4f}, Nuclear: {total_nuclear:.4f}{loss_str}{train_acc_str}")
+        val_acc_str = f", Val Acc: {val_acc:.4f}" if val_acc is not None else ""
+        print(f"[Step {step}] Total grad norms - Frobenius: {total_frobenius:.4f}, Spectral: {total_spectral:.4f}, Nuclear: {total_nuclear:.4f}{loss_str}{train_acc_str}{val_acc_str}")
         for k in frobenius_norms.keys():
             print(f"  {k}: Fro={frobenius_norms[k]:.4f}, Spec={spectral_norms[k]:.4f}, Nuc={nuclear_norms[k]:.4f}")
     
@@ -480,9 +486,13 @@ def save_norm_dataframe(norm_data_list, run=None, optimizer_name=None, combo_nam
     # Create DataFrame
     df = pd.DataFrame(norm_data_list)
     
-    # Backfill val_acc for each epoch if provided
+    # Backfill missing val_acc entries from epoch-level values if provided
     if epoch_val_acc is not None and 'epoch' in df.columns:
-        df['val_acc'] = df['epoch'].map(epoch_val_acc)
+        epoch_vals = df['epoch'].map(epoch_val_acc)
+        if 'val_acc' in df.columns:
+            df['val_acc'] = df['val_acc'].fillna(epoch_vals)
+        else:
+            df['val_acc'] = epoch_vals
     
     # Create output directory
     output_dir = 'cifar_norms'
@@ -588,6 +598,17 @@ def main(run, model, optimizer_config=None, combo_name=None):
     train_images = train_loader.normalize(train_loader.images[:5000])
     model.init_whiten(train_images)
     stop_timer()
+
+    ############################
+    # Pre-training evaluation  #
+    ############################
+    train_acc = None
+    val_acc = evaluate(model, test_loader, tta_level=0)
+    epoch = -1
+    epoch_val_acc[epoch] = val_acc
+    print_training_details(locals(), is_final_entry=False)
+    run = None  # Only print the run number once
+
     for epoch in range(ceil(total_train_steps / len(train_loader))):
 
         ####################
@@ -620,7 +641,9 @@ def main(run, model, optimizer_config=None, combo_name=None):
                 eta = (step / total_train_steps) # percentage of training
                 group["momentum"] = (group["target_momentum"] - 0.1) * eta + group["target_momentum"] * (1 - eta)
             '''
-            if step % 20 == 0 and not is_warmup:
+            if step % 10 == 0 and not is_warmup:
+                val_acc_step = evaluate(model, test_loader, tta_level=0)
+                model.train()
                 _, (total_fro, total_spec, total_nuc) = log_grad_frobenius_norms(
                     model,
                     step=step,
@@ -630,11 +653,12 @@ def main(run, model, optimizer_config=None, combo_name=None):
                     labels=labels,
                     logger=None,
                     silent=False,
-                    norm_data_list=norm_data_list
+                    norm_data_list=norm_data_list,
+                    val_acc=val_acc_step
                 )
                 loss_val = loss.item() if hasattr(loss, 'item') else float(loss)
                 train_acc_val = (outputs.detach().argmax(1) == labels).float().mean().item()
-                print(f"Epoch {epoch}, Step {step}: Total grad norms - Frobenius: {total_fro:.4f}, Spectral: {total_spec:.4f}, Nuclear: {total_nuc:.4f}, Loss: {loss_val:.4f}, Train Acc: {train_acc_val:.4f}")
+                print(f"Epoch {epoch}, Step {step}: Total grad norms - Frobenius: {total_fro:.4f}, Spectral: {total_spec:.4f}, Nuclear: {total_nuc:.4f}, Loss: {loss_val:.4f}, Train Acc: {train_acc_val:.4f}, Val Acc: {val_acc_step:.4f}")
 
             for opt in optimizers:
                 opt.step()
@@ -668,7 +692,13 @@ def main(run, model, optimizer_config=None, combo_name=None):
 
     # Save norm data to DataFrame if not warmup
     if not is_warmup and norm_data_list:
-        save_norm_dataframe(norm_data_list, run=run_id, optimizer_name=optimizer_name, combo_name=combo_name, epoch_val_acc=epoch_val_acc)
+        save_norm_dataframe(
+            norm_data_list,
+            run=run_id,
+            optimizer_name=optimizer_name,
+            combo_name=combo_name,
+            epoch_val_acc=epoch_val_acc
+        )
 
     return tta_val_acc
 
@@ -691,34 +721,35 @@ def run_optimizer_experiments(num_runs=1, warmup=True):
 
     # Define optimizer configurations with names
     optimizer_configs = {
-        'Neon_kyfan_lr04': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0
-        ),
-        'FNeon_kyfan_lr04': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5
-        ),
-        'Neon_kyfan_k5_lr04': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0, k=5,
-        ),
-        'FNeon_kyfan_k5_lr04': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5, k=5,
-        ),
-        'Neon_kyfan_k10_lr045': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.45, k=10, momentum=0.65, nesterov=True, sgd_coeff=0
-        ),
-        'FNeon_kyfan_k10_lr045': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.45, k=10, momentum=0.65, nesterov=True, sgd_coeff=0.5
-        ),
         'Muon_lr024': lambda filter_params: Muon(
-            filter_params, lr=0.24, momentum=0.6, nesterov=True
+            filter_params, lr=0.24, momentum=0.6, nesterov=True, norm_weight=False
         ),
+        # 'Neon_kyfan_lr04': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0
+        # ),
+        # 'FNeon_kyfan_lr04': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5
+        # ),
+        # 'Neon_kyfan_k5_lr04': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0, k=5,
+        # ),
+        # 'FNeon_kyfan_k5_lr04': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5, k=5,
+        # ),
+        # 'Neon_kyfan_k10_lr045': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.45, k=10, momentum=0.65, nesterov=True, sgd_coeff=0
+        # ),
+        # 'FNeon_kyfan_k10_lr045': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.45, k=10, momentum=0.65, nesterov=True, sgd_coeff=0.5
+        # ),
+        
         'FMuon_lr04': lambda filter_params: NormalizedMuon(
-            filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True
+            filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True, norm_weight=False
         ),
         'SignSGDMuon_lr04': lambda filter_params: SignSGDMuon(
-            filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5
+            filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.002, norm_weight=False 
         ),
-        'NSGD_lr_1': lambda filter_params: NormalizedMuon(filter_params, lr=1, momentum=0.6, sgd_coeff=1, nesterov=True)
+        'NSGD_lr_1': lambda filter_params: NormalizedMuon(filter_params, lr=1, momentum=0.6, sgd_coeff=1, nesterov=True, norm_weight=False)
     }
     
     # You can add more configurations here or modify existing ones

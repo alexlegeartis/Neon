@@ -362,11 +362,16 @@ def main(run, model):
     # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True) # the best tuned F-Muon, 94.0% for bs = 2000; 51.2 +-11 for bs = 10000; 92.56% for bs=200
     # optimizer2 = NormalizedMuon(filter_params, lr=0.24, momentum=0.6, sgd_coeff=0.5, nesterov=True) # 57 +- 13% for bs = 10000, 93.58% for bs = 2000
     # optimizer2 = MuonCringeMomentum(filter_params, lr=0.24, momentum=0.6, nesterov=True) # it's not bad, but without Nesterov=true it does not work
-    # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # base Muon, 94.01% 11.4 s; 57 +- 12% for bs = 10000; 92.5% for bs=200
+    # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.9, nesterov=True) # base Muon, 94.01% 11.4 s; 57 +- 12% for bs = 10000; 92.5% for bs=200
     # optimizer2 = SingleDeviceNorMuon(filter_params, lr=0.24, momentum=0.6) # no speedup
     # optimizer2 = RealFanion(filter_params, lr=0.24, momentum=0.6, k_share=0.1, nesterov=True) # often Muon, rare Neon. No improvement in the quality
     # optimizer2 = NeonMuon(filter_params, lr=0.4, momentum=0.6, neon_share=0.5, nesterov=True) # almost on par with Muon
-    optimizer2 = NeonMuon(filter_params, lr=0.24, momentum=0.6, neon_share=0.1, nesterov=True, sgd_coeff=0) # almost on par with Muon
+    # optimizer2 = NeonMuon(filter_params, lr=0.24, momentum=0.6, neon_share=0.1, nesterov=True, sgd_coeff=0) # almost on par with Muon
+    
+    # optimizer2 = Muon(filter_params, lr=0.24, momentum=0.6, nesterov=True, norm_weight=False) # 93.39%
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.6, sgd_coeff=0.5, nesterov=True, norm_weight=False) # 93.37%
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.9, sgd_coeff=0.5, nesterov=True, norm_weight=False) # 92.87%, but 98% on train
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.9, sgd_coeff=1, nesterov=True, norm_weight=False) # 90.49 +- 0.6%
     
     # optimizer2 = MLion(filter_params, lr=0.24, weight_decay=0.1, betas=(0.9, 0.99)) # 93.84% 11.4 s
     # optimizer2 = MLion(filter_params, lr=0.1) # 92.6%
@@ -412,8 +417,10 @@ def main(run, model):
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance - wrong EF
     
 
-    # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5) # 93.95%, on par with Muon for bs=2000, 50+-5% for bs=10000
-
+    # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.005) # 90.94 +- 0.4%
+    # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.007) # 90.95 +- 0.16%
+    optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.002) # 0.005-> 93.93%, 0.002 -> 94.00%, 0.001-> 93.89%
+    # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.009) # 89.66 +- 0.33%
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
     
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible

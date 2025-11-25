@@ -531,11 +531,12 @@ class SGDMuon(torch.optim.Optimizer):
 
             
 class SignSGDMuon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0, norm_weight=True):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True, sign_lr_mult=1, sgd_coeff=0):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
         self.norm_weight = norm_weight
+        self.sign_lr_mult = sign_lr_mult
 
     def step(self):
         for group in self.param_groups:
@@ -557,7 +558,7 @@ class SignSGDMuon(torch.optim.Optimizer):
                     p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
                 update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                update = (1 - self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * 0.001
+                update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * self.sign_lr_mult
                 p.data.add_(update, alpha=-lr) # take a step
 
 

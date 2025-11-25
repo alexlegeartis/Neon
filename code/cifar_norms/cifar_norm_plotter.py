@@ -101,7 +101,7 @@ def plot_norm_comparison(
         else:
             ax.set_ylabel(_format_metric_name(metric_col), fontsize=12)
         
-        ax.set_title(_format_metric_name(metric_col), fontsize=14, fontweight='bold')
+        # ax.set_title(_format_metric_name(metric_col), fontsize=14, fontweight='bold') - we need no title
         ax.legend(fontsize=10)
         ax.grid(True, alpha=0.3)
         
@@ -182,18 +182,51 @@ def _sanitize_filename(filename: str) -> str:
 
 import re
 
-def collect_grad_norm_files(folder_path):
-    pattern = re.compile(r"grad_norms_(.*?)_run\d+_\d{8}_\d{6}\.csv$")
+import os
+import re
+from datetime import datetime
+
+def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 11, 25, 13, 50, 0)):
+    """
+    Collect grad_norm CSV logs whose timestamp is strictly after `after_dt`.
+
+    Parameters
+    ----------
+    folder_path : str
+        Directory containing the CSV files.
+    after_dt : datetime
+        Only files with date/time > after_dt will be included.
+
+    Returns
+    -------
+    dict : {key: filename}
+    """
+    pattern = re.compile(
+        r"grad_norms_(.*?)_run\d+_(\d{8})_(\d{6})\.csv$"
+    )
+    
     result = {}
 
     for filename in os.listdir(folder_path):
-        if filename.endswith(".csv"):
-            match = pattern.match(filename)
-            if match:
-                key = match.group(1)
-                result[key] = filename
+        if not filename.endswith(".csv"):
+            continue
+
+        m = pattern.match(filename)
+        if not m:
+            continue
+
+        key = m.group(1)
+        date_str = m.group(2)   # YYYYMMDD
+        time_str = m.group(3)   # HHMMSS
+
+        # Parse into datetime
+        file_dt = datetime.strptime(date_str + time_str, "%Y%m%d%H%M%S")
+
+        if file_dt > after_dt:
+            result[key] = filename
 
     return result
+
 
 if __name__ == "__main__":
     # Example usage

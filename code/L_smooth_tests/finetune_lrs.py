@@ -7,7 +7,7 @@ import os
 
 import torch
 
-from optimizers import Muon, Neon, NormalizedMuon, RandomNormalizedMuon, NeonMuon
+from optimizers import Muon, Neon, NormalizedMuon, RandomNormalizedMuon, NeonMuon, SignSGDMuon
 from mlion import MLion, Lion
 from L_smooth_tests.optimizer_runner import MatrixProblem, run_optimizer_on_problem
 from L_smooth_tests.benchmark_plotter import build_default_panels, plot_from_descriptions, plot_and_save_default_panels, save_experiments_to_csv
@@ -108,6 +108,7 @@ def grid_search_learning_rates(
                 
                 # Create optimizer kwargs with current learning rate and momentum
                 optimizer_kwargs = {**base_optimizer_kwargs, "lr": float(lr)}
+                optimizer_kwargs["norm_weight"] = False
                 if momentum is not None:
                     optimizer_kwargs["momentum"] = float(momentum)
                     optimizer_kwargs["nesterov"] = True
@@ -277,12 +278,13 @@ def main() -> None:
         np.round(np.linspace(0.01, 0.1, 19), 3),
         np.round(np.linspace(0.15, 1, 18), 3)
     ))
+    # learning_rates = np.round(np.linspace(0.15, 1, 18), 3)
     print(f"Learning rate grid: {learning_rates}")
     
     # Generate momentum grid if specified
     momentums = None
     if True:# args.momentum_start is not None and args.momentum_end is not None:
-        momentums = [0, 0.5, 0.9, 0.95, 0.99]# np.linspace(args.momentum_start, args.momentum_end, args.momentum_num)
+        momentums = [0.9, 0.95]# [0, 0.5, 0.9, 0.95, 0.99]# np.linspace(args.momentum_start, args.momentum_end, args.momentum_num)
         momentums = np.round(momentums, 3)
         print(f"Momentum grid: {momentums}")
         print(f"Loss threshold: {args.loss_threshold}")
@@ -293,14 +295,14 @@ def main() -> None:
     
     # Define algorithm specifications (without fixed lr and momentum if grid searching)
     algorithm_specs: List[Dict[str, Any]] = [
-        dict(
-            name="NSGD",
-            optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(nesterov=True, sgd_coeff=1),
-            num_iterations=5000,
-            record_interval=50,
-            use_momentum=momentums is not None,  # Use momentum grid search if momentums are provided
-        ),
+        # dict(
+        #     name="NSGD",
+        #     optimizer_class=NormalizedMuon,
+        #     optimizer_kwargs=dict(nesterov=True, sgd_coeff=1),
+        #     num_iterations=600,
+        #     record_interval=50,
+        #     use_momentum=momentums is not None,  # Use momentum grid search if momentums are provided
+        # ),
         # dict(
         #     name="MLion",
         #     optimizer_class=MLion,
@@ -315,68 +317,84 @@ def main() -> None:
         #     num_iterations=iter_num_op,
         #     record_interval=100,
         # ),
+        # dict(
+        #     name="Muon",
+        #     optimizer_class=NormalizedMuon,
+        #     optimizer_kwargs=dict(nesterov=True),
+        #     num_iterations=600,
+        #     record_interval=50,
+        #     use_momentum=momentums is not None,
+        # ),
+        # dict(
+        #     name="F-Muon",
+        #     optimizer_class=NormalizedMuon,
+        #     optimizer_kwargs=dict(nesterov=True, sgd_coeff=0.5),
+        #     num_iterations=600,
+        #     record_interval=50,
+        #     use_momentum=momentums is not None,
+        # ),
+        # dict(
+        #     name="SignSGD",
+        #     optimizer_class=SignSGDMuon,
+        #     optimizer_kwargs=dict(nesterov=True, sign_lr_mult=0.01, sgd_coeff=1),
+        #     num_iterations=1000,
+        #     record_interval=50,
+        #     use_momentum=momentums is not None,
+        # ),
         dict(
-            name="Muon",
-            optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(nesterov=True),
-            num_iterations=3500,
-            record_interval=50,
-            use_momentum=momentums is not None,
-        ),
-        dict(
-            name="F-Muon",
-            optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(nesterov=True, sgd_coeff=0.5),
-            num_iterations=3000,
-            record_interval=50,
-            use_momentum=momentums is not None,
-        ),
-        dict(
-            name="F-Neon",
-            optimizer_class=Neon,
-            optimizer_kwargs=dict(nesterov=True, neon_mode="kyfan", iter_num=1, sgd_coeff=0.5),
-            num_iterations=8500,
-            record_interval=50,
-            use_momentum=momentums is not None,
-        ),
-        dict(
-            name="F-NeonMuon",
-            optimizer_class=NeonMuon,
-            optimizer_kwargs=dict(nesterov=True, neon_share=0.5, iter_num=10, sgd_coeff=0.33),
-            num_iterations=3000,
-            record_interval=50,
-            use_momentum=momentums is not None,
-        ),
-        dict(
-            name="F-Fanion-2",
-            optimizer_class=Neon,
-            optimizer_kwargs=dict(nesterov=True, neon_mode="kyfan", iter_num=10, sgd_coeff=0.5, k=2),
-            num_iterations=7500,
-            record_interval=50,
-            use_momentum=momentums is not None,
-        ),
-        dict(
-            name="F-Fanion-5",
-            optimizer_class=Neon,
-            optimizer_kwargs=dict(nesterov=True, neon_mode="kyfan", iter_num=10, sgd_coeff=0.5, k=5),
-            num_iterations=7500,
-            record_interval=50,
-            use_momentum=momentums is not None,
-        ),
-        dict(
-            name="F-Fanion-100",
-            optimizer_class=Neon,
-            optimizer_kwargs=dict(nesterov=True, neon_mode="kyfan", iter_num=10, sgd_coeff=0.5, k=100),
-            num_iterations=5000,
+            name="S-Muon",
+            optimizer_class=SignSGDMuon,
+            optimizer_kwargs=dict(nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5),
+            num_iterations=1000,
             record_interval=50,
             use_momentum=momentums is not None,
         ),
         # dict(
+        #     name="F-Neon",
+        #     optimizer_class=Neon,
+        #     optimizer_kwargs=dict(nesterov=True, neon_mode="kyfan", iter_num=1, sgd_coeff=0.5),
+        #     num_iterations=1000,
+        #     record_interval=50,
+        #     use_momentum=momentums is not None,
+        # ),
+        # dict(
+        #     name="F-NeonMuon",
+        #     optimizer_class=NeonMuon,
+        #     optimizer_kwargs=dict(nesterov=True, neon_share=0.5, iter_num=10, sgd_coeff=0.33),
+        #     num_iterations=1000,
+        #     record_interval=50,
+        #     use_momentum=momentums is not None,
+        # ),
+        # dict(
+        #     name="F-Fanion-2",
+        #     optimizer_class=Neon,
+        #     optimizer_kwargs=dict(nesterov=True, neon_mode="kyfan", iter_num=10, sgd_coeff=0.5, k=2),
+        #     num_iterations=1000,
+        #     record_interval=50,
+        #     use_momentum=momentums is not None,
+        # ),
+        # dict(
+        #     name="F-Fanion-5",
+        #     optimizer_class=Neon,
+        #     optimizer_kwargs=dict(nesterov=True, neon_mode="kyfan", iter_num=10, sgd_coeff=0.5, k=5),
+        #     num_iterations=1000,
+        #     record_interval=50,
+        #     use_momentum=momentums is not None,
+        # ),
+        # dict(
+        #     name="F-Fanion-100",
+        #     optimizer_class=Neon,
+        #     optimizer_kwargs=dict(nesterov=True, neon_mode="kyfan", iter_num=10, sgd_coeff=0.5, k=100),
+        #     num_iterations=1000,
+        #     record_interval=50,
+        #     use_momentum=momentums is not None,
+        # ),
+        # dict(
         #     name="Neon",
         #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=10, sgd_coeff=0),
-        #     num_iterations=1000,
-        #     record_interval=100,
+        #     optimizer_kwargs=dict(nesterov=True, neon_mode="kyfan", iter_num=10, sgd_coeff=0),
+        #     num_iterations=2000,
+        #     record_interval=50,
         # ),
         # dict(
         #     name="NeonMuon",
