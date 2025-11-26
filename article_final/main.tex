@@ -36,6 +36,11 @@
 \newcommand{\mX}{\bm{X}}
 \newcommand{\mSigma}{\bm{\Sigma}}
 
+% Vectors (note: \vec is already defined by jmlr class)
+% We define shortcuts for commonly used vectors
+\newcommand{\vu}{\vec{u}}
+\newcommand{\vv}{\vec{v}}
+
 % Calligraphic letters
 \newcommand{\cB}{\mathcal{B}}
 \newcommand{\cS}{\mathcal{S}}
@@ -45,6 +50,8 @@
 \DeclarePairedDelimiter{\normf}{\|}{\|_\mathrm{F}}
 \DeclarePairedDelimiter{\norms}{\|}{\|_{\mathrm{2}}}
 \DeclarePairedDelimiter{\normc}{\|}{\|_{\mathrm{C}}}
+\DeclarePairedDelimiter{\normn}{\|}{\|_{*}}
+\newcommand{\normkfk}[1]{\|#1\|_{\text{KF-}k}}
 
 % Inner product notation
 \def\<#1,#2>{\langle #1,#2\rangle}
@@ -161,26 +168,101 @@ and update for $\mX^k$ in \equationref{eq:simple_update} simplifies to
 	\mX^{k+1} = \mX^{k} - \gamma_k \{\mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,.
 \end{equation}
 
-Using this formula it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$.
+Using this formula it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$:
 
-For example, when the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \equationref{eq:our_update} turns into
+\paragraph{Frobenius norm and Normalized SGD}
+When the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \equationref{eq:our_update} turns into
 \begin{equation}\label{eq:nsgd_update}
 	\mX^{k+1} = \mX^{k} - \eta_k \frac{\mM^k}{\normf{\mM^k}}\,,
 \end{equation}
 which recovers Normalized SGD (NSGD).
 
-And when the norm is the spectral norm $\norms{\cdot}$, we get
+\paragraph{Spectral norm and Muon}
+When the norm is the spectral norm $\norms{\cdot}$, we get
 \begin{equation}\label{eq:muon_update}
 	\mX^{k+1} = \mX^{k} - \eta_k \mU \mV^\top\,,
 \end{equation}
 which is Muon without the $\sqrt{m/n}$ factor.
-Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^k$ ($\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and $\mV = [v_1, v_2, \dots, v_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
+Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^k$ ($\mU = [\vu_1, \vu_2, \dots, \vu_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and $\mV = [\vv_1, \vv_2, \dots, \vv_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
 
+\paragraph{Chebyshev norm and SignSGD}
 When the norm is the Chebyshev norm $\normc{\cdot}$, we get
 \begin{equation}\label{eq:signsgd_update}
 	\mX^{k+1} = \mX^{k} - \eta_k \sign(\mM^k)\,,
 \end{equation}
 which recovers SignSGD~\citep{bernstein2018signsgd}. Here, $\sign(\mM^k)$ denotes the element-wise sign function. SignSGD is particularly notable for its communication efficiency in distributed training, as it compresses gradients to 1-bit per parameter.
+
+\section{Duals to Ky Fan Norms Instead of the Spectral Norm}
+
+\subsection{\texorpdfstring{$\normn{\mM^{k}}$ and Neon}{Neon}}
+After considering $\normf{\mM^k}$ and $\norms{\mM^k}$, it is natural to look at the nuclear norm $\normn{\mM^k}$.
+\begin{lemma}\label{lemma:neon_update}
+	When $\norm{\cdot} = \normn{\cdot}$, \equationref{eq:our_update} turns into:
+
+	\begin{equation}\label{eq:neon_update}
+		\mX^{k+1} = \mX^{k} - \eta_k \vu_1 \vv_1^\top
+	\end{equation}
+\end{lemma}
+\begin{proof}
+Since $\norm{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\norms{\mM^k} = \sigma_1$.
+
+Let us note that $\Delta = \vu_1 \vv_1^\top$ delivers this value. Indeed, $\normn{\Delta}=1$ and by the trace property and orthogonality of the singular vectors,
+\[
+\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \vu_1 \vv_1^\top> = \tr \diag({\sigma_1, 0, \dots, 0}) = \norms{\mM^k}\,,
+\]
+which completes the proof.
+\end{proof}
+
+We name the derived algorithm \emph{Neon}. In \sectionref{sec:matrix-side}, we will discuss how to compute the Neon's update.
+
+\subsection{\texorpdfstring{$\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}{Muon, Neon, and Centralized Dion without error feedback}}
+
+Neon's and Muon's updates seem to be complete opposites: one has rank one, while the other is full-rank. It would be interesting to derive algorithms with updates of intermediate ranks.
+
+\subsubsection{Schatten norms}
+\citet{cesista2025schattenp} considered Schatten-$p$ norms: 
+\[\norm{\mM^k}_{S_p} = \left(\sum_{i=1}^{\min(m, n)}\sigma_i^p\right)^{1/p}\,,
+\]
+which produce the update
+\[
+\mX^{k+1} = \mX^k - \eta_k \mU \frac{\diag\left(\sigma_1^{q-1},\dots, \sigma_{\min(m,n)}^{q-1}\right)}{\left(\sum_{i=1}^{\min(m,n)}{\sigma_i^q}\right)^{\frac{q-1}{q}}}\mV^\top
+\]
+for $p$ and $q$ such that: $\frac{1}{p} + \frac{1}{q} = 1$. This formula recovers Neon when $p\rightarrow1$ provided that $\sigma_1 > \sigma_2$, which is true on real data; NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
+
+However, Schatten norms do not fill the gap rank: indeed, when $p > 1$, the rank of the update is full, while when $p=1$ ($p \rightarrow 1$) it is one. Moreover, it is not clear how to calculate the update for $p \neq 1, 2, \infty$: it seems one has to know all $\sigma_i$ to compute the update, which makes the problem as hard as the full SVD.
+
+\subsubsection{Ky Fan norms}
+There is another family of matrix norms, which might help us: Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ is $\sum_{i=1}^{k}\sigma_i$, i.e. the sum of the $k$ largest singular values of the matrix. Special cases of the Ky Fan $k$-norm are the Ky Fan $1$-norm, which is the spectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
+
+Let us derive the update for an arbitrary $k$. Since $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96), the goal is to reach $\max\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i, \sigma_1\}$. $\Delta = \vu_1 \vv_1^\top$ from Neon delivers $\sigma_1$, while $\Delta = \frac{1}{k}\sum_{i=1}^{\min(m,n)}\vu_i \vv_i^\top$ from Muon (with an extra factor of $1/k$) delivers $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
+\[
+\mX^{t+1} = \mX^{t} - \eta_t \vu_1 \vv_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\eta_t}{k}\mU \mV^\top\,,
+\]
+depending on which one better minimizes the linear function $L(\mX) \equiv F(\mX^t) + \mM^t(\mX - \mX^t)$.
+
+The rank gap is not closed by the Ky Fan norms because the obtained update is either one-rank or full-rank.
+
+\subsubsection{Duals to Ky Fan norms}
+While Schatten norms are closed under dualization and $\norm{\mM^k}_{S_p}^\dagger = \norm{\mM^k}_{S_q}$, for Ky Fan norms it is not generally the case. $k = 1$ and $k=\min(m, n)$ are exceptional: for $k=1$ the dual norm is $\normn{\cdot}$ with $k = \min(m, n)$ and for $k = \min(m, n)$ the dual norm is $\norms{\cdot}$ with $k=1$. For each other $k$, $\normkfk{\cdot} \neq \norm{\cdot}_{\text{KF-}k'}$ for any $k'$: $k'=\min(m, n)$ and $k'= 1$ correspond to the already discussed cases, while for other $k'$ one can change $\norm{\mM^k}_{\text{KF-}k'}$ by moving a small value between $\sigma_{k'}$ and $\sigma_{k'+1}$. During this change, $\norms{\mM^k}$ and $\normn{\mM^k}$ will remain constant, hence $\normkfk{\mM^k}$ will not change as well.
+
+\begin{lemma}\label{lemma:ky_fan_update}
+	When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \equationref{eq:our_update} turns into:
+
+	\begin{equation}\label{eq:ky_fan_update}
+		\mX^{t+1} = \mX^{t} - \eta \sum_{i=1}^{k}\vu_i \vv_i^\top
+	\end{equation}
+\end{lemma}
+
+\begin{proof}
+Since $\norm{\cdot}^\dagger = \normkfk{\cdot}^{\dagger\dagger} = \normkfk{\cdot}$, the goal is to reach $\normkfk{\mM^t}$.
+
+Let us note that $\Delta = \sum_{i=1}^{k} \vu_i \vv_i^\top$ delivers the value. Indeed,
+\[
+\<\mM^t, \Delta> =\<\mU \mSigma \mV^\top, \sum_{i=1}^{k} \vu_i \vv_i^\top> = \sum_{i,j=1}^{r, k}\<\vu_i \sigma_i \vv_i^\top, \vu_j \vv_j^\top> = \sum_{i=1}^{k}\sigma_i = \normkfk{\mM^t}\,,
+\]
+which completes the proof.
+\end{proof}
+These updates constitute the family of \emph{Fanions}, LMO-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. The algorithm for a particular $k$ we will call \emph{Fanion-$k$}. Thus, Muon is a Fanion-$\min\{m,n\}$, while Neon is a Fanion-1. Moreover, the unsharded version of the rank-$r$ Dion (Algorithm 1 from \citet{ahn2025dion}) without the error feedback and without scaling of the update is actually a Fanion-$r$ (see \citet{pethick2025understandingdion}, where Dion is written down in a notation more similar to ours).
 
 \bibliography{icomp2024_conference}
 
