@@ -186,7 +186,8 @@ import os
 import re
 from datetime import datetime
 
-def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 11, 25, 13, 50, 0)):
+
+def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 11, 26, 10, 50, 0)):
     """
     Collect grad_norm CSV logs whose timestamp is strictly after `after_dt`.
 
@@ -237,8 +238,13 @@ if __name__ == "__main__":
         "total_spectral",
         "total_nuclear",
         "nuclear norm for conv1",  # Will match layers.*.conv1.weight_nuclear
-        "layers.1.conv1.weight_frobenius",
-        "layers.2.conv2.weight_spectral",
+        "nuclear norm for conv2",
+        "Frobenius norm for conv1",
+        "Frobenius norm for conv2",
+
+        # "Frobenius norm for norm2",
+        "spectral norm for conv1",
+        "spectral norm for conv2",
         "train_acc",  # Train accuracy (plotted separately)
         "val_acc"     # Validation accuracy (plotted separately)
     ]

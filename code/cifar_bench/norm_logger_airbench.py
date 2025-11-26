@@ -721,7 +721,7 @@ def run_optimizer_experiments(num_runs=1, warmup=True):
 
     # Define optimizer configurations with names
     optimizer_configs = {
-        'Muon_lr024': lambda filter_params: Muon(
+        'Muon': lambda filter_params: Muon(
             filter_params, lr=0.24, momentum=0.6, nesterov=True, norm_weight=False
         ),
         # 'Neon_kyfan_lr04': lambda filter_params: Neon(
@@ -743,11 +743,11 @@ def run_optimizer_experiments(num_runs=1, warmup=True):
         #     filter_params, neon_mode='kyfan', lr=0.45, k=10, momentum=0.65, nesterov=True, sgd_coeff=0.5
         # ),
         
-        'FMuon_lr04': lambda filter_params: NormalizedMuon(
+        'F-Muon_lr04': lambda filter_params: NormalizedMuon(
             filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True, norm_weight=False
         ),
-        'SignSGDMuon_lr04': lambda filter_params: SignSGDMuon(
-            filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.002, norm_weight=False 
+        'S-Muon': lambda filter_params: SignSGDMuon(
+            filter_params, lr=0.42, momentum=0.65, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.003, norm_weight=False 
         ),
         'NSGD_lr_1': lambda filter_params: NormalizedMuon(filter_params, lr=1, momentum=0.6, sgd_coeff=1, nesterov=True, norm_weight=False)
     }

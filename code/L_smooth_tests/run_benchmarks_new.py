@@ -251,7 +251,7 @@ def main() -> None:
         # ),
         "S-Muon": dict(
             optimizer_class=SignSGDMuon,
-            optimizer_kwargs=dict(lr=0.035, momentum=0.9, nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5),
+            optimizer_kwargs=dict(lr=0.01, momentum=0.9, nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5), # lr=0.035, momentum=0.8 for 0.01 loss
             num_iterations=iter_num_fro,
             record_interval=record_period,
             verbose=True,
@@ -269,7 +269,7 @@ def main() -> None:
         ),
         "Muon": dict(
             optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(lr=0.02, momentum=0.9, nesterov=True),
+            optimizer_kwargs=dict(lr=0.007, momentum=0.5, nesterov=True), # 0.025, 0.5 for 0.01 loss
             num_iterations=iter_num_fro,
             record_interval=record_period,
             verbose=True,
@@ -278,7 +278,7 @@ def main() -> None:
         ),
         "F-Muon": dict(
             optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(lr=0.04, momentum=0.6, nesterov=True, sgd_coeff=0.5),
+            optimizer_kwargs=dict(lr=0.014, momentum=0.5, nesterov=True, sgd_coeff=0.5), # lr=0.035, momentum=0.5 for 0.01 loss
             num_iterations=iter_num_fro,
             record_interval=record_period,
             verbose=True,

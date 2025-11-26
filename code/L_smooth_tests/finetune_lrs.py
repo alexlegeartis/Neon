@@ -254,7 +254,7 @@ def main() -> None:
     parser.add_argument("--momentum-start", type=float, default=None, help="Start of momentum range (default: None, no momentum grid search)")
     parser.add_argument("--momentum-end", type=float, default=None, help="End of momentum range (default: None)")
     parser.add_argument("--momentum-num", type=int, default=5, help="Number of momentum points (default: 5)")
-    parser.add_argument("--loss-threshold", type=float, default=0.01, help="Loss threshold for below_thresh_iter (default: 0.01)")
+    parser.add_argument("--loss-threshold", type=float, default=0.001, help="Loss threshold for below_thresh_iter (default: 0.01)") # CHANGED
     parser.add_argument("--log-csv", type=str, default="L_smooth_tests/results/lr_grid_search.csv", help="Path to save grid search results CSV")
     parser.add_argument("--no-plot", action="store_true", help="If set, skip plotting after running experiments")
     parser.add_argument("--title-suffix", type=str, default=None, help="Optional title suffix for saved plots (defaults to size m x n)")
@@ -278,13 +278,15 @@ def main() -> None:
         np.round(np.linspace(0.01, 0.1, 19), 3),
         np.round(np.linspace(0.15, 1, 18), 3)
     ))
-    # learning_rates = np.round(np.linspace(0.15, 1, 18), 3)
+    # learning_rates = np.round(np.linspace(0.01, 0.1, 19), 3) # - for 0.01 loss
+    # learning_rates = learning_rates[learning_rates < 0.06]
+    learning_rates = np.round(np.linspace(0.005, 0.01, 6), 3) # - for 0.001 loss
     print(f"Learning rate grid: {learning_rates}")
     
     # Generate momentum grid if specified
     momentums = None
     if True:# args.momentum_start is not None and args.momentum_end is not None:
-        momentums = [0.9, 0.95]# [0, 0.5, 0.9, 0.95, 0.99]# np.linspace(args.momentum_start, args.momentum_end, args.momentum_num)
+        momentums = [0.5, 0.8, 0.9] # [0.1, 0.5, 0.8, 0.9, 0.95]# [0, 0.5, 0.9, 0.95, 0.99]# np.linspace(args.momentum_start, args.momentum_end, args.momentum_num)
         momentums = np.round(momentums, 3)
         print(f"Momentum grid: {momentums}")
         print(f"Loss threshold: {args.loss_threshold}")
@@ -292,7 +294,7 @@ def main() -> None:
     else:
         print(f"Loss threshold: {args.loss_threshold}")
         print(f"Total runs: {len(learning_rates)} learning rates × number of algorithms\n")
-    
+    rint = 10
     # Define algorithm specifications (without fixed lr and momentum if grid searching)
     algorithm_specs: List[Dict[str, Any]] = [
         # dict(
@@ -300,7 +302,7 @@ def main() -> None:
         #     optimizer_class=NormalizedMuon,
         #     optimizer_kwargs=dict(nesterov=True, sgd_coeff=1),
         #     num_iterations=600,
-        #     record_interval=50,
+        #     record_interval=rint,
         #     use_momentum=momentums is not None,  # Use momentum grid search if momentums are provided
         # ),
         # dict(
@@ -317,36 +319,36 @@ def main() -> None:
         #     num_iterations=iter_num_op,
         #     record_interval=100,
         # ),
-        # dict(
-        #     name="Muon",
-        #     optimizer_class=NormalizedMuon,
-        #     optimizer_kwargs=dict(nesterov=True),
-        #     num_iterations=600,
-        #     record_interval=50,
-        #     use_momentum=momentums is not None,
-        # ),
-        # dict(
-        #     name="F-Muon",
-        #     optimizer_class=NormalizedMuon,
-        #     optimizer_kwargs=dict(nesterov=True, sgd_coeff=0.5),
-        #     num_iterations=600,
-        #     record_interval=50,
-        #     use_momentum=momentums is not None,
-        # ),
-        # dict(
-        #     name="SignSGD",
-        #     optimizer_class=SignSGDMuon,
-        #     optimizer_kwargs=dict(nesterov=True, sign_lr_mult=0.01, sgd_coeff=1),
-        #     num_iterations=1000,
-        #     record_interval=50,
-        #     use_momentum=momentums is not None,
-        # ),
+        dict(
+            name="Muon",
+            optimizer_class=NormalizedMuon,
+            optimizer_kwargs=dict(nesterov=True),
+            num_iterations=1500,
+            record_interval=rint,
+            use_momentum=momentums is not None,
+        ),
+        dict(
+            name="F-Muon",
+            optimizer_class=NormalizedMuon,
+            optimizer_kwargs=dict(nesterov=True, sgd_coeff=0.5),
+            num_iterations=1500,
+            record_interval=rint,
+            use_momentum=momentums is not None,
+        ),
+        dict(
+            name="SignSGD",
+            optimizer_class=SignSGDMuon,
+            optimizer_kwargs=dict(nesterov=True, sign_lr_mult=0.01, sgd_coeff=1),
+            num_iterations=1500,
+            record_interval=rint,
+            use_momentum=momentums is not None,
+        ),
         dict(
             name="S-Muon",
             optimizer_class=SignSGDMuon,
             optimizer_kwargs=dict(nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5),
-            num_iterations=1000,
-            record_interval=50,
+            num_iterations=1500,
+            record_interval=rint,
             use_momentum=momentums is not None,
         ),
         # dict(
