@@ -14,6 +14,52 @@
 \makeatother
 \usepackage[load-configurations=version-1]{siunitx} % newer version
 
+% Load required packages for custom math commands
+\usepackage{mathtools}
+\usepackage{bm}
+
+% Custom math commands
+% Blackboard bold
+\newcommand{\R}{\mathbb{R}}
+
+% Bold matrices
+\newcommand{\mA}{\bm{A}}
+\newcommand{\mB}{\bm{B}}
+\newcommand{\mD}{\bm{D}}
+\newcommand{\mF}{\bm{F}}
+\newcommand{\mG}{\bm{G}}
+\newcommand{\mM}{\bm{M}}
+\newcommand{\mN}{\bm{N}}
+\newcommand{\mS}{\bm{S}}
+\newcommand{\mU}{\bm{U}}
+\newcommand{\mV}{\bm{V}}
+\newcommand{\mX}{\bm{X}}
+\newcommand{\mSigma}{\bm{\Sigma}}
+
+% Calligraphic letters
+\newcommand{\cB}{\mathcal{B}}
+\newcommand{\cS}{\mathcal{S}}
+
+% Norms and operators
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\DeclarePairedDelimiter{\normf}{\|}{\|_\mathrm{F}}
+\DeclarePairedDelimiter{\norms}{\|}{\|_{\mathrm{2}}}
+\DeclarePairedDelimiter{\normc}{\|}{\|_{\mathrm{C}}}
+
+% Inner product
+\newcommand{\<}{\langle}
+\renewcommand{\>}{\rangle}
+
+% Math operators
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\diag}{diag}
+
+% Custom shortcuts
+\renewcommand{\epsilon}{\varepsilon}
+\newcommand{\Rmn}{\R^{m\times n}}
+
 % change the arguments, as appropriate, in the following:
 \jmlrvolume{tbd}
 \jmlryear{2025}
@@ -81,6 +127,61 @@ Then we compare the performances of the algorithm families on various model and 
 Our experiments reveal important insights into the role of matrix norms in optimization. First, we show on the example of Neon, the one-rank Fanion, that not every LMO-based algorithm is effective, despite the same asymptotics in the general bounds of \citet{kovalev2025understanding} and \citet{riabinin2025gluon}. This suggests that existing theoretical guarantees should be reworked to explain empirical performance.
 
 Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon and S-Muon achieve $94.02 \pm 0.13\%$ and $94.03 \pm 0.13\%$ accuracy, matching Muon's $94.01 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, while fully-tuned Muon achieves 3.279. Finally, S-Muon matches Muon on fine-tuning of NanoGPT on Tiny Stories, while F-Muon is far more resistant to the learning rate choice than Muon. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, answering affirmatively the central question posed above. Moreover, the tools from \sectionref{sec:conic_combo} give the researchers an unheard-of flexibility in designing algorithms that do not have to be modifications of Muon.
+
+\section{Preliminaries: Linear Minimization Oracle Framework}
+
+Training a neural network is essentially an optimization of a function of several weight matrices and a few vectors. Let us start by considering the problem of minimizing a differentiable function of a {\it single} matrix:
+\begin{equation}\label{eq:matrix_problem}
+	F(\cdot)\colon \Rmn \to \R\,,\qquad F(\mX) \to \min_{\mX \in \Rmn}\,
+\end{equation}
+We equip the matrix space $\Rmn$ with a standard dot product $\<\cdot, \cdot> \to \R$ and a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which does not have to coincide with the Frobenius norm $\normf{\cdot}$. The dual norm $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ that is associated with $\norm{\cdot}$ is defined as
+\begin{equation}\label{eq:dual_norm}
+	\norm{\mG}^\dagger = \sup_{\mD \in \Rmn\,:\norm{\mD}\leq 1} \<\mG,\mD>\,.
+\end{equation}
+
+Such problems can be solved with an iterative algorithm based on the Linear Minimization Oracle (LMO):
+\begin{equation}\label{eq:lmo}
+	\mathrm{LMO}(\mM^k) \in \argmin_{\mD \in \cS} \<\mM^k, \mD>\,,
+\end{equation}
+where $\mM^k$ is a gradient (or a momentum) of $F$ in $\mX^k$ and $\cS \subset \Rmn$ is some set. The update of the algorithm is defined as follows:
+\begin{equation}\label{eq:simple_update}
+	\mX^{k + 1} = \mX^k + \gamma_k\mathrm{LMO}\left(\mM^k\right)\,.
+\end{equation}
+
+We are particularly interested in the case when $\cS$ is a unit ball in the norm $\norm{\cdot}$:
+
+$$
+\cS = \cB_{\norm{\cdot}} = \{ \mD \in \Rmn \mid \norm{\mD} \leq 1 \}\,.
+$$
+In this case,
+$$
+\argmin_{\mD \in \cS} \<\mM^k, \mD> = - \{ \mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,,
+$$
+and update for $\mX^k$ in \cref{eq:simple_update} simplifies to
+\begin{equation}\label{eq:our_update}
+	\mX^{k+1} = \mX^{k} - \gamma_k \{\mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,.
+\end{equation}
+
+Using this formula it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$.
+
+For example, when the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \cref{eq:our_update} turns into
+\begin{equation}\label{eq:nsgd_update}
+	\mX^{k+1} = \mX^{k} - \eta_k \frac{\mM^k}{\normf{\mM^k}}\,,
+\end{equation}
+which recovers Normalized SGD (NSGD).
+
+And when the norm is the spectral norm $\norms{\cdot}$, we get
+\begin{equation}\label{eq:muon_update}
+	\mX^{k+1} = \mX^{k} - \eta_k U V^\top\,,
+\end{equation}
+which is Muon without the $\sqrt{m/n}$ factor.
+Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^k$ ($\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \space \sigma_2, \dots, \sigma_r)$, and $\mV = [v_1, v_2, \dots, v_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
+
+When the norm is the Chebyshev norm $\normc{\cdot}$, we get
+\begin{equation}\label{eq:signsgd_update}
+	\mX^{k+1} = \mX^{k} - \eta_k \sign(\mM^k)\,,
+\end{equation}
+which recovers SignSGD~\citep{bernstein2018signsgd}. Here, $\sign(\mM^k)$ denotes the element-wise sign function. SignSGD is particularly notable for its communication efficiency in distributed training, as it compresses gradients to 1-bit per parameter.
 
 \bibliography{icomp2024_conference}
 
