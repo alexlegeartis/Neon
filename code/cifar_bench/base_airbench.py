@@ -383,6 +383,7 @@ def main(run, model):
     # optimizer2 = SpectrallyNormalizedNeon(filter_params, lr=0.48, momentum=0.65, nesterov=True, sgd_coeff=0) # pure Neon, 68.2%, lr is a bit high
     # optimizer2 = SpectrallyNormalizedNeon(filter_params, lr=0.3, momentum=0.6, nesterov=True, sgd_coeff=1) # Spectrally Normalized SGD, 91.4%
     # optimizer2 = NormalizedMuon(filter_params, lr=0.3, momentum=0.6, sgd_coeff=1, nesterov=True) # Frobenius NSGD, only 88%
+    # optimizer2 = NormalizedMuon(filter_params, lr=1, momentum=0.9, sgd_coeff=1, nesterov=True) # one of the BASELINES
     # optimizer2 = NormalizedMuon(filter_params, lr=1, momentum=0.6, sgd_coeff=1, nesterov=True) # Frobenius NSGD, 90.4%, mild dependency on lr
     # optimizer2= NuclearNormalizedMuon(filter_params, lr=0.4, momentum=0.6, sgd_coeff=0.5, nesterov=True) # 93.6%
     # optimizer2 = NuclearNormalizedMuon(filter_params, lr=3, momentum=0.6, sgd_coeff=1, nesterov=True) # Nuclear NSGD, 89%
@@ -416,9 +417,10 @@ def main(run, model):
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=10, momentum_decay=0.9, sgd_coeff=0) # 84.5%, with 0.4% variance - wrong EF
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance - wrong EF
     
+    optimizer2 = SignSGDMuon(filter_params, lr=1, momentum=0.95, nesterov=True, sgd_coeff=1, sign_lr_mult=0.003) # 91.41 +- 0.33% BASELINE
 
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.005) # 90.94 +- 0.4%
-    optimizer2 = SignSGDMuon(filter_params, lr=0.003, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=1) # 90.94 +- 0.4%
+    # optimizer2 = SignSGDMuon(filter_params, lr=0.003, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=1) # 90.94 +- 0.4%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.007) # 90.95 +- 0.16%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.002) # 0.005-> 93.93%, 0.002 -> 94.00%, 0.001-> 93.89%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.009) # 89.66 +- 0.33%

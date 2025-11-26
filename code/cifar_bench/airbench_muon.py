@@ -427,8 +427,10 @@ def main(run, model):
                      dict(params=norm_biases,         lr=bias_lr, weight_decay=wd/bias_lr),
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
-    optimizer2 =  Muon(filter_params, lr=0.24, momentum=0.63, nesterov=True)
-    # optimizer2 =  NormalizedMuon(filter_params, lr=0.44, momentum=0.63, nesterov=True, sgd_coeff=0.5)
+    # optimizer2 =  Muon(filter_params, lr=0.24, momentum=0.63, nesterov=True)
+    optimizer2 = NormalizedMuon(filter_params, lr=0.5, momentum=0.95, sgd_coeff=1, nesterov=True)
+    # optimizer2 = SignSGDMuon(filter_params, lr=1, momentum=0.95, nesterov=True, sgd_coeff=1, sign_lr_mult=0.003) # 91.54 +- 0.26%
+
     # optimizer2 =  SignSGDMuon(filter_params, lr=0.42, momentum=0.63, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.003)
     # optimizer2 = MuonOrSign(filter_params, lr=0.42, momentum=0.65, nesterov=True, sign_coeff=0.003) # 94.00%, for now a bad idea
 
@@ -516,7 +518,7 @@ if __name__ == "__main__":
 
     print_columns(logging_columns_list, is_head=True)
     main("warmup", model)
-    accs = torch.tensor([main(run, model) for run in range(50)])
+    accs = torch.tensor([main(run, model) for run in range(20)])
     print("Mean: %.4f    Std: %.4f" % (accs.mean(), accs.std()))
 
     log_dir = os.path.join("logs", str(uuid.uuid4()))
