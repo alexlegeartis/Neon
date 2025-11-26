@@ -707,6 +707,50 @@ class MuonOrNSGD(torch.optim.Optimizer): # in strange
                 p.data.add_(update, alpha=-lr) # take a step
 
 
+class MuonOrSign(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sign_coeff=0, norm_weight=True):
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+        self.sign_coeff = sign_coeff # here it is for the norm with conv(ball_op, sign_coeff * ball_sign)
+        self.norm_weight = norm_weight
+
+    def step(self):
+        for group in self.param_groups:
+            lr = group["lr"]
+            momentum = group["momentum"]
+            for p in group["params"]:
+                g = p.grad
+                if g is None:
+                    continue
+                state = self.state[p]
+
+                if "momentum_buffer" not in state.keys():
+                    state["momentum_buffer"] = torch.zeros_like(g)
+                buf = state["momentum_buffer"]
+                buf.mul_(momentum).add_(g)
+                g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
+
+                eps = 1e-12
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
+                uvt, nuc_norm = newtonschulz5_with_nuclear(g.reshape(len(g), -1))
+                m, n = uvt.shape
+                # print(f"{m, n}: {real_nsgd}")
+                uvt = uvt.view(g.shape)
+                sign_drop = g.abs().mean() * self.sign_coeff * m * n
+                # print(f"Muon vs SignSGD {m, n}: {nuc_norm} vs {sign_drop}")
+                if (sign_drop + nuc_norm) / 2 > 0.24 / 0.42 * nuc_norm:
+                    update = self.sign_coeff * g.sign() * (1 - 0.5) + uvt * 0.5
+                    # print("Sign")
+                else:
+                    update = uvt * 0.24 / 0.42
+                    # print("Muon")
+                p.data.add_(update, alpha=-lr) # take a step
+
+
 class RealFanion(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, k_share=1, nesterov=False,
                  iter_num=1, sgd_coeff=0, norm_weight=True):

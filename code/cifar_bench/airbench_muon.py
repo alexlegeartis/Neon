@@ -25,6 +25,8 @@ import torchvision.transforms as T
 import math
 torch.backends.cudnn.benchmark = True
 
+from optimizers import MuonOrSign
+
 #############################################
 #               Muon optimizer              #
 #############################################
@@ -118,11 +120,14 @@ class NormalizedMuon(torch.optim.Optimizer):
                     update = self.sgd_coeff * g_normalized
                 p.data.add_(update, alpha=-lr) # take a step
 
-class SignedMuon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, sgd_coeff=0):
+
+class SignSGDMuon(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True, sign_lr_mult=1, sgd_coeff=0):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
+        self.sign_lr_mult = sign_lr_mult
 
     def step(self):
         for group in self.param_groups:
@@ -140,14 +145,11 @@ class SignedMuon(torch.optim.Optimizer):
                 buf.mul_(momentum).add_(g)
                 g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
 
-                p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
+                if self.norm_weight:
+                    p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
-                eps = 1e-12
-                if self.sgd_coeff != 1:
-                    update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                    update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * torch.sign(g) / math.sqrt(g.shape[0] * g.shape[1])
-                else:
-                    update = self.sgd_coeff * torch.sign(g) / math.sqrt(g.shape[0] * g.shape[1])
+                update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
+                update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * self.sign_lr_mult
                 p.data.add_(update, alpha=-lr) # take a step
 
 #############################################
@@ -425,7 +427,10 @@ def main(run, model):
                      dict(params=norm_biases,         lr=bias_lr, weight_decay=wd/bias_lr),
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
-    optimizer2 = NormalizedMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5)
+    # optimizer2 =  NormalizedMuon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5)
+    optimizer2 =  SignSGDMuon(filter_params, lr=0.42, momentum=0.65, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.003)
+    # optimizer2 = MuonOrSign(filter_params, lr=0.42, momentum=0.65, nesterov=True, sign_coeff=0.003) # 94.00%, for now a bad idea
+
     optimizers = [optimizer1, optimizer2]
     for opt in optimizers:
         for group in opt.param_groups:
