@@ -46,9 +46,8 @@
 \DeclarePairedDelimiter{\norms}{\|}{\|_{\mathrm{2}}}
 \DeclarePairedDelimiter{\normc}{\|}{\|_{\mathrm{C}}}
 
-% Inner product
-\newcommand{\<}{\langle}
-\renewcommand{\>}{\rangle}
+% Inner product notation
+\def\<#1,#2>{\langle #1,#2\rangle}
 
 % Math operators
 \DeclareMathOperator*{\argmin}{arg\,min}
@@ -130,7 +129,7 @@ Most notably, our experiments on real-world tasks demonstrate that the choice of
 
 \section{Preliminaries: Linear Minimization Oracle Framework}
 
-Training a neural network is essentially an optimization of a function of several weight matrices and a few vectors. Let us start by considering the problem of minimizing a differentiable function of a {\it single} matrix:
+Training a neural network is essentially an optimization of a function of several weight matrices and a few vectors. Let us start by considering the problem of minimizing a differentiable function of a \emph{single} matrix:
 \begin{equation}\label{eq:matrix_problem}
 	F(\cdot)\colon \Rmn \to \R\,,\qquad F(\mX) \to \min_{\mX \in \Rmn}\,
 \end{equation}
@@ -150,21 +149,21 @@ where $\mM^k$ is a gradient (or a momentum) of $F$ in $\mX^k$ and $\cS \subset \
 
 We are particularly interested in the case when $\cS$ is a unit ball in the norm $\norm{\cdot}$:
 
-$$
+\[
 \cS = \cB_{\norm{\cdot}} = \{ \mD \in \Rmn \mid \norm{\mD} \leq 1 \}\,.
-$$
+\]
 In this case,
-$$
+\[
 \argmin_{\mD \in \cS} \<\mM^k, \mD> = - \{ \mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,,
-$$
-and update for $\mX^k$ in \cref{eq:simple_update} simplifies to
+\]
+and update for $\mX^k$ in \equationref{eq:simple_update} simplifies to
 \begin{equation}\label{eq:our_update}
 	\mX^{k+1} = \mX^{k} - \gamma_k \{\mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,.
 \end{equation}
 
 Using this formula it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$.
 
-For example, when the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \cref{eq:our_update} turns into
+For example, when the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \equationref{eq:our_update} turns into
 \begin{equation}\label{eq:nsgd_update}
 	\mX^{k+1} = \mX^{k} - \eta_k \frac{\mM^k}{\normf{\mM^k}}\,,
 \end{equation}
@@ -172,10 +171,10 @@ which recovers Normalized SGD (NSGD).
 
 And when the norm is the spectral norm $\norms{\cdot}$, we get
 \begin{equation}\label{eq:muon_update}
-	\mX^{k+1} = \mX^{k} - \eta_k U V^\top\,,
+	\mX^{k+1} = \mX^{k} - \eta_k \mU \mV^\top\,,
 \end{equation}
 which is Muon without the $\sqrt{m/n}$ factor.
-Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^k$ ($\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \space \sigma_2, \dots, \sigma_r)$, and $\mV = [v_1, v_2, \dots, v_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
+Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^k$ ($\mU = [u_1, u_2, \dots, u_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and $\mV = [v_1, v_2, \dots, v_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
 
 When the norm is the Chebyshev norm $\normc{\cdot}$, we get
 \begin{equation}\label{eq:signsgd_update}
