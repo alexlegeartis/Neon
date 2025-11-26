@@ -30,12 +30,12 @@
        \addr Moscow Institute of Physics and Technology (MIPT)\\
        Marchuk Institute of Numerical Mathematics
        \AND
-       \Name{Alexander Vinogradov}
-       \Email{vinogradov.am@phystech.edu}\\
-       \addr Moscow Institute of Physics and Technology (MIPT)
-       \AND
        \Name{Nikolai Kozlov}
        \Email{kozlov.na@phystech.edu}\\
+       \addr Moscow Institute of Physics and Technology (MIPT)
+       \AND
+       \Name{Alexander Vinogradov}
+       \Email{vinogradov.am@phystech.edu}\\
        \addr Moscow Institute of Physics and Technology (MIPT)
        \AND
        \Name{Daniil Merkulov}
@@ -55,5 +55,33 @@
 \begin{abstract}
 	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan $k$-norms to introduce a family of Muon-like algorithms we name \emph{Fanions}, which happen to be similar to Dion. Then working with the duals of convex combinations of the Ky Fan $k$-norms and the Frobenius norm or the $l_\infty$ norm, we construct the families of \emph{F-Fanions} and \emph{S-Fanions} respectively. Their most prominent members are \emph{F-Muon} and \emph{S-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that F-Muon and S-Muon are always on par with Muon, while on fine-tuning of NanoGPT and synthetic linear least squares they are even better than vanilla Muon optimizer.
 \end{abstract}
+
+\section{Introduction}
+
+Minimizing loss functions in unprecedentedly high-dimensional spaces has recently become an integral and crucial part in training large language models. Hence, new scalable, time- and memory-efficient algorithms have been demanded. Besides well-known Adam \citep{kingma2014adam} and AdamW \citep{loshchilov2017decoupled}, recently proposed Muon \citep{jordan2024muon} has shown promising results on training very large models \citep{liu2025muon}. Its key difference from Adam and AdamW is that it has been constructed specifically for optimizing functions of weight matrices, which are common in deep learning.
+
+That is what can be said from a practical point of view. From a theoretical perspective, a key innovation of Muon was its principled derivation of the update rule, which emerged as the solution to an optimization problem constrained by the RMS-to-RMS norm (scaled version of the spectral norm) \citep{bernstein2025deriving}.
+
+Motivated by the success of Muon, many generalizations and variations of it were proposed. Among the notable ones are Scion \citep{pethick2025training}, Dion \citep{ahn2025dion} and Gluon \citep{riabinin2025gluon}. Those works try to explain Muon's efficiency and establish convergence bounds. One central question, however, remains unanswered:
+
+\textit{In deriving Muon's update step, why should one constrain by the spectral or any other operator norm? How would alternative norms affect performance and computational cost?}
+
+In this article, we tackle this question by actually showing that there are many viable non-operator norms. We leverage the family of norms dual to Ky Fan $k$-norms to derive a new family of \textbf{Fanions}, algorithms with low-rank updates. This approach theoretically explains the backbone of Dion's update \citep{ahn2025dion} and generalizes the memory-motivated application of the nuclear norm to Sharpness-Aware Minimization \citep{pethick2025sam}. As it was done with Muon, we come up with an effective procedure for computing Fanions' updates. Lanczos algorithm, which is described and compared with its competitors in \sectionref{sec:matrix-side}, is the most operation-effective algorithm, which, however, for now lacks an effective GPU- and PyTorch-friendly implementation.
+
+Working with duals to conic combinations of dual norms, we construct the families of \textbf{F-Fanions} and \textbf{S-Fanions}, which are hybrids of Muon and NormalizedSGD and SignSGD, respectively.
+
+Then we compare the performances of the algorithm families on various model and real-world problems:
+\begin{itemize}
+	\item Synthetic least squares experiment \sectionref{subsec:lls_exps}
+	\item CIFAR-10 airbench \citep{cifar2023airbench}
+	\item Pre-training NanoGPT on FineWeb dataset \citep{modded_nanogpt_2024}
+	\item Fine-tuning NanoGPT on Tiny Stories \citep{eldan2023tinystoriessmalllanguagemodels}
+\end{itemize}
+
+Our experiments reveal important insights into the role of matrix norms in optimization. First, we show on the example of Neon, the one-rank Fanion, that not every LMO-based algorithm is effective, despite the same asymptotics in the general bounds of \citet{kovalev2025understanding} and \citet{riabinin2025gluon}. This suggests that existing theoretical guarantees should be reworked to explain empirical performance.
+
+Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon and S-Muon achieve $94.02 \pm 0.13\%$ and $94.03 \pm 0.13\%$ accuracy, matching Muon's $94.01 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, while fully-tuned Muon achieves 3.279. Finally, S-Muon matches Muon on fine-tuning of NanoGPT on Tiny Stories, while F-Muon is far more resistant to the learning rate choice than Muon. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, answering affirmatively the central question posed above. Moreover, the tools from \sectionref{sec:conic_combo} give the researchers an unheard-of flexibility in designing algorithms that do not have to be modifications of Muon.
+
+\bibliography{icomp2024_conference}
 
 \end{document}

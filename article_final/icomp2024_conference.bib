@@ -1,0 +1,486 @@
+% rough idea to generate new methods
+@article{bernstein2024oldoptimizernewnorm,
+  title={Old optimizer, new norm: An anthology},
+  author={Bernstein, Jeremy and Newhouse, Laker},
+  journal={arXiv preprint arXiv:2409.20325},
+  year={2024}
+}
+
+% muon tests
+@misc{jordan2024muon,
+  author       = {Keller Jordan and Yuchen Jin and Vlado Boza and Jiacheng You and
+                  Franz Cesista and Laker Newhouse and Jeremy Bernstein},
+  title        = {Muon: An optimizer for hidden layers in neural networks},
+  year         = {2024},
+  url          = {https://kellerjordan.github.io/posts/muon/}
+}
+
+% muon theory
+@misc{bernstein2025deriving,
+  author = {Jeremy Bernstein},
+  title = {Deriving Muon},
+  url = {https://jeremybernste.in/writing/deriving-muon},
+  year = {2025}
+}
+
+@misc{pethick2025understandingdion,
+  author = {Thomas Pethick},
+  title = {Understanding Dion},
+  url = {https://pethick.dk/posts/2025-08-18-understanding-dion/},
+  year = {2025}
+}
+
+% muon performance
+@article{liu2025muon,
+  title={Muon is scalable for llm training},
+  author={Liu, Jingyuan and Su, Jianlin and Yao, Xingcheng and Jiang, Zhejun and Lai, Guokun and Du, Yulun and Qin, Yidao and Xu, Weixin and Lu, Enzhe and Yan, Junjie and others},
+  journal={arXiv preprint arXiv:2502.16982},
+  year={2025}
+}
+
+% we don't need this, or muon performance
+@misc{tveit2025muonoptimizeracceleratesgrokking,
+      title={Muon Optimizer Accelerates Grokking}, 
+      author={Amund Tveit and Bjørn Remseth and Arve Skogvold},
+      year={2025},
+      eprint={2504.16041},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2504.16041}, 
+}
+
+% about bounds, though that's not an ideal
+@misc{li2025noteconvergencemuon,
+      title={A Note on the Convergence of Muon and Further}, 
+      author={Jiaxiang Li and Mingyi Hong},
+      year={2025},
+      eprint={2502.02900},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/2502.02900}, 
+}
+
+% do we need Shampoo at all? Probably, yes, it's a function of a matrix
+@misc{gupta2018shampoopreconditionedstochastictensor,
+      title={Shampoo: Preconditioned Stochastic Tensor Optimization}, 
+      author={Vineet Gupta and Tomer Koren and Yoram Singer},
+      year={2018},
+      eprint={1802.09568},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/1802.09568}, 
+}
+
+% muon in llms
+@misc{chen2025cosmoshybridadaptive,
+      title={COSMOS: A Hybrid Adaptive Optimizer for Memory-Efficient Training of  LLMs}, 
+      author={Weizhu Chen and Chen Liang and Tuo Zhao and Zixuan Zhang and Hao Kang and Liming Liu and Zichong Li and Zhenghao Xu},
+      year={2025},
+      eprint={2502.17410},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2502.17410}, 
+}
+
+@misc{ahn2025dion,
+      title={Dion: Distributed Orthonormalized Updates}, 
+      author={Kwangjun Ahn and Byron Xu and Natalie Abreu and Ying Fan and Gagik Magakyan and Pratyusha Sharma and Zheng Zhan and John Langford},
+      year={2025},
+      eprint={2504.05295},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2504.05295}, 
+}
+
+% AdamW classics
+@Article{Loshchilov2017FixingWD,
+ author = {I. Loshchilov and F. Hutter},
+ booktitle = {arXiv.org},
+ journal = {ArXiv},
+ title = {Fixing Weight Decay Regularization in Adam},
+ volume = {abs/1711.05101},
+ year = {2017}
+}
+
+% do we need this?
+@inproceedings{
+morwani2025a,
+title={A New Perspective on Shampoo's Preconditioner},
+author={Depen Morwani and Itai Shapira and Nikhil Vyas and eran malach and Sham M. Kakade and Lucas Janson},
+booktitle={The Thirteenth International Conference on Learning Representations},
+year={2025},
+url={https://openreview.net/forum?id=c6zI3Cp8c6}
+}
+%------------------------------------------------------- my literature:
+
+% different layers, different norms, boring, but (L0, L1)
+@article{riabinin2025gluon,
+  title={Gluon: Making Muon \& Scion Great Again!(Bridging Theory and Practice of LMO-based Optimizers for LLMs)},
+  author={Riabinin, Artem and Shulgin, Egor and Gruntkowska, Kaja and Richt{\'a}rik, Peter},
+  journal={arXiv preprint arXiv:2505.13416},
+  year={2025}
+}
+
+% also nuclear norm, but for SAM, power iterations
+@article{pethick2025sam,
+title={{\ensuremath{\nu}SAM}: Memory-Efficient Sharpness-Aware Minimization via Nuclear Norm Constraints},
+author={Thomas Pethick and Parameswaran Raman and Lenon Minorics and Mingyi Hong and Shoham Sabach and Volkan Cevher},
+journal={Transactions on Machine Learning Research},
+issn={2835-8856},
+year={2025},
+url={https://openreview.net/forum?id=V6ia5hWIMD},
+note={}
+}
+
+% basic framewok, but without the nuclear norm
+@article{pethick2025training,
+  title={Training deep learning models with norm-constrained lmos},
+  author={Pethick, Thomas and Xie, Wanyun and Antonakopoulos, Kimon and Zhu, Zhenyu and Silveti-Falls, Antonio and Cevher, Volkan},
+  journal={arXiv preprint arXiv:2502.07529},
+  year={2025}
+}
+
+% non-euclidean norm clipping analysis
+@misc{pethick2025generalizedgradientnormclipping,
+      title={Generalized Gradient Norm Clipping \& Non-Euclidean $(L_0,L_1)$-Smoothness}, 
+      author={Thomas Pethick and Wanyun Xie and Mete Erdogan and Kimon Antonakopoulos and Tony Silveti-Falls and Volkan Cevher},
+      year={2025},
+      eprint={2506.01913},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2506.01913}, 
+}
+
+% trust-region and Muon, L-smooth bounds
+@article{kovalev2025understanding,
+  title={Understanding gradient orthogonalization for deep learning via non-euclidean trust-region optimization},
+  author={Kovalev, Dmitry},
+  journal={arXiv preprint arXiv:2503.12645},
+  year={2025}
+}
+% adam
+@article{kingma2014adam,
+  title={Adam: A method for stochastic optimization},
+  author={Kingma, Diederik P and Ba, Jimmy},
+  journal={arXiv preprint arXiv:1412.6980},
+  year={2014}
+}
+
+% adamW
+@article{loshchilov2017decoupled,
+  title={Decoupled weight decay regularization},
+  author={Loshchilov, Ilya and Hutter, Frank},
+  journal={arXiv preprint arXiv:1711.05101},
+  year={2017}
+}
+
+
+% replacement for Newton-Schulz
+@article{amsel2025polar,
+  title={The Polar Express: Optimal Matrix Sign Methods and Their Application to the Muon Algorithm},
+  author={Amsel, Noah and Persson, David and Musco, Christopher and Gower, Robert M},
+  journal={arXiv preprint arXiv:2505.16932},
+  year={2025}
+}
+
+% adamuon
+@article{si2025adamuon,
+  title={AdaMuon: Adaptive Muon Optimizer},
+  author={Si, Chongjie and Zhang, Debing and Shen, Wei},
+  journal={arXiv preprint arXiv:2507.11005},
+  year={2025}
+}
+
+%muon and mup
+@article{shah2025practical,
+  title={Practical efficiency of muon for pretraining},
+  author={Shah, Ishaan and Polloreno, Anthony M and Stratos, Karl and Monk, Philip and Chaluvaraju, Adarsh and Hojel, Andrew and Ma, Andrew and Thomas, Anil and Tanwer, Ashish and Shah, Darsh J and others},
+  journal={arXiv preprint arXiv:2505.02222},
+  year={2025}
+}
+
+% Ky Fan k-norm
+@article{fan1951maximum,
+  title={Maximum properties and inequalities for the eigenvalues of completely continuous operators},
+  author={Fan, Ky},
+  journal={Proceedings of the National Academy of Sciences},
+  volume={37},
+  number={11},
+  pages={760--766},
+  year={1951}
+}
+
+% book with the dual to Ky Fan k-norm
+@book{bhatia2013matrix,
+  title={Matrix analysis},
+  author={Bhatia, Rajendra},
+  volume={169},
+  year={2013},
+  publisher={Springer Science \& Business Media}
+}
+
+% NSGD
+@article{hazan2015beyond,
+  title={Beyond convexity: Stochastic quasi-convex optimization},
+  author={Hazan, Elad and Levy, Kfir and Shalev-Shwartz, Shai},
+  journal={Advances in neural information processing systems},
+  volume={28},
+  year={2015}
+}
+
+% signSGD
+@inproceedings{bernstein2018signsgd,
+  title={signSGD: Compressed optimisation for non-convex problems},
+  author={Bernstein, Jeremy and Wang, Yu-Xiang and Azizzadenesheli, Kamyar and Anandkumar, Animashree},
+  booktitle={International conference on machine learning},
+  pages={560--569},
+  year={2018},
+  organization={PMLR}
+}
+
+% Gauss-Southwell rule
+@article{shi2016primer,
+  title={A primer on coordinate descent algorithms},
+  author={Shi, Hao-Jun Michael and Tu, Shenyinying and Xu, Yangyang and Yin, Wotao},
+  journal={arXiv preprint arXiv:1610.00040},
+  year={2016}
+}
+
+% Lanczos
+@article{simonz1998thick,
+  title={Thick-Restart Lanczos Method for Symmetric Eigenvalue Problemsy},
+  author={Simonz, Kesheng Wuzand Horst},
+  year={1998}
+}
+% dual norms
+@misc{yu2012arithmetic,
+  title={Arithmetic duality for norms},
+  author={Yu, Yao-Liang},
+  year={2012},
+  url={https://cs.uwaterloo.ca/~y328yu/notes/normduality.pdf}
+}
+
+@misc{cifar2023airbench,
+  author = {Jordan Keller},
+  title = {cifar10-airbench},
+  year = {2023},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/KellerJordan/cifar10-airbench}
+}
+
+@misc{cupy_svds_ref,
+  author       = {Preferred Infrastructure, Inc. and CuPy Developers},
+  title        = {{CuPy:} \texttt{cupyx.scipy.sparse.linalg.svds} — API Reference},
+  howpublished = {\url{https://docs.cupy.dev/en/stable/reference/generated/cupyx.scipy.sparse.linalg.svds.html}},
+  year         = {2025},
+  note         = {Accessed: 2025-08-24}
+}
+
+@misc{modded_nanogpt_2024,
+  author       = {Keller Jordan and Jeremy Bernstein and Brendan Rappazzo and
+                  @fernbear.bsky.social and Boza Vlado and You Jiacheng and
+                  Franz Cesista and Braden Koszarsky and @Grad62304977},
+  title        = {modded-nanogpt: Speedrunning the NanoGPT baseline},
+  year         = {2024},
+  url          = {https://github.com/KellerJordan/modded-nanogpt}
+}
+
+% ---- Missing general optimization citations used in the text ----
+@article{ghadimi2013stochastic,
+  title={Stochastic first-and zeroth-order methods for nonconvex stochastic programming},
+  author={Ghadimi, Saeed and Lan, Guanghui},
+  journal={SIAM Journal on Optimization},
+  year={2013}
+}
+
+@article{ghadimi2016accelerated,
+  title={Accelerated gradient methods for nonconvex nonlinear and stochastic programming},
+  author={Ghadimi, Saeed and Lan, Guanghui and Zhang, Hongchao},
+  journal={Mathematical Programming},
+  year={2016}
+}
+
+@article{cutkosky2020momentum,
+  title={Momentum-based variance reduction in nonconvex SGD},
+  author={Cutkosky, Ashok and Mehta, Harsh and Orabona, Francesco},
+  journal={Advances in Neural Information Processing Systems},
+  year={2020}
+}
+
+@article{sun2023momentum,
+  title={Momentum methods for stochastic optimization: A survey and new results},
+  author={Sun, Ruoyu and others},
+  journal={arXiv preprint arXiv:2302.06675},
+  year={2023}
+}
+
+@article{horvath2023stochastic,
+  title={Stochastic recursive momentum for nonconvex optimization},
+  author={Horv{\'a}th, Samuel and Kovalev, Dmitry and Richt{\'a}rik, Peter},
+  journal={arXiv preprint arXiv:2302.07731},
+  year={2023}
+}
+
+@article{gorbunov2020linearly,
+  title={Linearly converging error compensated SGD},
+  author={Gorbunov, Eduard and Kovalev, Dmitry and Richt{\'a}rik, Peter},
+  journal={Advances in Neural Information Processing Systems},
+  year={2020}
+}
+
+@article{gower2019sgd,
+  title={SGD: General analysis and improved rates},
+  author={Gower, Robert M and others},
+  journal={International Conference on Machine Learning},
+  year={2019}
+}
+%-----------------------------------------------------
+
+@misc{cesista2025schattenp,
+  author = {Franz Louis Cesista},
+  title = {{S}teepest {D}escent Under {S}chatten-p {N}orms},
+  year = {2025},
+  month = {February},
+  day = {7},
+  url = {https://leloykun.github.io/ponder/steepest-descent-schatten-p/},
+}
+
+% update not all layers
+@misc{gruntkowska2025dropmuon,
+      title={Drop-Muon: Update Less, Converge Faster}, 
+      author={Kaja Gruntkowska and Yassine Maziane and Zheng Qu and Peter Richtárik},
+      year={2025},
+      eprint={2510.02239},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2510.02239}, 
+}
+
+% inexact lmo analysis
+@misc{shulgin2025inexactmuon,
+      title={Beyond the Ideal: Analyzing the Inexact Muon Update}, 
+      author={Egor Shulgin and Sultan AlRashed and Francesco Orabona and Peter Richtárik},
+      year={2025},
+      eprint={2510.19933},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2510.19933}, 
+}
+
+% x_k+1 = argmin f(z) for z in B(x_k, t_k)
+@misc{gruntkowska2025noneuclideanbroximal,
+      title={Non-Euclidean Broximal Point Method: A Blueprint for Geometry-Aware Optimization}, 
+      author={Kaja Gruntkowska and Peter Richtárik},
+      year={2025},
+      eprint={2510.00823},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/2510.00823}, 
+}
+
+% works for all LMO
+@misc{gruntkowska2025efmuon,
+      title={Error Feedback for Muon and Friends}, 
+      author={Kaja Gruntkowska and Alexander Gaponov and Zhirayr Tovmasyan and Peter Richtárik},
+      year={2025},
+      eprint={2510.00643},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2510.00643}, 
+}
+
+% dp sign
+@InProceedings{jang2024dplogsign,
+  title = 	 {Rethinking {DP}-{SGD} in Discrete Domain: Exploring Logistic Distribution in the Realm of sign{SGD}},
+  author =       {Jang, Jonggyu and Hwang, Seongjin and Yang, Hyun Jong},
+  booktitle = 	 {Proceedings of the 41st International Conference on Machine Learning},
+  pages = 	 {21241--21265},
+  year = 	 {2024},
+  editor = 	 {Salakhutdinov, Ruslan and Kolter, Zico and Heller, Katherine and Weller, Adrian and Oliver, Nuria and Scarlett, Jonathan and Berkenkamp, Felix},
+  volume = 	 {235},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {21--27 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v235/main/assets/jang24a/jang24a.pdf},
+  url = 	 {https://proceedings.mlr.press/v235/jang24a.html},
+  abstract = 	 {Deep neural networks (DNNs) have a risk of remembering sensitive data from their training datasets, inadvertently leading to substantial information leakage through privacy attacks like membership inference attacks. DP-SGD is a simple but effective defense method, incorporating Gaussian noise into gradient updates to safeguard sensitive information. With the prevalence of large neural networks, DP-signSGD, a variant of DP-SGD, has emerged, aiming to curtail memory usage while maintaining security. However, it is noteworthy that most DP-signSGD algorithms default to Gaussian noise, suitable only for DP-SGD, without scant discussion of its appropriateness for signSGD. Our study delves into an intriguing question: <b>"Can we find a more efficient substitute for Gaussian noise to secure privacy in DP-signSGD?"</b> We propose an answer with a Logistic mechanism, which conforms to signSGD principles and is interestingly evolved from an exponential mechanism. In this paper, we provide both theoretical and experimental evidence showing that our method surpasses DP-signSGD.}
+}
+
+@misc{petrov2025zeromuon,
+      title={Leveraging Coordinate Momentum in SignSGD and Muon: Memory-Optimized Zero-Order}, 
+      author={Egor Petrov and Grigoriy Evseev and Aleksey Antonov and Andrey Veprikov and Nikolay Bushkov and Stanislav Moiseev and Aleksandr Beznosikov},
+      year={2025},
+      eprint={2506.04430},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2506.04430}, 
+}
+
+@misc{vyas2025soap,
+      title={SOAP: Improving and Stabilizing Shampoo using Adam}, 
+      author={Nikhil Vyas and Depen Morwani and Rosie Zhao and Mujin Kwun and Itai Shapira and David Brandfonbrener and Lucas Janson and Sham Kakade},
+      year={2025},
+      eprint={2409.11321},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2409.11321}, 
+}
+% overview of scion
+@misc{pethick2025trainingneuralnetworksscale,
+      title={Training Neural Networks at Any Scale}, 
+      author={Thomas Pethick and Kimon Antonakopoulos and Antonio Silveti-Falls and Leena Chennuru Vankadara and Volkan Cevher},
+      year={2025},
+      eprint={2511.11163},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2511.11163}, 
+}
+
+% like PolarExpress
+@misc{grishina2025chebyshev,
+      title={Accelerating Newton-Schulz Iteration for Orthogonalization via Chebyshev-type Polynomials}, 
+      author={Ekaterina Grishina and Matvey Smirnov and Maxim Rakhuba},
+      year={2025},
+      eprint={2506.10935},
+      archivePrefix={arXiv},
+      primaryClass={math.NA},
+      url={https://arxiv.org/abs/2506.10935}, 
+}
+
+@misc{Karpathy2022,
+  author       = {Karpathy, Andrej},
+  title        = {nanoGPT: The simplest, fastest repository for training/finetuning medium‐sized GPTs},
+  howpublished = {GitHub repository},
+  year         = {2022},
+  url          = {https://github.com/karpathy/nanoGPT},
+}
+@misc{eldan2023tinystoriessmalllanguagemodels,
+      title={TinyStories: How Small Can Language Models Be and Still Speak Coherent English?}, 
+      author={Ronen Eldan and Yuanzhi Li},
+      year={2023},
+      eprint={2305.07759},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2305.07759}, 
+}
+
+@misc{kovalev2025noneuclideansgdstructuredoptimization,
+      title={Non-Euclidean SGD for Structured Optimization: Unified Analysis and Improved Rates}, 
+      author={Dmitry Kovalev and Ekaterina Borodich},
+      year={2025},
+      eprint={2511.11466},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/2511.11466}, 
+}
+
+@inproceedings{
+zhao2025deconstructing,
+title={Deconstructing What Makes a Good Optimizer for Autoregressive Language Models},
+author={Rosie Zhao and Depen Morwani and David Brandfonbrener and Nikhil Vyas and Sham M. Kakade},
+booktitle={The Thirteenth International Conference on Learning Representations},
+year={2025},
+url={https://openreview.net/forum?id=zfeso8ceqr}
+}
+@Comment{jabref-meta: databaseType:bibtex;}
