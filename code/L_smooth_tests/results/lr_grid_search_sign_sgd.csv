@@ -1,0 +1,16 @@
+algorithm_name,learning_rate,momentum,below_thresh_iter
+SignSGD,0.005,0.9,-1
+SignSGD,0.0059,0.9,-1
+SignSGD,0.0069,0.9,-1
+SignSGD,0.0082,0.9,-1
+SignSGD,0.0097,0.9,-1
+SignSGD,0.0114,0.9,-1
+SignSGD,0.0134,0.9,3240
+SignSGD,0.0158,0.9,3170
+SignSGD,0.0186,0.9,-1
+SignSGD,0.022,0.9,-1
+SignSGD,0.0259,0.9,-1
+SignSGD,0.0305,0.9,-1
+SignSGD,0.036,0.9,-1
+SignSGD,0.0424,0.9,-1
+SignSGD,0.05,0.9,-1

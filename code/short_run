@@ -1,0 +1,681 @@
+experiment,x_key,x,y_key,y,color,linestyle
+NSGD,iterations,0.0,losses,302.89605712890625,gray,dashed
+NSGD,iterations,10.0,losses,290.24432373046875,gray,dashed
+NSGD,iterations,20.0,losses,277.9364318847656,gray,dashed
+NSGD,iterations,30.0,losses,265.9701843261719,gray,dashed
+NSGD,iterations,40.0,losses,254.3430633544922,gray,dashed
+NSGD,cumulative_time,0.0008089542388916016,losses,302.89605712890625,gray,dashed
+NSGD,cumulative_time,0.022093534469604492,losses,290.24432373046875,gray,dashed
+NSGD,cumulative_time,0.024585962295532227,losses,277.9364318847656,gray,dashed
+NSGD,cumulative_time,0.02713465690612793,losses,265.9701843261719,gray,dashed
+NSGD,cumulative_time,0.029627323150634766,losses,254.3430633544922,gray,dashed
+NSGD,iterations,0.0,grad_spectral_norms,2.0190553665161133,gray,dashed
+NSGD,iterations,10.0,grad_spectral_norms,1.9491122961044312,gray,dashed
+NSGD,iterations,20.0,grad_spectral_norms,1.88053560256958,gray,dashed
+NSGD,iterations,30.0,grad_spectral_norms,1.8127968311309814,gray,dashed
+NSGD,iterations,40.0,grad_spectral_norms,1.746062994003296,gray,dashed
+NSGD,cumulative_time,0.0008089542388916016,grad_spectral_norms,2.0190553665161133,gray,dashed
+NSGD,cumulative_time,0.022093534469604492,grad_spectral_norms,1.9491122961044312,gray,dashed
+NSGD,cumulative_time,0.024585962295532227,grad_spectral_norms,1.88053560256958,gray,dashed
+NSGD,cumulative_time,0.02713465690612793,grad_spectral_norms,1.8127968311309814,gray,dashed
+NSGD,cumulative_time,0.029627323150634766,grad_spectral_norms,1.746062994003296,gray,dashed
+NSGD,iterations,0.0,grad_frobenius_norms,16.03041648864746,gray,dashed
+NSGD,iterations,10.0,grad_frobenius_norms,15.599491119384766,gray,dashed
+NSGD,iterations,20.0,grad_frobenius_norms,15.171416282653809,gray,dashed
+NSGD,iterations,30.0,grad_frobenius_norms,14.746414184570312,gray,dashed
+NSGD,iterations,40.0,grad_frobenius_norms,14.324718475341797,gray,dashed
+NSGD,cumulative_time,0.0008089542388916016,grad_frobenius_norms,16.03041648864746,gray,dashed
+NSGD,cumulative_time,0.022093534469604492,grad_frobenius_norms,15.599491119384766,gray,dashed
+NSGD,cumulative_time,0.024585962295532227,grad_frobenius_norms,15.171416282653809,gray,dashed
+NSGD,cumulative_time,0.02713465690612793,grad_frobenius_norms,14.746414184570312,gray,dashed
+NSGD,cumulative_time,0.029627323150634766,grad_frobenius_norms,14.324718475341797,gray,dashed
+NSGD,iterations,0.0,grad_nuclear_norms,250.87103271484375,gray,dashed
+NSGD,iterations,10.0,grad_nuclear_norms,245.0936279296875,gray,dashed
+NSGD,iterations,20.0,grad_nuclear_norms,239.332275390625,gray,dashed
+NSGD,iterations,30.0,grad_nuclear_norms,233.58859252929688,gray,dashed
+NSGD,iterations,40.0,grad_nuclear_norms,227.86358642578125,gray,dashed
+NSGD,cumulative_time,0.0008089542388916016,grad_nuclear_norms,250.87103271484375,gray,dashed
+NSGD,cumulative_time,0.022093534469604492,grad_nuclear_norms,245.0936279296875,gray,dashed
+NSGD,cumulative_time,0.024585962295532227,grad_nuclear_norms,239.332275390625,gray,dashed
+NSGD,cumulative_time,0.02713465690612793,grad_nuclear_norms,233.58859252929688,gray,dashed
+NSGD,cumulative_time,0.029627323150634766,grad_nuclear_norms,227.86358642578125,gray,dashed
+SignSGD,iterations,0.0,losses,302.89605712890625,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,10.0,losses,292.81317138671875,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,20.0,losses,283.0025634765625,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,30.0,losses,273.45989990234375,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,40.0,losses,264.1804504394531,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,6.747245788574219e-05,losses,302.89605712890625,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.011976480484008789,losses,292.81317138671875,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.014075994491577148,losses,283.0025634765625,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.016208171844482422,losses,273.45989990234375,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.01841282844543457,losses,264.1804504394531,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,0.0,grad_spectral_norms,2.0190553665161133,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,10.0,grad_spectral_norms,1.9644873142242432,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,20.0,grad_spectral_norms,1.9112663269042969,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,30.0,grad_spectral_norms,1.8592214584350586,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,40.0,grad_spectral_norms,1.8081765174865723,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,6.747245788574219e-05,grad_spectral_norms,2.0190553665161133,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.011976480484008789,grad_spectral_norms,1.9644873142242432,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.014075994491577148,grad_spectral_norms,1.9112663269042969,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.016208171844482422,grad_spectral_norms,1.8592214584350586,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.01841282844543457,grad_spectral_norms,1.8081765174865723,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,0.0,grad_frobenius_norms,16.03041648864746,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,10.0,grad_frobenius_norms,15.687784194946289,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,20.0,grad_frobenius_norms,15.349031448364258,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,30.0,grad_frobenius_norms,15.014272689819336,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,40.0,grad_frobenius_norms,14.683717727661133,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,6.747245788574219e-05,grad_frobenius_norms,16.03041648864746,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.011976480484008789,grad_frobenius_norms,15.687784194946289,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.014075994491577148,grad_frobenius_norms,15.349031448364258,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.016208171844482422,grad_frobenius_norms,15.014272689819336,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.01841282844543457,grad_frobenius_norms,14.683717727661133,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,0.0,grad_nuclear_norms,250.87103271484375,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,10.0,grad_nuclear_norms,246.2700958251953,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,20.0,grad_nuclear_norms,241.70591735839844,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,30.0,grad_nuclear_norms,237.17901611328125,gray,"(0, (3, 1, 1, 1))"
+SignSGD,iterations,40.0,grad_nuclear_norms,232.69102478027344,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,6.747245788574219e-05,grad_nuclear_norms,250.87103271484375,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.011976480484008789,grad_nuclear_norms,246.2700958251953,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.014075994491577148,grad_nuclear_norms,241.70591735839844,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.016208171844482422,grad_nuclear_norms,237.17901611328125,gray,"(0, (3, 1, 1, 1))"
+SignSGD,cumulative_time,0.01841282844543457,grad_nuclear_norms,232.69102478027344,gray,"(0, (3, 1, 1, 1))"
+Neon,iterations,0.0,losses,302.89605712890625,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,10.0,losses,302.7557373046875,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,20.0,losses,302.6170654296875,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,30.0,losses,302.4795837402344,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,40.0,losses,302.34320068359375,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,7.05718994140625e-05,losses,302.89605712890625,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.22779536247253418,losses,302.7557373046875,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.3073575496673584,losses,302.6170654296875,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.38654088973999023,losses,302.4795837402344,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.4660642147064209,losses,302.34320068359375,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,10.0,grad_spectral_norms,1.9949630498886108,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,20.0,grad_spectral_norms,1.9752781391143799,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,30.0,grad_spectral_norms,1.9591447114944458,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,40.0,grad_spectral_norms,1.9411416053771973,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,7.05718994140625e-05,grad_spectral_norms,2.0190553665161133,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.22779536247253418,grad_spectral_norms,1.9949630498886108,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.3073575496673584,grad_spectral_norms,1.9752781391143799,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.38654088973999023,grad_spectral_norms,1.9591447114944458,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.4660642147064209,grad_spectral_norms,1.9411416053771973,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,10.0,grad_frobenius_norms,16.02433204650879,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,20.0,grad_frobenius_norms,16.018352508544922,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,30.0,grad_frobenius_norms,16.012454986572266,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,40.0,grad_frobenius_norms,16.006614685058594,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,7.05718994140625e-05,grad_frobenius_norms,16.03041648864746,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.22779536247253418,grad_frobenius_norms,16.02433204650879,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.3073575496673584,grad_frobenius_norms,16.018352508544922,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.38654088973999023,grad_frobenius_norms,16.012454986572266,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.4660642147064209,grad_frobenius_norms,16.006614685058594,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,10.0,grad_nuclear_norms,250.8219451904297,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,20.0,grad_nuclear_norms,250.7744903564453,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,30.0,grad_nuclear_norms,250.72727966308594,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,iterations,40.0,grad_nuclear_norms,250.67861938476562,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,7.05718994140625e-05,grad_nuclear_norms,250.87103271484375,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.22779536247253418,grad_nuclear_norms,250.8219451904297,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.3073575496673584,grad_nuclear_norms,250.7744903564453,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.38654088973999023,grad_nuclear_norms,250.72727966308594,[0.87058824 0.61960784 0.83921569 1.        ],-
+Neon,cumulative_time,0.4660642147064209,grad_nuclear_norms,250.67861938476562,[0.87058824 0.61960784 0.83921569 1.        ],-
+F-Neon,iterations,0.0,losses,302.89605712890625,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,10.0,losses,301.5455017089844,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,20.0,losses,300.2008056640625,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,30.0,losses,298.8614196777344,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,40.0,losses,297.5273132324219,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,7.05718994140625e-05,losses,302.89605712890625,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.07980012893676758,losses,301.5455017089844,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.15947508811950684,losses,300.2008056640625,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.2393360137939453,losses,298.8614196777344,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.3202526569366455,losses,297.5273132324219,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,10.0,grad_spectral_norms,1.986344575881958,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,20.0,grad_spectral_norms,1.9591442346572876,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,30.0,grad_spectral_norms,1.9365172386169434,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,40.0,grad_spectral_norms,1.9138226509094238,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,7.05718994140625e-05,grad_spectral_norms,2.0190553665161133,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.07980012893676758,grad_spectral_norms,1.986344575881958,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.15947508811950684,grad_spectral_norms,1.9591442346572876,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.2393360137939453,grad_spectral_norms,1.9365172386169434,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.3202526569366455,grad_spectral_norms,1.9138226509094238,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,10.0,grad_frobenius_norms,15.98339557647705,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,20.0,grad_frobenius_norms,15.936552047729492,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,30.0,grad_frobenius_norms,15.889846801757812,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,40.0,grad_frobenius_norms,15.843244552612305,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,7.05718994140625e-05,grad_frobenius_norms,16.03041648864746,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.07980012893676758,grad_frobenius_norms,15.98339557647705,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.15947508811950684,grad_frobenius_norms,15.936552047729492,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.2393360137939453,grad_frobenius_norms,15.889846801757812,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.3202526569366455,grad_frobenius_norms,15.843244552612305,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,10.0,grad_nuclear_norms,250.27676391601562,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,20.0,grad_nuclear_norms,249.6832275390625,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,30.0,grad_nuclear_norms,249.09036254882812,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,iterations,40.0,grad_nuclear_norms,248.4971466064453,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,7.05718994140625e-05,grad_nuclear_norms,250.87103271484375,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.07980012893676758,grad_nuclear_norms,250.27676391601562,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.15947508811950684,grad_nuclear_norms,249.6832275390625,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.2393360137939453,grad_nuclear_norms,249.09036254882812,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+F-Neon,cumulative_time,0.3202526569366455,grad_nuclear_norms,248.4971466064453,[0.87058824 0.61960784 0.83921569 1.        ],dashed
+S-Neon,iterations,0.0,losses,302.89605712890625,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,10.0,losses,299.28973388671875,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,20.0,losses,295.7189636230469,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,30.0,losses,292.18328857421875,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,40.0,losses,288.68231201171875,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,6.890296936035156e-05,losses,302.89605712890625,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.07866883277893066,losses,299.28973388671875,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.15721344947814941,losses,295.7189636230469,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.23614263534545898,losses,292.18328857421875,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.3159947395324707,losses,288.68231201171875,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,10.0,grad_spectral_norms,1.9803392887115479,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,20.0,grad_spectral_norms,1.9437018632888794,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,30.0,grad_spectral_norms,1.9136112928390503,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,40.0,grad_spectral_norms,1.8830103874206543,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,6.890296936035156e-05,grad_spectral_norms,2.0190553665161133,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.07866883277893066,grad_spectral_norms,1.9803392887115479,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.15721344947814941,grad_spectral_norms,1.9437018632888794,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.23614263534545898,grad_spectral_norms,1.9136112928390503,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.3159947395324707,grad_spectral_norms,1.8830103874206543,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,10.0,grad_frobenius_norms,15.907454490661621,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,20.0,grad_frobenius_norms,15.785057067871094,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,30.0,grad_frobenius_norms,15.663296699523926,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,40.0,grad_frobenius_norms,15.542144775390625,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,6.890296936035156e-05,grad_frobenius_norms,16.03041648864746,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.07866883277893066,grad_frobenius_norms,15.907454490661621,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.15721344947814941,grad_frobenius_norms,15.785057067871094,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.23614263534545898,grad_frobenius_norms,15.663296699523926,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.3159947395324707,grad_frobenius_norms,15.542144775390625,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,10.0,grad_nuclear_norms,249.24703979492188,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,20.0,grad_nuclear_norms,247.6282958984375,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,30.0,grad_nuclear_norms,246.01425170898438,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,iterations,40.0,grad_nuclear_norms,244.4047088623047,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,6.890296936035156e-05,grad_nuclear_norms,250.87103271484375,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.07866883277893066,grad_nuclear_norms,249.24703979492188,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.15721344947814941,grad_nuclear_norms,247.6282958984375,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.23614263534545898,grad_nuclear_norms,246.01425170898438,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+S-Neon,cumulative_time,0.3159947395324707,grad_nuclear_norms,244.4047088623047,[0.87058824 0.61960784 0.83921569 1.        ],"(0, (3, 1, 1, 1))"
+Fanion-2,iterations,0.0,losses,302.89605712890625,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,10.0,losses,302.6170349121094,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,20.0,losses,302.3432312011719,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,30.0,losses,302.0736083984375,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,40.0,losses,301.8069763183594,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,7.653236389160156e-05,losses,302.89605712890625,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.08449816703796387,losses,302.6170349121094,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.16553735733032227,losses,302.3432312011719,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.25374841690063477,losses,302.0736083984375,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.3345003128051758,losses,301.8069763183594,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,10.0,grad_spectral_norms,1.9755159616470337,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,20.0,grad_spectral_norms,1.9435840845108032,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,30.0,grad_spectral_norms,1.9197816848754883,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,40.0,grad_spectral_norms,1.8996212482452393,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,7.653236389160156e-05,grad_spectral_norms,2.0190553665161133,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.08449816703796387,grad_spectral_norms,1.9755159616470337,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.16553735733032227,grad_spectral_norms,1.9435840845108032,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.25374841690063477,grad_spectral_norms,1.9197816848754883,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.3345003128051758,grad_spectral_norms,1.8996212482452393,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,10.0,grad_frobenius_norms,16.018339157104492,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,20.0,grad_frobenius_norms,16.006601333618164,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,30.0,grad_frobenius_norms,15.995142936706543,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,40.0,grad_frobenius_norms,15.983839988708496,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,7.653236389160156e-05,grad_frobenius_norms,16.03041648864746,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.08449816703796387,grad_frobenius_norms,16.018339157104492,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.16553735733032227,grad_frobenius_norms,16.006601333618164,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.25374841690063477,grad_frobenius_norms,15.995142936706543,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.3345003128051758,grad_frobenius_norms,15.983839988708496,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,10.0,grad_nuclear_norms,250.77490234375,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,20.0,grad_nuclear_norms,250.6796112060547,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,30.0,grad_nuclear_norms,250.58457946777344,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,iterations,40.0,grad_nuclear_norms,250.49147033691406,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,7.653236389160156e-05,grad_nuclear_norms,250.87103271484375,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.08449816703796387,grad_nuclear_norms,250.77490234375,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.16553735733032227,grad_nuclear_norms,250.6796112060547,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.25374841690063477,grad_nuclear_norms,250.58457946777344,[0.48235294 0.25490196 0.45098039 1.        ],-
+Fanion-2,cumulative_time,0.3345003128051758,grad_nuclear_norms,250.49147033691406,[0.48235294 0.25490196 0.45098039 1.        ],-
+F-Fanion-2,iterations,0.0,losses,302.89605712890625,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,10.0,losses,301.3975830078125,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,20.0,losses,299.9098815917969,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,30.0,losses,298.43157958984375,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,40.0,losses,296.96148681640625,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,7.414817810058594e-05,losses,302.89605712890625,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.080535888671875,losses,301.3975830078125,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.16117548942565918,losses,299.9098815917969,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.2431321144104004,losses,298.43157958984375,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.3246138095855713,losses,296.96148681640625,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,10.0,grad_spectral_norms,1.9705674648284912,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,20.0,grad_spectral_norms,1.927456021308899,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,30.0,grad_spectral_norms,1.8970924615859985,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,40.0,grad_spectral_norms,1.8702688217163086,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,7.414817810058594e-05,grad_spectral_norms,2.0190553665161133,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.080535888671875,grad_spectral_norms,1.9705674648284912,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.16117548942565918,grad_spectral_norms,1.927456021308899,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.2431321144104004,grad_spectral_norms,1.8970924615859985,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.3246138095855713,grad_spectral_norms,1.8702688217163086,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,10.0,grad_frobenius_norms,15.977007865905762,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,20.0,grad_frobenius_norms,15.924036979675293,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,30.0,grad_frobenius_norms,15.871410369873047,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,40.0,grad_frobenius_norms,15.819119453430176,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,7.414817810058594e-05,grad_frobenius_norms,16.03041648864746,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.080535888671875,grad_frobenius_norms,15.977007865905762,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.16117548942565918,grad_frobenius_norms,15.924036979675293,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.2431321144104004,grad_frobenius_norms,15.871410369873047,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.3246138095855713,grad_frobenius_norms,15.819119453430176,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,10.0,grad_nuclear_norms,250.2255096435547,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,20.0,grad_nuclear_norms,249.5810546875,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,30.0,grad_nuclear_norms,248.93873596191406,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,iterations,40.0,grad_nuclear_norms,248.29661560058594,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,7.414817810058594e-05,grad_nuclear_norms,250.87103271484375,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.080535888671875,grad_nuclear_norms,250.2255096435547,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.16117548942565918,grad_nuclear_norms,249.5810546875,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.2431321144104004,grad_nuclear_norms,248.93873596191406,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+F-Fanion-2,cumulative_time,0.3246138095855713,grad_nuclear_norms,248.29661560058594,[0.48235294 0.25490196 0.45098039 1.        ],dashed
+S-Fanion-2,iterations,0.0,losses,302.89605712890625,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,10.0,losses,299.1814270019531,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,20.0,losses,295.5067138671875,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,30.0,losses,291.8710632324219,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,40.0,losses,288.27337646484375,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,6.818771362304688e-05,losses,302.89605712890625,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.08052706718444824,losses,299.1814270019531,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.15995454788208008,losses,295.5067138671875,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.24207425117492676,losses,291.8710632324219,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.32280421257019043,losses,288.27337646484375,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,10.0,grad_spectral_norms,1.9622852802276611,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,20.0,grad_spectral_norms,1.9211183786392212,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,30.0,grad_spectral_norms,1.8829345703125,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,40.0,grad_spectral_norms,1.8448286056518555,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,6.818771362304688e-05,grad_spectral_norms,2.0190553665161133,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.08052706718444824,grad_spectral_norms,1.9622852802276611,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.15995454788208008,grad_spectral_norms,1.9211183786392212,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.24207425117492676,grad_spectral_norms,1.8829345703125,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.32280421257019043,grad_spectral_norms,1.8448286056518555,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,10.0,grad_frobenius_norms,15.902731895446777,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,20.0,grad_frobenius_norms,15.775836944580078,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,30.0,grad_frobenius_norms,15.649693489074707,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,40.0,grad_frobenius_norms,15.524313926696777,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,6.818771362304688e-05,grad_frobenius_norms,16.03041648864746,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.08052706718444824,grad_frobenius_norms,15.902731895446777,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.15995454788208008,grad_frobenius_norms,15.775836944580078,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.24207425117492676,grad_frobenius_norms,15.649693489074707,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.32280421257019043,grad_frobenius_norms,15.524313926696777,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,10.0,grad_nuclear_norms,249.20928955078125,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,20.0,grad_nuclear_norms,247.55352783203125,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,30.0,grad_nuclear_norms,245.9019775390625,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,iterations,40.0,grad_nuclear_norms,244.25558471679688,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,6.818771362304688e-05,grad_nuclear_norms,250.87103271484375,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.08052706718444824,grad_nuclear_norms,249.20928955078125,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.15995454788208008,grad_nuclear_norms,247.55352783203125,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.24207425117492676,grad_nuclear_norms,245.9019775390625,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-2,cumulative_time,0.32280421257019043,grad_nuclear_norms,244.25558471679688,[0.48235294 0.25490196 0.45098039 1.        ],"(0, (3, 1, 1, 1))"
+Fanion-10,iterations,0.0,losses,302.89605712890625,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,10.0,losses,301.5731201171875,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,20.0,losses,300.2821044921875,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,30.0,losses,299.02056884765625,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,40.0,losses,297.7861633300781,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,7.867813110351562e-05,losses,302.89605712890625,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.09688973426818848,losses,301.5731201171875,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.1929941177368164,losses,300.2821044921875,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.29048967361450195,losses,299.02056884765625,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.3871316909790039,losses,297.7861633300781,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,10.0,grad_spectral_norms,1.9702924489974976,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,20.0,grad_spectral_norms,1.9217742681503296,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,30.0,grad_spectral_norms,1.8736538887023926,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,40.0,grad_spectral_norms,1.8258103132247925,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,7.867813110351562e-05,grad_spectral_norms,2.0190553665161133,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.09688973426818848,grad_spectral_norms,1.9702924489974976,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.1929941177368164,grad_spectral_norms,1.9217742681503296,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.29048967361450195,grad_spectral_norms,1.8736538887023926,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.3871316909790039,grad_spectral_norms,1.8258103132247925,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,10.0,grad_frobenius_norms,15.974743843078613,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,20.0,grad_frobenius_norms,15.920498847961426,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,30.0,grad_frobenius_norms,15.867676734924316,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,40.0,grad_frobenius_norms,15.816106796264648,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,7.867813110351562e-05,grad_frobenius_norms,16.03041648864746,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.09688973426818848,grad_frobenius_norms,15.974743843078613,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.1929941177368164,grad_frobenius_norms,15.920498847961426,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.29048967361450195,grad_frobenius_norms,15.867676734924316,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.3871316909790039,grad_frobenius_norms,15.816106796264648,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,10.0,grad_nuclear_norms,250.403076171875,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,20.0,grad_nuclear_norms,249.93792724609375,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,30.0,grad_nuclear_norms,249.47607421875,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,iterations,40.0,grad_nuclear_norms,249.01560974121094,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,7.867813110351562e-05,grad_nuclear_norms,250.87103271484375,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.09688973426818848,grad_nuclear_norms,250.403076171875,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.1929941177368164,grad_nuclear_norms,249.93792724609375,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.29048967361450195,grad_nuclear_norms,249.47607421875,[0.51764706 0.23529412 0.22352941 1.        ],-
+Fanion-10,cumulative_time,0.3871316909790039,grad_nuclear_norms,249.01560974121094,[0.51764706 0.23529412 0.22352941 1.        ],-
+F-Fanion-10,iterations,0.0,losses,302.89605712890625,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,10.0,losses,301.57830810546875,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,20.0,losses,300.907470703125,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,30.0,losses,300.39111328125,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,40.0,losses,299.9560241699219,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,6.985664367675781e-05,losses,302.89605712890625,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.09638404846191406,losses,301.57830810546875,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.1936509609222412,losses,300.907470703125,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.2895634174346924,losses,300.39111328125,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.3864128589630127,losses,299.9560241699219,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,10.0,grad_spectral_norms,1.9893242120742798,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,20.0,grad_spectral_norms,1.9743472337722778,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,30.0,grad_spectral_norms,1.962772011756897,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,40.0,grad_spectral_norms,1.9528870582580566,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,6.985664367675781e-05,grad_spectral_norms,2.0190553665161133,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.09638404846191406,grad_spectral_norms,1.9893242120742798,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.1936509609222412,grad_spectral_norms,1.9743472337722778,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.2895634174346924,grad_spectral_norms,1.962772011756897,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.3864128589630127,grad_spectral_norms,1.9528870582580566,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,10.0,grad_frobenius_norms,15.979975700378418,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,20.0,grad_frobenius_norms,15.95429515838623,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,30.0,grad_frobenius_norms,15.934530258178711,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,40.0,grad_frobenius_norms,15.91787052154541,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,6.985664367675781e-05,grad_frobenius_norms,16.03041648864746,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.09638404846191406,grad_frobenius_norms,15.979975700378418,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.1936509609222412,grad_frobenius_norms,15.95429515838623,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.2895634174346924,grad_frobenius_norms,15.934530258178711,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.3864128589630127,grad_frobenius_norms,15.91787052154541,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,10.0,grad_nuclear_norms,250.34616088867188,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,20.0,grad_nuclear_norms,250.07810974121094,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,30.0,grad_nuclear_norms,249.87161254882812,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,iterations,40.0,grad_nuclear_norms,249.6966552734375,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,6.985664367675781e-05,grad_nuclear_norms,250.87103271484375,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.09638404846191406,grad_nuclear_norms,250.34616088867188,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.1936509609222412,grad_nuclear_norms,250.07810974121094,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.2895634174346924,grad_nuclear_norms,249.87161254882812,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+F-Fanion-10,cumulative_time,0.3864128589630127,grad_nuclear_norms,249.6966552734375,[0.51764706 0.23529412 0.22352941 1.        ],dashed
+S-Fanion-10,iterations,0.0,losses,302.89605712890625,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,10.0,losses,298.3663330078125,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,20.0,losses,293.90765380859375,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,30.0,losses,289.5185241699219,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,40.0,losses,285.19720458984375,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,6.866455078125e-05,losses,302.89605712890625,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.09514451026916504,losses,298.3663330078125,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.19167399406433105,losses,293.90765380859375,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.2882997989654541,losses,289.5185241699219,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.38503432273864746,losses,285.19720458984375,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,10.0,grad_spectral_norms,1.961915135383606,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,20.0,grad_spectral_norms,1.9057958126068115,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,30.0,grad_spectral_norms,1.850636601448059,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,40.0,grad_spectral_norms,1.796215534210205,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,6.866455078125e-05,grad_spectral_norms,2.0190553665161133,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.09514451026916504,grad_spectral_norms,1.961915135383606,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.19167399406433105,grad_spectral_norms,1.9057958126068115,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.2882997989654541,grad_spectral_norms,1.850636601448059,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.38503432273864746,grad_spectral_norms,1.796215534210205,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,10.0,grad_frobenius_norms,15.868534088134766,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,20.0,grad_frobenius_norms,15.708288192749023,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,30.0,grad_frobenius_norms,15.549697875976562,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,40.0,grad_frobenius_norms,15.392843246459961,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,6.866455078125e-05,grad_frobenius_norms,16.03041648864746,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.09514451026916504,grad_frobenius_norms,15.868534088134766,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.19167399406433105,grad_frobenius_norms,15.708288192749023,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.2882997989654541,grad_frobenius_norms,15.549697875976562,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.38503432273864746,grad_frobenius_norms,15.392843246459961,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,10.0,grad_nuclear_norms,248.91815185546875,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,20.0,grad_nuclear_norms,246.97048950195312,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,30.0,grad_nuclear_norms,245.02928161621094,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,iterations,40.0,grad_nuclear_norms,243.0924835205078,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,6.866455078125e-05,grad_nuclear_norms,250.87103271484375,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.09514451026916504,grad_nuclear_norms,248.91815185546875,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.19167399406433105,grad_nuclear_norms,246.97048950195312,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.2882997989654541,grad_nuclear_norms,245.02928161621094,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-10,cumulative_time,0.38503432273864746,grad_nuclear_norms,243.0924835205078,[0.51764706 0.23529412 0.22352941 1.        ],"(0, (3, 1, 1, 1))"
+Fanion-100,iterations,0.0,losses,302.89605712890625,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,10.0,losses,293.4743347167969,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,20.0,losses,284.328369140625,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,30.0,losses,275.4532470703125,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,40.0,losses,266.84405517578125,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,7.486343383789062e-05,losses,302.89605712890625,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,0.46811842918395996,losses,293.4743347167969,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,0.9424715042114258,losses,284.328369140625,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,1.4102389812469482,losses,275.4532470703125,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,1.8822031021118164,losses,266.84405517578125,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,10.0,grad_spectral_norms,1.9704551696777344,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,20.0,grad_spectral_norms,1.9221901893615723,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,30.0,grad_spectral_norms,1.874047875404358,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,40.0,grad_spectral_norms,1.826464056968689,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,7.486343383789062e-05,grad_spectral_norms,2.0190553665161133,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,0.46811842918395996,grad_spectral_norms,1.9704551696777344,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,0.9424715042114258,grad_spectral_norms,1.9221901893615723,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,1.4102389812469482,grad_spectral_norms,1.874047875404358,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,1.8822031021118164,grad_spectral_norms,1.826464056968689,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,10.0,grad_frobenius_norms,15.686328887939453,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,20.0,grad_frobenius_norms,15.34707260131836,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,30.0,grad_frobenius_norms,15.012781143188477,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,40.0,grad_frobenius_norms,14.683591842651367,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,7.486343383789062e-05,grad_frobenius_norms,16.03041648864746,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,0.46811842918395996,grad_frobenius_norms,15.686328887939453,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,0.9424715042114258,grad_frobenius_norms,15.34707260131836,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,1.4102389812469482,grad_frobenius_norms,15.012781143188477,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,1.8822031021118164,grad_frobenius_norms,14.683591842651367,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,10.0,grad_nuclear_norms,246.9411163330078,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,20.0,grad_nuclear_norms,243.03602600097656,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,30.0,grad_nuclear_norms,239.1597137451172,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,iterations,40.0,grad_nuclear_norms,235.3134765625,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,7.486343383789062e-05,grad_nuclear_norms,250.87103271484375,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,0.46811842918395996,grad_nuclear_norms,246.9411163330078,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,0.9424715042114258,grad_nuclear_norms,243.03602600097656,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,1.4102389812469482,grad_nuclear_norms,239.1597137451172,[0.54901961 0.42745098 0.19215686 1.        ],-
+Fanion-100,cumulative_time,1.8822031021118164,grad_nuclear_norms,235.3134765625,[0.54901961 0.42745098 0.19215686 1.        ],-
+F-Fanion-100,iterations,0.0,losses,302.89605712890625,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,10.0,losses,291.63873291015625,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,20.0,losses,280.7550964355469,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,30.0,losses,270.23931884765625,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,40.0,losses,260.0825500488281,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,7.414817810058594e-05,losses,302.89605712890625,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,0.46977734565734863,losses,291.63873291015625,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,0.9452407360076904,losses,280.7550964355469,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,1.4137399196624756,losses,270.23931884765625,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,1.8860232830047607,losses,260.0825500488281,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,10.0,grad_spectral_norms,1.960448145866394,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,20.0,grad_spectral_norms,1.9023399353027344,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,30.0,grad_spectral_norms,1.8446685075759888,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,40.0,grad_spectral_norms,1.7876496315002441,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,7.414817810058594e-05,grad_spectral_norms,2.0190553665161133,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,0.46977734565734863,grad_spectral_norms,1.960448145866394,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,0.9452407360076904,grad_spectral_norms,1.9023399353027344,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,1.4137399196624756,grad_spectral_norms,1.8446685075759888,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,1.8860232830047607,grad_spectral_norms,1.7876496315002441,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,10.0,grad_frobenius_norms,15.62163257598877,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,20.0,grad_frobenius_norms,15.218997955322266,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,30.0,grad_frobenius_norms,14.822940826416016,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,40.0,grad_frobenius_norms,14.433608055114746,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,7.414817810058594e-05,grad_frobenius_norms,16.03041648864746,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,0.46977734565734863,grad_frobenius_norms,15.62163257598877,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,0.9452407360076904,grad_frobenius_norms,15.218997955322266,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,1.4137399196624756,grad_frobenius_norms,14.822940826416016,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,1.8860232830047607,grad_frobenius_norms,14.433608055114746,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,10.0,grad_nuclear_norms,246.11895751953125,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,20.0,grad_nuclear_norms,241.39816284179688,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,30.0,grad_nuclear_norms,236.7159423828125,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,iterations,40.0,grad_nuclear_norms,232.07164001464844,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,7.414817810058594e-05,grad_nuclear_norms,250.87103271484375,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,0.46977734565734863,grad_nuclear_norms,246.11895751953125,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,0.9452407360076904,grad_nuclear_norms,241.39816284179688,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,1.4137399196624756,grad_nuclear_norms,236.7159423828125,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+F-Fanion-100,cumulative_time,1.8860232830047607,grad_nuclear_norms,232.07164001464844,[0.54901961 0.42745098 0.19215686 1.        ],dashed
+S-Fanion-100,iterations,0.0,losses,302.89605712890625,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,10.0,losses,292.0322265625,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,20.0,losses,281.48834228515625,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,30.0,losses,271.2601318359375,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,40.0,losses,261.34283447265625,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,7.486343383789062e-05,losses,302.89605712890625,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,0.47187042236328125,losses,292.0322265625,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,0.9497730731964111,losses,281.48834228515625,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,1.4269561767578125,losses,271.2601318359375,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,1.8943235874176025,losses,261.34283447265625,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,10.0,grad_spectral_norms,1.962059736251831,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,20.0,grad_spectral_norms,1.9057811498641968,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,30.0,grad_spectral_norms,1.8499492406845093,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,40.0,grad_spectral_norms,1.794808030128479,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,7.486343383789062e-05,grad_spectral_norms,2.0190553665161133,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,0.47187042236328125,grad_spectral_norms,1.962059736251831,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,0.9497730731964111,grad_spectral_norms,1.9057811498641968,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,1.4269561767578125,grad_spectral_norms,1.8499492406845093,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,1.8943235874176025,grad_spectral_norms,1.794808030128479,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,10.0,grad_frobenius_norms,15.641984939575195,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,20.0,grad_frobenius_norms,15.258027076721191,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,30.0,grad_frobenius_norms,14.878893852233887,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,40.0,grad_frobenius_norms,14.504969596862793,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,7.486343383789062e-05,grad_frobenius_norms,16.03041648864746,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,0.47187042236328125,grad_frobenius_norms,15.641984939575195,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,0.9497730731964111,grad_frobenius_norms,15.258027076721191,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,1.4269561767578125,grad_frobenius_norms,14.878893852233887,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,1.8943235874176025,grad_frobenius_norms,14.504969596862793,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,10.0,grad_nuclear_norms,246.19610595703125,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,20.0,grad_nuclear_norms,241.5452117919922,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,30.0,grad_nuclear_norms,236.9203338623047,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,iterations,40.0,grad_nuclear_norms,232.32435607910156,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,7.486343383789062e-05,grad_nuclear_norms,250.87103271484375,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,0.47187042236328125,grad_nuclear_norms,246.19610595703125,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,0.9497730731964111,grad_nuclear_norms,241.5452117919922,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,1.4269561767578125,grad_nuclear_norms,236.9203338623047,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+S-Fanion-100,cumulative_time,1.8943235874176025,grad_nuclear_norms,232.32435607910156,[0.54901961 0.42745098 0.19215686 1.        ],"(0, (3, 1, 1, 1))"
+Muon,iterations,0.0,losses,302.89605712890625,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,10.0,losses,287.4007263183594,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,20.0,losses,272.48431396484375,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,30.0,losses,258.13763427734375,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,40.0,losses,244.35397338867188,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,7.62939453125e-05,losses,302.89605712890625,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.09348702430725098,losses,287.4007263183594,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.09974837303161621,losses,272.48431396484375,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.10594654083251953,losses,258.13763427734375,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.11229300498962402,losses,244.35397338867188,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,0.0,grad_spectral_norms,2.0190553665161133,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,10.0,grad_spectral_norms,1.9832565784454346,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,20.0,grad_spectral_norms,1.9472825527191162,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,30.0,grad_spectral_norms,1.9109954833984375,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,40.0,grad_spectral_norms,1.8744523525238037,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,7.62939453125e-05,grad_spectral_norms,2.0190553665161133,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.09348702430725098,grad_spectral_norms,1.9832565784454346,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.09974837303161621,grad_spectral_norms,1.9472825527191162,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.10594654083251953,grad_spectral_norms,1.9109954833984375,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.11229300498962402,grad_spectral_norms,1.8744523525238037,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,0.0,grad_frobenius_norms,16.03041648864746,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,10.0,grad_frobenius_norms,15.573661804199219,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,20.0,grad_frobenius_norms,15.12275505065918,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,30.0,grad_frobenius_norms,14.677873611450195,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,40.0,grad_frobenius_norms,14.23930835723877,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,7.62939453125e-05,grad_frobenius_norms,16.03041648864746,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.09348702430725098,grad_frobenius_norms,15.573661804199219,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.09974837303161621,grad_frobenius_norms,15.12275505065918,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.10594654083251953,grad_frobenius_norms,14.677873611450195,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.11229300498962402,grad_frobenius_norms,14.23930835723877,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,0.0,grad_nuclear_norms,250.87103271484375,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,10.0,grad_nuclear_norms,242.71145629882812,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,20.0,grad_nuclear_norms,234.62875366210938,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,30.0,grad_nuclear_norms,226.6260528564453,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,iterations,40.0,grad_nuclear_norms,218.71075439453125,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,7.62939453125e-05,grad_nuclear_norms,250.87103271484375,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.09348702430725098,grad_nuclear_norms,242.71145629882812,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.09974837303161621,grad_nuclear_norms,234.62875366210938,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.10594654083251953,grad_nuclear_norms,226.6260528564453,[0.22352941 0.23137255 0.4745098  1.        ],-
+Muon,cumulative_time,0.11229300498962402,grad_nuclear_norms,218.71075439453125,[0.22352941 0.23137255 0.4745098  1.        ],-
+F-Muon,iterations,0.0,losses,302.89605712890625,indigo,dashed
+F-Muon,iterations,10.0,losses,285.147216796875,indigo,dashed
+F-Muon,iterations,20.0,losses,268.13580322265625,indigo,dashed
+F-Muon,iterations,30.0,losses,251.84979248046875,indigo,dashed
+F-Muon,iterations,40.0,losses,236.2802734375,indigo,dashed
+F-Muon,cumulative_time,7.677078247070312e-05,losses,302.89605712890625,indigo,dashed
+F-Muon,cumulative_time,0.006224870681762695,losses,285.147216796875,indigo,dashed
+F-Muon,cumulative_time,0.0124969482421875,losses,268.13580322265625,indigo,dashed
+F-Muon,cumulative_time,0.018687009811401367,losses,251.84979248046875,indigo,dashed
+F-Muon,cumulative_time,0.024838685989379883,losses,236.2802734375,indigo,dashed
+F-Muon,iterations,0.0,grad_spectral_norms,2.0190553665161133,indigo,dashed
+F-Muon,iterations,10.0,grad_spectral_norms,1.9741942882537842,indigo,dashed
+F-Muon,iterations,20.0,grad_spectral_norms,1.9291664361953735,indigo,dashed
+F-Muon,iterations,30.0,grad_spectral_norms,1.8838326930999756,indigo,dashed
+F-Muon,iterations,40.0,grad_spectral_norms,1.8382973670959473,indigo,dashed
+F-Muon,cumulative_time,7.677078247070312e-05,grad_spectral_norms,2.0190553665161133,indigo,dashed
+F-Muon,cumulative_time,0.006224870681762695,grad_spectral_norms,1.9741942882537842,indigo,dashed
+F-Muon,cumulative_time,0.0124969482421875,grad_spectral_norms,1.9291664361953735,indigo,dashed
+F-Muon,cumulative_time,0.018687009811401367,grad_spectral_norms,1.8838326930999756,indigo,dashed
+F-Muon,cumulative_time,0.024838685989379883,grad_spectral_norms,1.8382973670959473,indigo,dashed
+F-Muon,iterations,0.0,grad_frobenius_norms,16.03041648864746,indigo,dashed
+F-Muon,iterations,10.0,grad_frobenius_norms,15.500626564025879,indigo,dashed
+F-Muon,iterations,20.0,grad_frobenius_norms,14.977738380432129,indigo,dashed
+F-Muon,iterations,30.0,grad_frobenius_norms,14.462077140808105,indigo,dashed
+F-Muon,iterations,40.0,grad_frobenius_norms,13.954023361206055,indigo,dashed
+F-Muon,cumulative_time,7.677078247070312e-05,grad_frobenius_norms,16.03041648864746,indigo,dashed
+F-Muon,cumulative_time,0.006224870681762695,grad_frobenius_norms,15.500626564025879,indigo,dashed
+F-Muon,cumulative_time,0.0124969482421875,grad_frobenius_norms,14.977738380432129,indigo,dashed
+F-Muon,cumulative_time,0.018687009811401367,grad_frobenius_norms,14.462077140808105,indigo,dashed
+F-Muon,cumulative_time,0.024838685989379883,grad_frobenius_norms,13.954023361206055,indigo,dashed
+F-Muon,iterations,0.0,grad_nuclear_norms,250.87103271484375,indigo,dashed
+F-Muon,iterations,10.0,grad_nuclear_norms,241.58782958984375,indigo,dashed
+F-Muon,iterations,20.0,grad_nuclear_norms,232.39488220214844,indigo,dashed
+F-Muon,iterations,30.0,grad_nuclear_norms,223.30126953125,indigo,dashed
+F-Muon,iterations,40.0,grad_nuclear_norms,214.31649780273438,indigo,dashed
+F-Muon,cumulative_time,7.677078247070312e-05,grad_nuclear_norms,250.87103271484375,indigo,dashed
+F-Muon,cumulative_time,0.006224870681762695,grad_nuclear_norms,241.58782958984375,indigo,dashed
+F-Muon,cumulative_time,0.0124969482421875,grad_nuclear_norms,232.39488220214844,indigo,dashed
+F-Muon,cumulative_time,0.018687009811401367,grad_nuclear_norms,223.30126953125,indigo,dashed
+F-Muon,cumulative_time,0.024838685989379883,grad_nuclear_norms,214.31649780273438,indigo,dashed
+S-Muon,iterations,0.0,losses,302.89605712890625,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,10.0,losses,287.2481384277344,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,20.0,losses,272.1387939453125,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,30.0,losses,257.5636901855469,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,40.0,losses,243.52183532714844,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,7.724761962890625e-05,losses,302.89605712890625,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.006790637969970703,losses,287.2481384277344,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.013087749481201172,losses,272.1387939453125,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.019383668899536133,losses,257.5636901855469,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.02585887908935547,losses,243.52183532714844,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,0.0,grad_spectral_norms,2.0190553665161133,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,10.0,grad_spectral_norms,1.972116470336914,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,20.0,grad_spectral_norms,1.9254525899887085,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,30.0,grad_spectral_norms,1.878875494003296,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,40.0,grad_spectral_norms,1.8322819471359253,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,7.724761962890625e-05,grad_spectral_norms,2.0190553665161133,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.006790637969970703,grad_spectral_norms,1.972116470336914,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.013087749481201172,grad_spectral_norms,1.9254525899887085,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.019383668899536133,grad_spectral_norms,1.878875494003296,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.02585887908935547,grad_spectral_norms,1.8322819471359253,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,0.0,grad_frobenius_norms,16.03041648864746,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,10.0,grad_frobenius_norms,15.552765846252441,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,20.0,grad_frobenius_norms,15.079192161560059,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,30.0,grad_frobenius_norms,14.610044479370117,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,40.0,grad_frobenius_norms,14.145834922790527,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,7.724761962890625e-05,grad_frobenius_norms,16.03041648864746,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.006790637969970703,grad_frobenius_norms,15.552765846252441,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.013087749481201172,grad_frobenius_norms,15.079192161560059,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.019383668899536133,grad_frobenius_norms,14.610044479370117,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.02585887908935547,grad_frobenius_norms,14.145834922790527,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,0.0,grad_nuclear_norms,250.87103271484375,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,10.0,grad_nuclear_norms,242.86956787109375,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,20.0,grad_nuclear_norms,234.91973876953125,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,30.0,grad_nuclear_norms,227.03073120117188,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,iterations,40.0,grad_nuclear_norms,219.20924377441406,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,7.724761962890625e-05,grad_nuclear_norms,250.87103271484375,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.006790637969970703,grad_nuclear_norms,242.86956787109375,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.013087749481201172,grad_nuclear_norms,234.91973876953125,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.019383668899536133,grad_nuclear_norms,227.03073120117188,darkcyan,"(0, (3, 1, 1, 1))"
+S-Muon,cumulative_time,0.02585887908935547,grad_nuclear_norms,219.20924377441406,darkcyan,"(0, (3, 1, 1, 1))"

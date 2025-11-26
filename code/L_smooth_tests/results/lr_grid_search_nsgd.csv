@@ -1,0 +1,16 @@
+algorithm_name,learning_rate,momentum,below_thresh_iter
+NSGD,0.005,0.9,-1
+NSGD,0.0069,0.9,-1
+NSGD,0.0097,0.9,-1
+NSGD,0.0134,0.9,-1
+NSGD,0.0186,0.9,-1
+NSGD,0.0259,0.9,-1
+NSGD,0.036,0.9,1930
+NSGD,0.05,0.9,1430
+NSGD,0.0695,0.9,1120
+NSGD,0.0965,0.9,-1
+NSGD,0.1341,0.9,-1
+NSGD,0.1864,0.9,-1
+NSGD,0.259,0.9,-1
+NSGD,0.3598,0.9,-1
+NSGD,0.5,0.9,-1

@@ -98,8 +98,8 @@ def main() -> None:
     m, n = 500, 500
     # problem = LogisticRegressionProblem(m, n) 
     problem = SimpleQuadratic(m, n, device=device, seed=42, eig_range_M=(0,1), eig_range_N=(0,1), shift_scale=0)
-    iter_num_nuc = iter_num_op = iter_num_fro = 1200
-    record_period=25
+    iter_num_nuc = iter_num_op = iter_num_fro = 5000
+    record_period = 10
     # iter_num = 100000
     X0 = 0.1 * torch.randn(m, n, dtype=torch.float32, device=device)
     # Define optimizers and settings
@@ -120,16 +120,24 @@ def main() -> None:
     smuon_mom = 0.9
 
     # Define experiment specifications
-    colors = cm.tab20b(np.linspace(0, 1, 5))[::-1]
+    # Colors will be assigned based on base optimizer name
+    # Linestyles: plain = "-", F- = ":", S- = "--"
     experiment_specs: Dict[str, Dict[str, Any]] = {
         "NSGD": dict(
             optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(lr=0.25, momentum=0.9, nesterov=True, sgd_coeff=1),
+            optimizer_kwargs=dict(lr=0.08, momentum=0.95, nesterov=True, sgd_coeff=1),
             num_iterations=iter_num_fro,
             record_interval=record_period,
             verbose=True,
             lr_scheduler=const_lr,
-            color="gray"
+        ),
+        "SignSGD": dict(
+            optimizer_class=SignSGDMuon,
+            optimizer_kwargs=dict(lr=0.016, momentum=0.95, nesterov=True, sign_lr_mult=0.01, sgd_coeff=1),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
         ),
         #  "Random F-Muon": dict(
         #     optimizer_class=RandomNormalizedMuon,
@@ -167,7 +175,6 @@ def main() -> None:
             verbose=True,
             lr_scheduler=const_lr,
             requires_cuda=True,
-            color=colors[0]
         ),
         "F-Neon": dict(
             optimizer_class=Neon,
@@ -177,7 +184,15 @@ def main() -> None:
             verbose=True,
             lr_scheduler=const_lr,
             requires_cuda=True,
-            color=colors[0]
+        ),
+        "S-Neon": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=smuon_lr, nesterov=True, momentum=smuon_mom, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, sign_lr_mult=0.01),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
         ),
         "Fanion-2": dict(
             optimizer_class=Neon,
@@ -187,7 +202,6 @@ def main() -> None:
             verbose=True,
             lr_scheduler=const_lr,
             requires_cuda=True,
-            color=colors[1]
         ),
         "F-Fanion-2": dict(
             optimizer_class=Neon,
@@ -197,7 +211,15 @@ def main() -> None:
             verbose=True,
             lr_scheduler=const_lr,
             requires_cuda=True,
-            color=colors[1]
+        ),
+        "S-Fanion-2": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=smuon_lr, nesterov=True, momentum=smuon_mom, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k=2, sign_lr_mult=0.01),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
         ),
         "Fanion-10": dict(
             optimizer_class=Neon,
@@ -207,17 +229,24 @@ def main() -> None:
             verbose=True,
             lr_scheduler=const_lr,
             requires_cuda=True,
-            color=colors[2]
         ),
         "F-Fanion-10": dict(
             optimizer_class=Neon,
             optimizer_kwargs=dict(lr=fmuon_lr, nesterov=True, momentum=fmuon_mom, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k = 10),
             num_iterations=iter_num_nuc,
-            record_interval=100,
+            record_interval=record_period,
             verbose=True,
             lr_scheduler=inv_sqrt_lr,
             requires_cuda=True,
-            color=colors[2]
+        ),
+        "S-Fanion-10": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=smuon_lr, nesterov=True, momentum=smuon_mom, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k=10, sign_lr_mult=0.01),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
         ),
         "Fanion-100": dict(
             optimizer_class=Neon,
@@ -227,7 +256,6 @@ def main() -> None:
             verbose=True,
             lr_scheduler=const_lr,
             requires_cuda=True,
-            color=colors[3]
         ),
         "F-Fanion-100": dict(
             optimizer_class=Neon,
@@ -237,7 +265,15 @@ def main() -> None:
             verbose=True,
             lr_scheduler=const_lr,
             requires_cuda=True,
-            color=colors[3]
+        ),
+        "S-Fanion-100": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=smuon_lr, nesterov=True, momentum=smuon_mom, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k=100, sign_lr_mult=0.01),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
         ),
 
         # "MLion": dict(
@@ -258,24 +294,6 @@ def main() -> None:
         #     lr_scheduler=inv_sqrt_lr,
         #     color=colors[3]
         # ),
-        "S-Muon": dict(
-            optimizer_class=SignSGDMuon,
-            optimizer_kwargs=dict(lr=smuon_lr, momentum=smuon_mom, nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5), # lr=0.035, momentum=0.8 for 0.01 loss
-            num_iterations=iter_num_fro,
-            record_interval=record_period,
-            verbose=True,
-            lr_scheduler=const_lr,
-            color=colors[3]
-        ),
-        "SignSGD": dict(
-            optimizer_class=SignSGDMuon,
-            optimizer_kwargs=dict(lr=0.055, momentum=0.95, nesterov=True, sign_lr_mult=0.01, sgd_coeff=1),
-            num_iterations=iter_num_fro,
-            record_interval=record_period,
-            verbose=True,
-            lr_scheduler=const_lr,
-            color=colors[3]
-        ),
         "Muon": dict(
             optimizer_class=NormalizedMuon,
             optimizer_kwargs=dict(lr=muon_lr, momentum=muon_mom, nesterov=True), # 0.025, 0.5 for 0.01 loss
@@ -283,7 +301,6 @@ def main() -> None:
             record_interval=record_period,
             verbose=True,
             lr_scheduler=const_lr,
-            color=colors[4]
         ),
         "F-Muon": dict(
             optimizer_class=NormalizedMuon,
@@ -292,7 +309,14 @@ def main() -> None:
             record_interval=record_period,
             verbose=True,
             lr_scheduler=const_lr,
-            color=colors[4]
+        ),
+        "S-Muon": dict(
+            optimizer_class=SignSGDMuon,
+            optimizer_kwargs=dict(lr=smuon_lr, momentum=smuon_mom, nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5), # lr=0.035, momentum=0.8 for 0.01 loss
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
         ),
         # "SGD": dict(
         #     optimizer_class=torch.optim.SGD,
@@ -303,13 +327,50 @@ def main() -> None:
         #     lr_scheduler=inv_sqrt_lr,
         # ),
     }
-    linestyles = ["--", "-",]
-    for idx, key in enumerate(experiment_specs.keys()):
-        spec = experiment_specs[key]
-        # spec["color"] = tab20_hex[idx % len(tab20_hex)]
-        spec["linestyle"] = linestyles[idx % len(linestyles)]
-        #if idx == 0:
-        #    spec["linestyle"] = "-"
+    
+    # Assign colors and linestyles based on base optimizer name and prefix
+    def get_base_name_and_prefix(name: str) -> Tuple[str, str]:
+        """Extract base name and prefix from experiment name."""
+        if name.startswith("F-") or name.startswith("NSGD"):
+            return name[2:], "F-"
+        elif name.startswith("S-") or name.startswith("Sign"):
+            return name[2:], "S-"
+        else:
+            return name, ""
+    
+    # Generate colors from colormap
+    colors = cm.tab20b(np.linspace(0, 1, 6))[::-1]
+    
+    # Map base names to colors
+    base_name_to_color = {
+        "NSGD": "gray",
+        "SignSGD": "gray",
+        "Neon": colors[0],
+        "Fanion-2": colors[1],
+        "Fanion-10": colors[2],
+        "Fanion-100": colors[3],
+        "S-Muon": "darkcyan",
+        "F-Muon": "indigo",
+        "Muon": colors[5],
+    }
+    
+    # Linestyle mapping: plain = "-", F- = ":", S- = "--"
+    prefix_to_linestyle = {
+        "": "-",      # solid for plain
+        "F-": "dashed",    # dotted for F-
+        "S-": (0, (3, 1, 1, 1)),   # dashed for S-
+    }
+    
+    # Assign colors and linestyles
+    for key, spec in experiment_specs.items():
+        base_name, prefix = get_base_name_and_prefix(key)
+        # Get color from base name (check full name first for special cases like "S-Muon")
+        if key in base_name_to_color:
+            spec["color"] = base_name_to_color[key]
+        elif base_name in base_name_to_color:
+            spec["color"] = base_name_to_color[base_name]
+        # Get linestyle from prefix
+        spec["linestyle"] = prefix_to_linestyle[prefix]
 
     # Run all experiments via the unified helper
     experiments = run_experiments_from_specs(experiment_specs, problem=problem, X_init=X0)

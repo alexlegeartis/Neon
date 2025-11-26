@@ -61,7 +61,7 @@ def plot_from_descriptions(
         if yscale:
             ax.set_yscale(yscale)
         ax.grid(True, alpha=0.3)
-        ax.legend()
+        ax.legend(ncol=2, frameon=True, fancybox=True, shadow=True)
 
     # Hide any unused subplots
     for j in range(num_panels, len(axes_list)):
@@ -128,7 +128,7 @@ def plot_and_save_individual_panels(
         
         # Add grid and legend
         ax.grid(True, alpha=0.3)
-        ax.legend()
+        ax.legend(ncol=2, frameon=True, fancybox=True, shadow=True)
         
         # Create filename from title (sanitized for filesystem)
         filename = base_title.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("||", "").replace("∇", "grad").replace("f", "f").replace("X", "X").replace(":", "").replace("__", "_")

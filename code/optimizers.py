@@ -269,13 +269,14 @@ class MuonCringeMomentum(torch.optim.Optimizer):
 # this function also supports F-Neon
 class Neon(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3, momentum=0, k=1, tau = 0, nesterov=False,
-                 neon_mode='fast', iter_num=1, sgd_coeff=0, norm_weight=True):
+                 neon_mode='fast', iter_num=1, sgd_coeff=0, norm_weight=True, sign_lr_mult=None):
         self.tau = tau
         self.k = k # target number of SVD componenets which we preserve
         self.lanczos_iter_num = iter_num
         self.type = neon_mode # fast (vanilla Neon), accurate (old F*-Neon), Ky-Fan (~Dion)
         self.sgd_coeff = sgd_coeff
         self.norm_weight = norm_weight
+        self.sign_lr_mult = sign_lr_mult
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -326,7 +327,12 @@ class Neon(torch.optim.Optimizer):
                         u, s, vt = several_sv_svds_approximation(g_resh, self.k, self.lanczos_iter_num)
                         update = u @ vt
                         error = u @ torch.diag(s) @ vt
-                update2 = (1-self.sgd_coeff) * update.view(g.shape) + self.sgd_coeff * g / (g.norm() + 1e-12)
+                if self.sign_lr_mult is not None:
+                    # Use sign-based update when sign_lr_mult is provided
+                    update2 = (1-self.sgd_coeff) * update.view(g.shape) + self.sgd_coeff * g.sign() * self.sign_lr_mult
+                else:
+                    # Default: normalized gradient
+                    update2 = (1-self.sgd_coeff) * update.view(g.shape) + self.sgd_coeff * g / (g.norm() + 1e-12)
                 p.data.add_(update2, alpha=-lr)
 
 
@@ -594,8 +600,11 @@ class SignSGDMuon(torch.optim.Optimizer):
                 if self.norm_weight:
                     p.data.mul_(len(p.data)**0.5 / p.data.norm()) # normalize the weight
                 # update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
-                update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
-                update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * self.sign_lr_mult
+                if self.sgd_coeff != 1:
+                    update_part = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape)
+                    update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * self.sign_lr_mult
+                else:
+                    update = g.sign() * self.sign_lr_mult
                 p.data.add_(update, alpha=-lr) # take a step
 
 

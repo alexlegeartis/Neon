@@ -279,10 +279,10 @@ def main() -> None:
         np.round(np.linspace(0.01, 0.1, 19), 3),
         np.round(np.linspace(0.15, 1, 18), 3)
     ))
-    # learning_rates = np.round(np.linspace(0.01, 0.1, 19), 3) # - for 0.01 loss
+    learning_rates = np.round(np.linspace(0.01, 0.1, 19), 3) # - for 0.01 loss
     # learning_rates = learning_rates[learning_rates < 0.06]
-    learning_rates = np.round(np.logspace(np.log10(0.0005), np.logspace(0.1), 15), 3) # - for 0.001 loss
-    # learning_rates = np.round(np.linspace(0.005, 0.020, 16), 3) # - for 0.001 loss
+    # learning_rates = np.round(np.logspace(np.log10(0.005), np.log10(0.5), 15), 4) # - for 0.001 loss
+    #learning_rates = np.round(np.linspace(0.005, 0.020, 16), 3) # - for 0.001 loss
     
     print(f"Learning rate grid: {learning_rates}")
     
@@ -300,14 +300,14 @@ def main() -> None:
     rint = 10
     # Define algorithm specifications (without fixed lr and momentum if grid searching)
     algorithm_specs: List[Dict[str, Any]] = [
-        # dict(
-        #     name="NSGD",
-        #     optimizer_class=NormalizedMuon,
-        #     optimizer_kwargs=dict(nesterov=True, sgd_coeff=1),
-        #     num_iterations=600,
-        #     record_interval=rint,
-        #     use_momentum=momentums is not None,  # Use momentum grid search if momentums are provided
-        # ),
+        dict(
+            name="NSGD",
+            optimizer_class=NormalizedMuon,
+            optimizer_kwargs=dict(nesterov=True, sgd_coeff=1),
+            num_iterations=1500,
+            record_interval=rint,
+            use_momentum=momentums is not None,  # Use momentum grid search if momentums are provided
+        ),
         # dict(
         #     name="MLion",
         #     optimizer_class=MLion,
@@ -338,14 +338,14 @@ def main() -> None:
         #     record_interval=rint,
         #     use_momentum=momentums is not None,
         # ),
-        dict(
-            name="SignSGD",
-            optimizer_class=SignSGDMuon,
-            optimizer_kwargs=dict(nesterov=True, sign_lr_mult=0.01, sgd_coeff=1),
-            num_iterations=3500,
-            record_interval=rint,
-            use_momentum=momentums is not None,
-        ),
+        # dict(
+        #     name="SignSGD",
+        #     optimizer_class=SignSGDMuon,
+        #     optimizer_kwargs=dict(nesterov=True, sign_lr_mult=0.01, sgd_coeff=1),
+        #     num_iterations=3500,
+        #     record_interval=rint,
+        #     use_momentum=momentums is not None,
+        # ),
         # dict(
         #     name="S-Muon",
         #     optimizer_class=SignSGDMuon,
