@@ -102,7 +102,11 @@ def plot_norm_comparison(
             ax.set_ylabel(_format_metric_name(metric_col), fontsize=12)
         
         # ax.set_title(_format_metric_name(metric_col), fontsize=14, fontweight='bold') - we need no title
-        ax.legend(fontsize=10)
+        # Sort legend alphabetically
+        handles, labels = ax.get_legend_handles_labels()
+        sorted_pairs = sorted(zip(labels, handles), key=lambda x: x[0])
+        sorted_labels, sorted_handles = zip(*sorted_pairs) if sorted_pairs else ([], [])
+        ax.legend(sorted_handles, sorted_labels, fontsize=10)
         ax.grid(True, alpha=0.3)
         
         # Save figure
@@ -187,7 +191,7 @@ import re
 from datetime import datetime
 
 
-def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 11, 26, 10, 50, 0)):
+def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 11, 27, 0, 50, 0)):
     """
     Collect grad_norm CSV logs whose timestamp is strictly after `after_dt`.
 
