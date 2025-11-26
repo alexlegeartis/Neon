@@ -34,7 +34,8 @@ Moscow Institute of Physics and Technology (MIPT) \\
 \texttt{kravtskii.aiu@phystech.edu} \\
 \And
 Ivan Kozyrev \\
-Moscow Institute of Physics and Technology (MIPT) \\
+Moscow Institute of Physics and Technology (MIPT), \\
+Marchuk Institute of Numerical Mathematics \\
 \texttt{kozyrev.in@phystech.edu} \\
 \And
 Nikolai Kozlov \\
@@ -114,7 +115,7 @@ AIRI, Skoltech \\
 \maketitle
 
 \begin{abstract}
-	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan $k$-norms to introduce a family of Muon-like algorithms we name {\it Fanions}, which happen to be similar to Dion. Then working with the duals of convex combinations of the Ky Fan $k$-norms and the Frobenius norm or the $l_\infty$ norm, we construct the families of {\it F-Fanions} and {\it S-Fanions} respectively. Their most prominent members are {\it F-Muon} and {\it S-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that F-Muon and S-Muon are always on par with Muon and S-Muo, while on fine-tuning of NanoGPT and synthetic linear least squares even better than vanilla Muon.
+	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan $k$-norms to introduce a family of Muon-like algorithms we name {\it Fanions}, which happen to be similar to Dion. Then working with the duals of convex combinations of the Ky Fan $k$-norms and the Frobenius norm or the $l_\infty$ norm, we construct the families of {\it F-Fanions} and {\it S-Fanions} respectively. Their most prominent members are {\it F-Muon} and {\it S-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that F-Muon and S-Muon are always on par with Muon and S-Muon, while on fine-tuning of NanoGPT and synthetic linear least squares even better than vanilla Muon.
 
 \end{abstract}
 
@@ -128,7 +129,7 @@ Motivated by the success of Muon, many generalizations and variations of it were
 
 \textit{In deriving Muon's update step, why should one constrain by the spectral or any operator norm? How would alternative norms affect performance and computational cost?}
 
-In this article, we tackle this question by actually showing that there are many viable non-operator norms. We leverage the family of norms dual to Ky Fan $k$-norms to derive a new family of Fanions, algorithms with low-rank updates. This approach theoretically explains the backbone of Dion's update \citep{ahn2025dion} and generalizes the memory-motivated application of the nuclear norm to Sharpness-Aware Minimization \citep{pethick2025sam}. As it was done with Muon, we come up with an effective procedure for computing Fanions' updates, Lanczos algorithm as described in ~\cref{sec:matrix-side} is the most effective algorithm, which, however, lacks an effective GPU- and PyTorch-friendly implementation.
+In this article, we tackle this question by actually showing that there are many viable non-operator norms. We leverage the family of norms dual to Ky Fan $k$-norms to derive a new family of Fanions, algorithms with low-rank updates. This approach theoretically explains the backbone of Dion's update \citep{ahn2025dion} and generalizes the memory-motivated application of the nuclear norm to Sharpness-Aware Minimization \citep{pethick2025sam}. As it was done with Muon, we come up with an effective procedure for computing Fanions' updates, Lanczos algorithm as described in~\cref{sec:matrix-side} is the most effective algorithm, which, however, lacks an effective GPU- and PyTorch-friendly implementation.
 
 Working with duals to conic combinations of dual norms, we consturct the families of F-Fanions and S-Fanions, which are hybrids between Muon and NormalizedSGD and SignSGD, respectively.
 
