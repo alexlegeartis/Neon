@@ -546,9 +546,7 @@ Again, as on the CIFAR airbench, if we set $\alpha=-0.1$ that corresponds to no 
 
 We fine-tuned the NanoGPT framework by Karpathy \citep{Karpathy2022} using the standard \textit{NanoGPT-medium} configuration, which corresponds to GPT-2 Medium. This model consists of 24 transformer layers, a hidden size of 1024, 16 attention heads, and approximately 345 million parameters. The training dataset was the \textit{Tiny Stories} corpus \citep{eldan2023tinystoriessmalllanguagemodels}, selected for its high entropy and structural diversity, which amplify and make more visible the differences in optimization dynamics. All training runs were initialized with the same random seed, weight initialization, and learning rate schedule to ensure that any differences in performance arose solely from the choice of optimizer.
 
-Experiments were conducted on a single NVIDIA RTX 4090 (24GB) GPU using PyTorch~2.8 with CUDA~12.8 and cuDNN~9.0, running on a workstation equipped with an Intel Core i9-14900KS CPU and 128 GB of RAM. No distributed or mixed-hardware training setups were used, ensuring a strictly controlled and unbiased comparison across optimizers.
-
-A uniform training protocol was applied to all runs, including identical batch size, warm-up and cosine decay learning rate schedule, gradient clipping strategy, and validation split. Our optimization methods were integrated into the NanoGPT training loop without modifying the model architecture or preprocessing pipeline. Model quality was primarily evaluated using validation loss tracked over 200 training steps. For all one-dimensional layers, AdamW was used with a learning rate of $1\!\times\!10^{-3}$. Since momentum exhibited negligible influence on training dynamics, it was held constant across all experiments. A comparative analysis of optimization performance is provided in Figure~\ref{fig:nanogptftexps}.
+For all one-dimensional layers, AdamW was used with a learning rate of $1\!\times\!10^{-3}$. Since momentum exhibited negligible influence on training dynamics, it was held constant across all experiments. A comparative analysis of optimization performance is provided in Figure~\ref{fig:nanogptftexps}.
 
 \begin{figure}[h]
     \centering
@@ -716,21 +714,6 @@ In fact, those balls can be described easier if we use the results from \citet{y
 \end{figure}
 
 
-%\section{Updates derivations}
-% we prove a general lemma instead
-%Proof of \cref{lemma:nsgd_muon_update}:
-%Since $\norm{\cdot}^\dagger = \normfstar{\cdot}^{\dagger\dagger} = \normfstar{\cdot}$, the goal is to reach $\normfstar{\mM^k} = \alpha \tr{\mSigma} + (1-\alpha) \normf{\mM^k}$.
-
-%Let us note that $\Delta = \alpha \mU \mV^\top + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha \mU \mV^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \mSigma + (1-\alpha) \normf{\mM^k} = \normfstar{\mM^k}$, which completes the proof.
-
-
-
-% we prove a general lemma instead
-%Proof of \cref{lemma:nsgd_neon_update}:
-%Since $\norm{\cdot}^\dagger = \normftwo{\cdot}^{\dagger\dagger} = \normftwo{\cdot}$, the goal is to reach $\normftwo{\mM^k} = \alpha \sigma_1 + (1-\alpha) \normf{\mM^k}$.
-
-% Let us note that $\Delta = \alpha (u_1 v_1^\top) + (1-\alpha) \frac{\mM^k}{\normf{\mM^k}}$ delivers this value. Indeed, by the trace property and singular vectors orthogonality, $\<\mM^k, \Delta> =\<\mU \mSigma \mV^\top, \alpha u_1 v_1^\top + (1-\alpha) \frac{\mU \mSigma \mV^\top}{\normf{\mM^k}}> = \alpha \tr \diag({\sigma_1, 0, \dots, 0}) + (1-\alpha) \normf{\mM^k} = \normftwo{\mM^k}$, which completes the proof.
-
 
 
 \section{More data for Linear Least Squares}
@@ -783,9 +766,8 @@ In fact, those balls can be described easier if we use the results from \citet{y
 \end{figure}
 
 \section{Under the hood of CNN on CIFAR-10}
-Most bounds for Muon and other LMO-algorithms are given for the norm of the gradient \citep{kovalev2025understanding, pethick2025training, riabinin2025gluon,kovalev2025noneuclideansgdstructuredoptimization}. Accordingly, one is immediately interested to measure those norms on a real deep learning problem.
+Most bounds for Muon and other LMO-algorithms are given for the norm of the gradient \citep{kovalev2025understanding, pethick2025training, riabinin2025gluon,kovalev2025noneuclideansgdstructuredoptimization}. Accordingly, it is natural to measure those norms on a real deep learning problem.
 
-We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, and F-Neon on CIFAR-airbench. NSGD and SignSGD are not heavily tuned. To preserve the algorithms, we do not normalize the weights of the network each iteration. The parameters are in the table.
 
 \begin{table}[ht]
 	\centering
@@ -798,19 +780,55 @@ We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, and F-Neon on CIFAR-airben
 	  SignSGD & 0.003 & 0.95 & $91.54 \pm 0.26$ \\
 	  \hdashline
 	  Muon & 0.24 & 0.6 & $94.01 \pm 0.10$ \\
-	  \hdashline
 	  F-Muon & 0.40 & 0.6 & $94.01 \pm 0.13$\\
 	  \hdashline
 	  S-Muon & 0.42 & 0.63 & $94.03 \pm 0.13$ \\
+	  \hdashline
+	  Neon & 0.24 & 0.6 & $69.8 \pm 0.5$ \\
+	  F-Neon & 0.40 & 0.6 & $87.15 \pm 0.24$\\
+	  \hdashline
+	  Fanion-5 & 0.24 & 0.6 & $80.69 \pm 1.25$ \\
+	  F-Fanion-5 & 0.40 & 0.6 & $86.66 \pm 0.65$\\
 	  \hline
 	\end{tabular}
-  \caption{Parameters for CIFAR-airbench. \texttt{sign\_lr\_mult}=0.003}
+  \caption{Parameters for CIFAR-airbench. \texttt{sign\_lr\_mult} for S-Muon is 0.003}
   \label{tbl:cifar_lrs}
   \end{table}
 
+We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, and F-Neon, Fanion-5, and F-Fanion-5 on CIFAR-airbench. NSGD and SignSGD are not heavily tuned. The hyperparameters of Neon, F-Neon, Fanion-5, and F-Fanion-5 are taken from Muon and F-Muon. The parameters are in the table \cref{tbl:cifar_lrs}. val\_accuracy is for the the weighted variant. However, to preserve the algorithms, we do not normalize the weights of the network each iteration.
+
+We log train and validation accuracy, and nuclear, gradient, and spectral norms of the gradients of conv1.weight and conv2.weight for all the layers.
+
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[t]{0.7\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/train_acc.pdf}
+        \caption{Train accuracy}
+		\label{fig:train_acc_cifar}
+    \end{subfigure}
+    \vspace{1em} % optional: add vertical spacing between subfigures
+    \begin{subfigure}[t]{0.7\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/val_acc.pdf}
+        \caption{Validation accuracy}
+		\label{fig:val_acc_cifar}
+    \end{subfigure}
+    \caption{Different optimizers on CIFAR airbench without weight normalization}
+	\label{fig:cifar_accs}
+\end{figure}
+
+
 
 \section{Technical details of the experiments}
-We compared TRLand with other methods in Google Colab. We used RTX A4000 for CIFAR airbench.
+\textbf{CIFAR airbench} We used NVIDIA RTX A4000.
+
+\textbf{NanoGPT pretrain} We used the standard setting of 8 $\times$ H100 as documented in \citet{modded_nanogpt_2024}. 
+
+\textbf{NanoGPT Fine-tuning.} Experiments were conducted on a single NVIDIA RTX 4090 (24GB) GPU using PyTorch~2.8 with CUDA~12.8 and cuDNN~9.0, running on a workstation equipped with an Intel Core i9-14900KS CPU and 128 GB of RAM. No distributed or mixed-hardware training setups were used, ensuring a strictly controlled and unbiased comparison across optimizers.
+
+A uniform training protocol was applied to all runs, including identical batch size, warm-up and cosine decay learning rate schedule, gradient clipping strategy, and validation split. Our optimization methods were integrated into the NanoGPT training loop without modifying the model architecture or preprocessing pipeline. Model quality was primarily evaluated using validation loss tracked over 200 training steps. 
 
 
 \end{document}
