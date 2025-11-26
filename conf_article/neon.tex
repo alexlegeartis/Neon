@@ -797,7 +797,7 @@ Most bounds for Muon and other LMO-algorithms are given for the norm of the grad
 
 We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, and F-Neon, Fanion-5, and F-Fanion-5 on CIFAR-airbench. NSGD and SignSGD are not heavily tuned. The hyperparameters of Neon, F-Neon, Fanion-5, and F-Fanion-5 are taken from Muon and F-Muon. The parameters are in the table \cref{tbl:cifar_lrs}. val\_accuracy is for the the weighted variant. However, to preserve the algorithms, we do not normalize the weights of the network each iteration.
 
-We log train and validation accuracy, and nuclear, gradient, and spectral norms of the gradients of conv1.weight and conv2.weight for all the layers.
+We log train and validation accuracy, and nuclear, gradient, and spectral norms of the gradients of conv1.weight and conv2.weight for all the layers. The gradient norms decrease only by the order of ten maximum during training, while train accuracy reaches full 100\% for Muon, S-Muon, and F-Muon.
 
 
 \begin{figure}[h!]
@@ -817,6 +817,92 @@ We log train and validation accuracy, and nuclear, gradient, and spectral norms 
     \end{subfigure}
     \caption{Different optimizers on CIFAR airbench without weight normalization}
 	\label{fig:cifar_accs}
+\end{figure}
+
+
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[t]{0.7\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/total_frobenius.pdf}
+        \caption{Total Frobenius norm}
+		\label{fig:total_fro_norm_cifar}
+    \end{subfigure}
+    \vspace{1em} % optional: add vertical spacing between subfigures
+    \begin{subfigure}[t]{0.7\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/total_spectral.pdf}
+        \caption{Total spectral norm}
+		\label{fig:total_spectral_norm_cifar}
+    \end{subfigure}
+	\vspace{1em} % optional: add vertical spacing between subfigures
+    \begin{subfigure}[t]{0.7\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/total_nuclear.pdf}
+        \caption{Total nuclear norm}
+		\label{fig:total_nuclear_norm_cifar}
+    \end{subfigure}
+    \caption{Matrix norms of the whole gradient of CIFAR CNN}
+	\label{fig:total_norms_cifar}
+\end{figure}
+
+
+% Juxtaposed conv1 (left) vs conv2 (right) norms
+
+\begin{figure}[h!]
+    \centering
+    %--- First row: Frobenius ---
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/layers_2_conv1_weight_frobenius.pdf}
+        \caption{Frobenius norm of layer2.conv1}
+        \label{fig:fro_conv1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/layers_2_conv2_weight_frobenius.pdf}
+        \caption{Frobenius norm of layer2.conv2}
+        \label{fig:fro_conv2}
+    \end{subfigure}
+
+    \vspace{1em}
+
+    %--- Second row: Spectral ---
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/layers_2_conv1_weight_spectral.pdf}
+        \caption{Spectral norm of layer2.conv1}
+        \label{fig:spec_conv1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/layers_2_conv2_weight_spectral.pdf}
+        \caption{Spectral norm of layer2.conv2}
+        \label{fig:spec_conv2}
+    \end{subfigure}
+
+    \vspace{1em}
+
+    %--- Third row: Nuclear ---
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/layers_2_conv1_weight_nuclear.pdf}
+        \caption{Nuclear norm of layer2.conv1}
+        \label{fig:nuc_conv1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{figs/cifar_logger/layers_2_conv2_weight_nuclear.pdf}
+        \caption{Nuclear norm of layer2.conv2}
+        \label{fig:nuc_conv2}
+    \end{subfigure}
+
+    \caption{Matrix norms of layer2.conv1 (left) and layer2.conv2 (right) gradients of CIFAR CNN}
+    \label{fig:norms_conv1_vs_conv2}
 \end{figure}
 
 
