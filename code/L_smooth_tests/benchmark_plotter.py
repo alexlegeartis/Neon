@@ -61,7 +61,7 @@ def plot_from_descriptions(
         if yscale:
             ax.set_yscale(yscale)
         ax.grid(True, alpha=0.3)
-        ax.legend(ncol=2, frameon=True, fancybox=True, shadow=True)
+        ax.legend(ncol=2, frameon=True, fancybox=True, loc='upper right', bbox_to_anchor=(1, 0.85), framealpha=0.95)
 
     # Hide any unused subplots
     for j in range(num_panels, len(axes_list)):
@@ -128,7 +128,7 @@ def plot_and_save_individual_panels(
         
         # Add grid and legend
         ax.grid(True, alpha=0.3)
-        ax.legend(ncol=2, frameon=True, fancybox=True, shadow=True)
+        ax.legend(ncol=2, frameon=True, fancybox=True, loc='upper right', bbox_to_anchor=(1, 0.85), framealpha=0.95)
         
         # Create filename from title (sanitized for filesystem)
         filename = base_title.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("||", "").replace("∇", "grad").replace("f", "f").replace("X", "X").replace(":", "").replace("__", "_")
@@ -162,7 +162,13 @@ def build_default_panels(experiments: Dict[str, Dict[str, Any]]) -> List[Dict[st
 
     def collect_series(x_key: str, y_key: str) -> List[Dict[str, Any]]:
         series: List[Dict[str, Any]] = []
-        for name, res in experiments.items():
+        # Use preserved order if available, otherwise use dict iteration order
+        experiment_order = experiments.get("_experiment_order", list(experiments.keys()))
+        # Filter out the special _experiment_order key
+        experiment_order = [name for name in experiment_order if name != "_experiment_order" and name in experiments]
+        
+        for name in experiment_order:
+            res = experiments[name]
             # Pass through optional style fields if present in the experiment results
             series_item: Dict[str, Any] = {
                 "name": name,
@@ -318,6 +324,7 @@ def load_experiments_from_csv(csv_path: str) -> Dict[str, Dict[str, Any]]:
     """
     Load experiments from CSV produced by save_experiments_to_csv and
     reconstruct the original experiments dict structure expected by plotting helpers.
+    Preserves the order of experiments as they first appear in the CSV.
     """
     df = pd.read_csv(csv_path)
     # Ensure types
@@ -326,6 +333,14 @@ def load_experiments_from_csv(csv_path: str) -> Dict[str, Dict[str, Any]]:
     if "y" in df.columns:
         df["y"] = df["y"].astype(float)
 
+    # Track the order of experiments as they first appear in the CSV
+    experiment_order = []
+    seen_experiments = set()
+    for exp_name in df["experiment"]:
+        if exp_name not in seen_experiments:
+            experiment_order.append(exp_name)
+            seen_experiments.add(exp_name)
+    
     experiments: Dict[str, Dict[str, Any]] = {}
     for exp_name, g in df.groupby("experiment"):
         exp: Dict[str, Any] = {}
@@ -334,22 +349,58 @@ def load_experiments_from_csv(csv_path: str) -> Dict[str, Dict[str, Any]]:
         if not styles.empty:
             srow = styles.iloc[0]
             if "color" in srow and pd.notna(srow["color"]):
-                exp["color"] = srow["color"]
+                color_val = srow["color"]
+                # Convert numpy array string representation to tuple if needed
+                if isinstance(color_val, str) and color_val.startswith('['):
+                    try:
+                        # Handle space-separated values in brackets like '[0.87 0.62 0.84 1.0]'
+                        color_str = color_val.strip('[]')
+                        color_vals = [float(x) for x in color_str.split()]
+                        if len(color_vals) == 4:
+                            # RGBA tuple
+                            exp["color"] = tuple(color_vals)
+                        elif len(color_vals) == 3:
+                            # RGB tuple
+                            exp["color"] = tuple(color_vals)
+                        else:
+                            exp["color"] = color_val
+                    except:
+                        exp["color"] = color_val
+                else:
+                    exp["color"] = color_val
             if "linestyle" in srow and pd.notna(srow["linestyle"]):
-                exp["linestyle"] = srow["linestyle"]
+                linestyle_val = srow["linestyle"]
+                # Convert tuple string representation if needed
+                if isinstance(linestyle_val, str) and linestyle_val.startswith('('):
+                    import ast
+                    try:
+                        linestyle_val = ast.literal_eval(linestyle_val)
+                    except:
+                        pass
+                exp["linestyle"] = linestyle_val
 
-        # Rebuild each series
-        for x_key, gx in g.groupby("x_key"):
-            gx_sorted = gx.sort_values("x")
-            exp[x_key] = gx_sorted["x"].tolist()
-        for y_key, gy in g.groupby("y_key"):
-            # Choose the longest y among x_key splits (they should match); default use all rows
-            gy_sorted = gy.sort_values(["x_key", "x"])  # stable
-            target_len = max(len(exp.get("iterations", [])), len(exp.get("cumulative_time", [])), 0)
-            exp[y_key] = gy_sorted["y"].tolist()[: target_len]
+        # Rebuild each series - pair x_key and y_key together
+        for (x_key, y_key), gxy in g.groupby(["x_key", "y_key"]):
+            gxy_sorted = gxy.sort_values("x")
+            # Store x values for this x_key (only once per x_key)
+            if x_key not in exp:
+                exp[x_key] = gxy_sorted["x"].tolist()
+            # Store y values for this y_key, paired with the same x_key
+            # Use the length of the corresponding x_key to ensure matching lengths
+            x_values = exp.get(x_key, [])
+            y_values = gxy_sorted["y"].tolist()
+            # Truncate to match x length
+            min_len = min(len(x_values), len(y_values))
+            exp[y_key] = y_values[:min_len]
+            # Also truncate x to match if needed
+            if len(x_values) > min_len:
+                exp[x_key] = x_values[:min_len]
 
         experiments[exp_name] = exp
 
+    # Store the order for use in plotting
+    experiments["_experiment_order"] = experiment_order
+    
     return experiments
 
 
