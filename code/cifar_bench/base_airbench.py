@@ -19,7 +19,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
 from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon, NuclearNormalizedMuon, MuonCringeMomentum
-from optimizers import SpectrallyNormalizedNeon, MuonOrNSGD, MuonOrSign, RealFanion, NeonMuon, SingleDeviceNorMuon
+from optimizers import SpectrallyNormalizedNeon, MuonOrNSGD, MuonOrSign, RealFanion, NeonMuon, SingleDeviceNorMuon, MuonSignedUpdate
 from mlion import MLion, NLion
 
 #############################################
@@ -418,11 +418,14 @@ def main(run, model):
     
 
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.005) # 90.94 +- 0.4%
+    optimizer2 = SignSGDMuon(filter_params, lr=0.003, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=1) # 90.94 +- 0.4%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.007) # 90.95 +- 0.16%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.002) # 0.005-> 93.93%, 0.002 -> 94.00%, 0.001-> 93.89%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.009) # 89.66 +- 0.33%
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
-    optimizer2 = MuonOrSign(filter_params, lr=0.42, momentum=0.65, nesterov=True, sign_coeff=0.003) # 94.00% - see airbench_muon.py
+    # optimizer2 = MuonOrSign(filter_params, lr=0.42, momentum=0.65, nesterov=True, sign_coeff=0.003) # 94.00% - see airbench_muon.py - no benefit
+    # optimizer2 = MuonSignedUpdate(filter_params, lr=0.003, momentum=0.8, nesterov=True) # 93.14 +- 0.17%
+    
 
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible
     

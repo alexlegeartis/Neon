@@ -110,6 +110,15 @@ def main() -> None:
     def const_lr(T: int, base_lr: float) -> float:
         return base_lr
 
+
+    muon_lr = 0.007
+    fmuon_lr = 0.015
+    smuon_lr = 0.011
+    
+    muon_mom = 0.5
+    fmuon_mom = 0.7
+    smuon_mom = 0.9
+
     # Define experiment specifications
     colors = cm.tab20b(np.linspace(0, 1, 5))[::-1]
     experiment_specs: Dict[str, Dict[str, Any]] = {
@@ -150,86 +159,86 @@ def main() -> None:
         #     requires_cuda=True,
         #     color=colors[0]
         # ),
-        # "Neon": dict(
-        #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=0.45, nesterov=True, momentum=0.95, neon_mode="kyfan", iter_num=5),
-        #     num_iterations=iter_num_nuc,
-        #     record_interval=50,
-        #     verbose=True,
-        #     lr_scheduler=const_lr,
-        #     requires_cuda=True,
-        #     color=colors[0]
-        # ),
-        # "F-Neon": dict(
-        #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=0.25, nesterov=True, momentum=0.9, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5),
-        #     num_iterations=iter_num_nuc,
-        #     record_interval=50,
-        #     verbose=True,
-        #     lr_scheduler=const_lr,
-        #     requires_cuda=True,
-        #     color=colors[0]
-        # ),
-        # "Fanion-2": dict(
-        #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=1, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5, k=2),
-        #     num_iterations=iter_num_nuc,
-        #     record_interval=100,
-        #     verbose=True,
-        #     lr_scheduler=inv_sqrt_lr,
-        #     requires_cuda=True,
-        #     color=colors[1]
-        # ),
-        # "F-Fanion-2": dict(
-        #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=1, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k = 2),
-        #     num_iterations=iter_num_nuc,
-        #     record_interval=100,
-        #     verbose=True,
-        #     lr_scheduler=inv_sqrt_lr,
-        #     requires_cuda=True,
-        #     color=colors[1]
-        # ),
-        # "Fanion-5": dict(
-        #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=1, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5, k=5),
-        #     num_iterations=iter_num_nuc,
-        #     record_interval=100,
-        #     verbose=True,
-        #     lr_scheduler=inv_sqrt_lr,
-        #     requires_cuda=True,
-        #     color=colors[2]
-        # ),
-        # "F-Fanion-5": dict(
-        #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=1, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k = 5),
-        #     num_iterations=iter_num_nuc,
-        #     record_interval=100,
-        #     verbose=True,
-        #     lr_scheduler=inv_sqrt_lr,
-        #     requires_cuda=True,
-        #     color=colors[2]
-        # ),
-        # "Fanion-100": dict(
-        #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=1, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5, k=100),
-        #     num_iterations=iter_num_nuc,
-        #     record_interval=100,
-        #     verbose=True,
-        #     lr_scheduler=inv_sqrt_lr,
-        #     requires_cuda=True,
-        #     color=colors[3]
-        # ),
-        # "F-Fanion-100": dict(
-        #     optimizer_class=Neon,
-        #     optimizer_kwargs=dict(lr=1, nesterov=True, momentum=0.6, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k = 100),
-        #     num_iterations=iter_num_nuc,
-        #     record_interval=100,
-        #     verbose=True,
-        #     lr_scheduler=inv_sqrt_lr,
-        #     requires_cuda=True,
-        #     color=colors[3]
-        # ),
+        "Neon": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=muon_lr, nesterov=True, momentum=muon_mom, neon_mode="kyfan", iter_num=5),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
+            color=colors[0]
+        ),
+        "F-Neon": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=fmuon_lr, nesterov=True, momentum=fmuon_mom, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
+            color=colors[0]
+        ),
+        "Fanion-2": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=muon_lr, nesterov=True, momentum=muon_mom, neon_mode="kyfan", iter_num=5, k=2),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
+            color=colors[1]
+        ),
+        "F-Fanion-2": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=fmuon_lr, nesterov=True, momentum=fmuon_mom, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k = 2),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
+            color=colors[1]
+        ),
+        "Fanion-10": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=muon_lr, nesterov=True, momentum=muon_mom, neon_mode="kyfan", iter_num=5, k=10),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
+            color=colors[2]
+        ),
+        "F-Fanion-10": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=fmuon_lr, nesterov=True, momentum=fmuon_mom, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k = 10),
+            num_iterations=iter_num_nuc,
+            record_interval=100,
+            verbose=True,
+            lr_scheduler=inv_sqrt_lr,
+            requires_cuda=True,
+            color=colors[2]
+        ),
+        "Fanion-100": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=muon_lr, nesterov=True, momentum=muon_mom, neon_mode="kyfan", iter_num=5, k=100),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
+            color=colors[3]
+        ),
+        "F-Fanion-100": dict(
+            optimizer_class=Neon,
+            optimizer_kwargs=dict(lr=fmuon_lr, nesterov=True, momentum=fmuon_mom, neon_mode="kyfan", iter_num=5, sgd_coeff=0.5, k = 100),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+            requires_cuda=True,
+            color=colors[3]
+        ),
 
         # "MLion": dict(
         #     optimizer_class=MLion,
@@ -251,7 +260,7 @@ def main() -> None:
         # ),
         "S-Muon": dict(
             optimizer_class=SignSGDMuon,
-            optimizer_kwargs=dict(lr=0.01, momentum=0.9, nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5), # lr=0.035, momentum=0.8 for 0.01 loss
+            optimizer_kwargs=dict(lr=smuon_lr, momentum=smuon_mom, nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5), # lr=0.035, momentum=0.8 for 0.01 loss
             num_iterations=iter_num_fro,
             record_interval=record_period,
             verbose=True,
@@ -269,7 +278,7 @@ def main() -> None:
         ),
         "Muon": dict(
             optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(lr=0.007, momentum=0.5, nesterov=True), # 0.025, 0.5 for 0.01 loss
+            optimizer_kwargs=dict(lr=muon_lr, momentum=muon_mom, nesterov=True), # 0.025, 0.5 for 0.01 loss
             num_iterations=iter_num_fro,
             record_interval=record_period,
             verbose=True,
@@ -278,7 +287,7 @@ def main() -> None:
         ),
         "F-Muon": dict(
             optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(lr=0.014, momentum=0.5, nesterov=True, sgd_coeff=0.5), # lr=0.035, momentum=0.5 for 0.01 loss
+            optimizer_kwargs=dict[str, float](lr=fmuon_lr, momentum=fmuon_mom, nesterov=True, sgd_coeff=0.5), # lr=0.035, momentum=0.5 for 0.01 loss
             num_iterations=iter_num_fro,
             record_interval=record_period,
             verbose=True,
