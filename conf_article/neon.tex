@@ -145,7 +145,7 @@ Then We compare the performances of the algorithm families on various model and 
 
 Our experiments reveal important insights into the role of matrix norms in optimization. First, we show on the example of Neon, the one-rank Fanion, that not every LMO-based algorithm is effective, despite the same asymptotics in the general bounds of \citet{kovalev2025understanding} and \citet{riabinin2025gluon}. This suggests that existing theoretical guarantees should be reworked to explain empirical performance.
 
-Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon and S-Muon achieve $94.04 \pm 0.13\%$ and $94.03 \pm 0.13\%$ accuracy, matching Muon's $94.01 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, while fully-tuned Muon achieves 3.279. Finally, S-Muon matches Muon on fine-tuning of NanoGPT on Tiny Stories, while F-Muon is far more resistant to the learning rate choice than Muon. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, answering affirmatively the central question posed above. Moreover, the tools from ~\ref{sec:conic_combo} give the researchers an unheard-of flexibility in designing algorithms that does not have to be modifications of Muon.
+Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon and S-Muon achieve $94.02 \pm 0.13\%$ and $94.03 \pm 0.13\%$ accuracy, matching Muon's $94.01 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, while fully-tuned Muon achieves 3.279. Finally, S-Muon matches Muon on fine-tuning of NanoGPT on Tiny Stories, while F-Muon is far more resistant to the learning rate choice than Muon. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, answering affirmatively the central question posed above. Moreover, the tools from ~\ref{sec:conic_combo} give the researchers an unheard-of flexibility in designing algorithms that does not have to be modifications of Muon.
 
 \section{Preliminaries: Linear Minimization Oracle Framework}
 
@@ -493,7 +493,7 @@ Both F-Muon and S-Muon converge faster and to a lower loss and a lower Frobenius
 
 We compare the algorithms on the CIFAR-10 airbench \citep{cifar2023airbench}. First, to test the impact of $\alpha$, we run F-Muon for different $\alpha$ with the same {\tt lr=0.24(1 - step/total\_steps), momentum=0.6, nesterov=True} and weight normalization, as have been finetuned by Keller Jordan, 10 repetitions for each $\alpha$. We record the accuracy after 8 epochs of training (\cref{fig:muon_alphas}).
 
-Then we tune F-Muon with $\alpha = 0.5$. Tuned parameters are {\tt lr=0.42(1 - step/total\_steps), momentum=0.63, nesterov = True}. Tuned F-Muon reaches $94.04 \pm 0.13\%$ after 8 epochs (averaged by 200 iterations), matching Muon's accuracy and variance. Once again we measure \texttt{val\_accuracy}($\alpha$) curve (\cref{fig:fmuon_alphas}). We notice that even when $\alpha=0.1$, the accuracy is much higher than in the case of vanilla NSGD.
+Then we tune F-Muon with $\alpha = 0.5$. Tuned parameters are {\tt lr=0.4(1 - step/total\_steps), momentum=0.6, nesterov = True}. Tuned F-Muon reaches $94.02 \pm 0.13\%$ after 8 epochs (averaged by 200 iterations), matching Muon's accuracy and variance. Once again we measure \texttt{val\_accuracy}($\alpha$) curve (\cref{fig:fmuon_alphas}). We notice that even when $\alpha=0.1$, the accuracy is much higher than in the case of vanilla NSGD.
 
 We tune S-Muon with $\alpha=0.5$ for the best \texttt{(lr, momentum, sign\_lr\_coeff)} and by setting {\tt lr=0.42(1 - step/total\_steps), momentum=0.63, nesterov = True, sign\_lr\_coeff = 0.003} get $\bf{94.03} \pm 0.13\%$, which is even higher than for vanilla Muon.
 
@@ -797,9 +797,9 @@ We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, and F-Neon on CIFAR-airben
 	  \hdashline
 	  SignSGD & ? $\cdot$ ? & ? & ? \\
 	  \hdashline
-	  Muon & 0.24 & 0.63 & $94.02 \pm 0.10$ \\
+	  Muon & 0.24 & 0.6 & $94.01 \pm 0.10$ \\
 	  \hdashline
-	  F-Muon & 0.42 & 0.63 & $94.04 \pm 0.13$\\
+	  F-Muon & 0.40 & 0.6 & $94.02 \pm 0.13$\\
 	  \hdashline
 	  S-Muon & 0.42 & 0.63 & $94.03 \pm 0.13$ \\
 	  \hline
