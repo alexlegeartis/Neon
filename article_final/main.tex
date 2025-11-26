@@ -1,0 +1,59 @@
+%\documentclass[wcp,gray]{jmlr} % test grayscale version
+ %\documentclass[wcp]{jmlr}% former name JMLR W\&CP
+\documentclass[pmlr]{jmlr}% new name PMLR (Proceedings of Machine Learning)
+
+\RequirePackage{graphicx}
+ % The following packages will be automatically loaded:
+ % amsmath, amssymb, natbib, graphicx, url, algorithm2e
+ \usepackage{booktabs}
+ %\usepackage{rotating}% for sideways figures and tables
+\usepackage{longtable}% for long tables
+
+\makeatletter
+\def\set@curr@file#1{\def\@curr@file{#1}} %temp workaround for 2019 latex release
+\makeatother
+\usepackage[load-configurations=version-1]{siunitx} % newer version
+
+% change the arguments, as appropriate, in the following:
+\jmlrvolume{tbd}
+\jmlryear{2025}
+\jmlrworkshop{International Conference on Computational Optimization}
+
+\title[Ky Fan Norms for Matrix Optimization]{The Ky Fan Norms and Beyond: Dual Norms and Combinations for Matrix Optimization}
+
+\author{\Name{Alexey Kravatskiy}
+       \Email{kravtskii.aiu@phystech.edu}\\
+       \addr Moscow Institute of Physics and Technology (MIPT)
+       \AND
+       \Name{Ivan Kozyrev}
+       \Email{kozyrev.in@phystech.edu}\\
+       \addr Moscow Institute of Physics and Technology (MIPT)\\
+       Marchuk Institute of Numerical Mathematics
+       \AND
+       \Name{Alexander Vinogradov}
+       \Email{vinogradov.am@phystech.edu}\\
+       \addr Moscow Institute of Physics and Technology (MIPT)
+       \AND
+       \Name{Nikolai Kozlov}
+       \Email{kozlov.na@phystech.edu}\\
+       \addr Moscow Institute of Physics and Technology (MIPT)
+       \AND
+       \Name{Daniil Merkulov}
+       \Email{daniil.merkulov@phystech.edu}\\
+       \addr Moscow Institute of Physics and Technology (MIPT)\\
+       Skoltech, HSE, AI4Science
+       \AND
+       \Name{Ivan Oseledets}
+       \Email{i.oseledets@skoltech.ru}\\
+       \addr AIRI, Skoltech\\
+       Marchuk Institute of Numerical Mathematics}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan $k$-norms to introduce a family of Muon-like algorithms we name \emph{Fanions}, which happen to be similar to Dion. Then working with the duals of convex combinations of the Ky Fan $k$-norms and the Frobenius norm or the $l_\infty$ norm, we construct the families of \emph{F-Fanions} and \emph{S-Fanions} respectively. Their most prominent members are \emph{F-Muon} and \emph{S-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that F-Muon and S-Muon are always on par with Muon, while on fine-tuning of NanoGPT and synthetic linear least squares they are even better than vanilla Muon optimizer.
+\end{abstract}
+
+\end{document}
