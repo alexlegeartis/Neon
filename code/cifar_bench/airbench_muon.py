@@ -25,7 +25,7 @@ import torchvision.transforms as T
 import math
 torch.backends.cudnn.benchmark = True
 
-from optimizers import MuonOrSign
+from optimizers import MuonOrSign, Neon
 
 #############################################
 #               Muon optimizer              #
@@ -428,12 +428,24 @@ def main(run, model):
                      dict(params=[model.head.weight], lr=head_lr, weight_decay=wd/head_lr)]
     optimizer1 = torch.optim.SGD(param_configs, momentum=0.85, nesterov=True, fused=True)
     # optimizer2 =  Muon(filter_params, lr=0.24, momentum=0.63, nesterov=True)
-    optimizer2 = NormalizedMuon(filter_params, lr=0.5, momentum=0.95, sgd_coeff=1, nesterov=True)
+    # optimizer2 = NormalizedMuon(filter_params, lr=0.5, momentum=0.95, sgd_coeff=1, nesterov=True)
     # optimizer2 = SignSGDMuon(filter_params, lr=1, momentum=0.95, nesterov=True, sgd_coeff=1, sign_lr_mult=0.003) # 91.54 +- 0.26%
 
     # optimizer2 =  SignSGDMuon(filter_params, lr=0.42, momentum=0.63, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.003)
     # optimizer2 = MuonOrSign(filter_params, lr=0.42, momentum=0.65, nesterov=True, sign_coeff=0.003) # 94.00%, for now a bad idea
 
+    # optimizer2 = Neon(
+    #         filter_params, neon_mode='kyfan', lr=0.24, momentum=0.6, nesterov=True, norm_weight=False # 69.8 +-0.50%
+    #     )
+    # optimizer2 = Neon(
+    #         filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5 # 87.15 +-0.24%
+    #     )
+    # optimizer2 = Neon(
+    #         filter_params, neon_mode='kyfan', lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, k=5,
+    #     )
+    optimizer2= Neon(
+            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5, k=5, #86.66 +-0.65%
+        )
     optimizers = [optimizer1, optimizer2]
     for opt in optimizers:
         for group in opt.param_groups:
@@ -518,7 +530,7 @@ if __name__ == "__main__":
 
     print_columns(logging_columns_list, is_head=True)
     main("warmup", model)
-    accs = torch.tensor([main(run, model) for run in range(20)])
+    accs = torch.tensor([main(run, model) for run in range(10)])
     print("Mean: %.4f    Std: %.4f" % (accs.mean(), accs.std()))
 
     log_dir = os.path.join("logs", str(uuid.uuid4()))
