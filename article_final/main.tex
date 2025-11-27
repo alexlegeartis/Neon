@@ -86,7 +86,7 @@
 \maketitle
 
 \begin{abstract}
-	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan $k$-norms to introduce a family of Muon-like algorithms we name \emph{Fanions}, which happen to be similar to Dion. Then working with the duals of convex combinations of the Ky Fan $k$-norms and the Frobenius norm or the $l_\infty$ norm, we construct the families of \emph{F-Fanions} and \emph{S-Fanions} respectively. Their most prominent members are \emph{F-Muon} and \emph{S-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that F-Muon and S-Muon are always on par with Muon, while on fine-tuning of NanoGPT and synthetic linear least squares they are even better than vanilla Muon optimizer.
+	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals to the Ky Fan $k$-norms to introduce a family of Muon-like algorithms we name \emph{Fanions}, which happen to be similar to Dion. Then working with the duals of convex combinations of the Ky Fan $k$-norms and the Frobenius norm or the $l_\infty$ norm, we construct the families of \emph{F-Fanions} and \emph{S-Fanions} respectively. Their most prominent members are \emph{F-Muon} and \emph{S-Muon}. We complement our theoretical analysis with an extensive empirical study of the algorithms across a wide range of tasks and settings, from which it follows that F-Muon and S-Muon are always on par with Muon, while on synthetic linear least squares they are even better than vanilla Muon optimizer.
 \end{abstract}
 
 \section{Introduction}
@@ -347,9 +347,9 @@ Combining Fanions for various $k$ with another excellent LMO-algorithm, NSGD, we
 \begin{equation}\label{eq:nsgd_muon_update}
 		\mX^{t+1} = \mX^{t} - \gamma_k \left(\alpha \sum_{i = 1}^k \vu_i \vv_i^\top + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}}\right)\,.
 \end{equation}
-Recall that Fanion-$k$ update is governed by the norm dual to the Ky Fan-$k$ norm, and NSGD corresponds to the Frobenius norm, which is dual to itself. Thus, by \corollaryref{corollary:lin_comb_alg}, our new algorithm is an LMO-algorithm corresponding to the unit ball of the norm $\norm{\cdot}_{\mathrm{F-KF-k}}$:
+Recall that Fanion-$k$ update is governed by the norm dual to the Ky Fan-$k$ norm, and NSGD corresponds to the Frobenius norm, which is dual to itself. Thus, by \corollaryref{corollary:lin_comb_alg}, our new algorithm is an LMO-algorithm corresponding to the unit ball of the norm $\norm{\cdot}_{\mathrm{F-KF-k}}^\dagger$:
 \begin{equation}\label{eq:fkfk_norm}
-	\norm{\cdot}_{\mathrm{F-KF-k}}^\dagger = \alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}\,.
+	\norm{\cdot}_{\mathrm{F-KF-k}} = \alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}\,.
 \end{equation}
 We name the derived family of algorithms \emph{F-Fanions}.
 
@@ -363,9 +363,9 @@ Another algorithm we consider is the SignSGD. Mixing its update with that of Fan
 \end{equation}
 where $\eta$ is the special SignSGD learning rate coefficient.
 
-The norm $\norm{\cdot}_{\mathrm{C-KF-k}}$ which produces this update in the LMO framework is again given by \corollaryref{corollary:lin_comb_alg}:
+The norm $\norm{\cdot}_{\mathrm{C-KF-k}}^\dagger$ that produces this update in the LMO framework is again given by \corollaryref{corollary:lin_comb_alg}:
 \begin{equation}\label{eq:ckfk_norm}
-	\norm{\cdot}_{\mathrm{C-KF-k}}^\dagger = \alpha \normkfk{\cdot} + \frac{1-\alpha}{\eta}\normc{\cdot}^\dagger\,.
+	\norm{\cdot}_{\mathrm{C-KF-k}} = \alpha \normkfk{\cdot} + \frac{1-\alpha}{\eta}\normc{\cdot}^\dagger\,.
 \end{equation}
 
 \section{Computing the Updates}\label{sec:matrix-side}
@@ -613,13 +613,11 @@ We suppose that the reason for the recorded stark discrepancy between Neon and M
 
 \section{Conclusion}
 
-In this article, we have generalized several successful algorithms, like Muon and Dion, to the LMO-based algorithms in the $\normkfk{\cdot}^\dagger$ norm. Also we have proposed the technique of ``regularizing'' the updates with NSGD, a trick to increase the robustness of the algorithms, which is motivated by the consideration of the $\normfstar{\cdot}$, $\normftwo{\cdot}$, and general $\norm{\cdot}_{\mathrm{F-KF-k}}$ norms. Generalizations of well-known norms and subsequent combinations of them may further improve performance of LMO-based algorithms. If a theory is developed that explains the discrepancy between performance of different algorithms based on the matrix norms, one will probably be able to intentionally construct norms optimal to given architectures and probably even their parameters.
-
-We suggest that future works that deal with the non-Euclidean LMO explain in corollaries to their convergence theorems the empirical superiority of Muon to other Fanions. Without that, it is hard to believe that the bounds are relevant for practitioners.
+In this article, we have generalized several successful algorithms, like Muon, Dion and $\nu$SAM, to the LMO-based algorithms in the $\normkfk{\cdot}^\dagger$ norm. Also we have proposed the technique of ``regularizing'' the updates with NSGD or SignSGD, a trick to increase the robustness of the algorithms, which is motivated by the consideration of the $\norm{\cdot}_{\mathrm{F-KF-k}}$ and $\norm{\cdot}_{\mathrm{C^\dagger-KF-k}}$ norms. We suggest that future works that deal with the non-Euclidean LMO explain in the corollaries to their convergence theorems the empirical superiority of Muon to other Fanions, and ideally accont for S-Fanion and F-Muon robustness as well. Without that, it is hard to believe that the bounds are relevant for practitioners, as we see by the notorious example of one-rank Neon.
 
 \section{Author Contributions}
 
-IO suggested using the nuclear norm in the \citet{bernstein2024oldoptimizernewnorm} framework. DM presented the problem at the MIPT optimization course and helped with editing the article. IK suggested using composite norms (though not the ones that induce F-Fanions and S-Fanions) and refactored \sectionref{sec:conic_combo}. NK suggested Lanczos algorithm as the most precise means to compute Fanions' updates, conducted experiments to prove this, and wrote \sectionref{sec:matrix-side}. AV conducted the finetuning of NanoGPT on Tiny Stories and wrote \sectionref{subsec:finetune}. All other work was done by AK: creating Fanions, F-Fanions, S-Fanions, experimenting on the Linear Least Squares, CIFAR-airbench and NanoGPT pretrain, and writing the manuscript.
+IO suggested using the nuclear norm in the \citet{bernstein2024oldoptimizernewnorm} framework. DM presented the problem at the MIPT optimization course. IK suggested using composite norms (though not the ones that induce F-Fanions and S-Fanions) and refactored \sectionref{sec:conic_combo}. NK suggested Lanczos algorithm as the most precise means to compute Fanions' updates, conducted experiments to prove this, and wrote \sectionref{sec:matrix-side}. AV conducted the finetuning of NanoGPT on Tiny Stories and wrote \sectionref{subsec:finetune}. All other work was done by AK: constructing Fanions, F-Fanions, S-Fanions, experimenting on the Linear Least Squares, CIFAR-airbench and NanoGPT pretrain, and writing the manuscript.
 
 \bibliography{icomp2024_conference}
 
@@ -827,11 +825,12 @@ We log train and validation accuracy, and nuclear, gradient, and spectral norms 
 
 \section{Technical details of the experiments}
 
-\textbf{CIFAR airbench} We used NVIDIA RTX A4000.
 
-\textbf{NanoGPT pretrain} We used the standard setting of 8 $\times$ H100 as documented in \citet{modded_nanogpt_2024}. 
+\paragraph{CIFAR airbench} We used NVIDIA RTX A4000.
 
-\textbf{NanoGPT Fine-tuning.} Experiments were conducted on a single NVIDIA RTX 4090 (24GB) GPU using PyTorch~2.8 with CUDA~12.8 and cuDNN~9.0, running on a workstation equipped with an Intel Core i9-14900KS CPU and 128 GB of RAM. No distributed or mixed-hardware training setups were used, ensuring a strictly controlled and unbiased comparison across optimizers.
+\paragraph{NanoGPT pretrain} We used the standard setting of 8 $\times$ H100 as documented in \citet{modded_nanogpt_2024}. 
+
+\paragraph{NanoGPT Fine-tuning.} Experiments were conducted on a single NVIDIA RTX 4090 (24GB) GPU using PyTorch~2.8 with CUDA~12.8 and cuDNN~9.0, running on a workstation equipped with an Intel Core i9-14900KS CPU and 128 GB of RAM. No distributed or mixed-hardware training setups were used, ensuring a strictly controlled and unbiased comparison across optimizers.
 
 A uniform training protocol was applied to all runs, including identical batch size, warm-up and cosine decay learning rate schedule, gradient clipping strategy, and validation split. Our optimization methods were integrated into the NanoGPT training loop without modifying the model architecture or preprocessing pipeline. Model quality was primarily evaluated using validation loss tracked over 200 training steps.
 
