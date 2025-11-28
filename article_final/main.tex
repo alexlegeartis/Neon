@@ -172,10 +172,12 @@ When the norm is the Chebyshev norm $\normc{\cdot}$, we get
 \end{equation}
 which recovers SignSGD~\citep{bernstein2018signsgd}. Here, $\sign(\mM^t)$ denotes the element-wise sign function. SignSGD is particularly notable for its communication efficiency in distributed training, as it compresses gradients to 1-bit per parameter.
 
-\section{Duals to Ky Fan Norms Instead of the Spectral Norm}
+\section{Beyond the Spectral Norm: Fanions}
 
-\subsection{\texorpdfstring{$\normn{\mM^{t}}$ and Neon}{Neon}}
-After considering $\normf{\mM^t}$ and $\norms{\mM^t}$, it is natural to look at the nuclear norm $\normn{\mM^t}$.
+\subsection{The Rank Gap Problem}
+
+Having examined the Frobenius norm (NSGD), spectral norm (Muon), and Chebyshev norm (SignSGD), all of which produce full-rank updates, we naturally turn to the nuclear norm $\normn{\cdot}$.
+
 \begin{lemma}\label{lemma:neon_update}
 	When $\norm{\cdot} = \normn{\cdot}$, \equationref{eq:our_update} becomes
 	\begin{equation}\label{eq:neon_update}
@@ -183,20 +185,16 @@ After considering $\normf{\mM^t}$ and $\norms{\mM^t}$, it is natural to look at 
 	\end{equation}
 \end{lemma}
 \begin{proof}
-Since $\norm{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\norms{\mM^t} = \sigma_1$. Let us note that $\Delta = \vu_1 \vv_1^\top$ delivers this value. Indeed, $\normn{\Delta}=1$ and by the trace property and orthogonality of the singular vectors,
+Since $\normn{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\norms{\mM^t} = \sigma_1$. Note that $\Delta = \vu_1 \vv_1^\top$ delivers this value. Indeed, $\normn{\Delta}=1$ and by the trace property and orthogonality of the singular vectors,
 \[
 \<\mM^t, \Delta> =\<\mU \mSigma \mV^\top, \vu_1 \vv_1^\top> = \tr \diag({\sigma_1, 0, \dots, 0}) = \norms{\mM^t}\,,
 \]
 which completes the proof.
 \end{proof}
 
-We name the derived algorithm \emph{Neon}. In \sectionref{sec:matrix-side}, we will discuss how to compute Neon's update.
+We call this algorithm \emph{Neon}. The nuclear norm thus yields rank-one updates, in stark contrast to the full-rank updates of Muon, NSGD, and SignSGD. This raises a natural question: can we derive algorithms with updates of intermediate ranks?
 
-\subsection{\texorpdfstring{$\normkfk{\mM^t}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}{Muon, Neon, and Centralized Dion without error feedback}}
-
-Neon's and Muon's updates seem to be complete opposites: one has rank one, while the other is full-rank. It would be interesting to derive algorithms with updates of intermediate ranks.
-
-\subsubsection{Schatten norms}
+\paragraph{Schatten norms}
 \citet{cesista2025schattenp} considered Schatten-$p$ norms:
 \[\norm{\mM^t}_{S_p} = \left(\sum_{i=1}^{\min(m, n)}\sigma_i^p\right)^{1/p}\,,
 \]
@@ -204,23 +202,26 @@ which produce the update
 \[
 \mX^{t+1} = \mX^t - \gamma_t \mU \frac{\diag\left(\sigma_1^{q-1},\dots, \sigma_{\min(m,n)}^{q-1}\right)}{\left(\sum_{i=1}^{\min(m,n)}{\sigma_i^q}\right)^{\frac{q-1}{q}}}\mV^\top
 \]
-for $p$ and $q$ such that: $\frac{1}{p} + \frac{1}{q} = 1$. This formula recovers Neon when $p\rightarrow1$ provided that $\sigma_1 > \sigma_2$, which is true on real data; NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
+where $p$ and $q$ satisfy $\frac{1}{p} + \frac{1}{q} = 1$. This formula recovers Neon when $p\rightarrow1$ (provided $\sigma_1 > \sigma_2$, which holds on real data), NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
 
-However, Schatten norms do not fill the rank gap: indeed, when $p > 1$, the rank of the update is full, while when $p=1$ ($p \rightarrow 1$) it is one. Moreover, it is not clear how to calculate the update for $p \neq 1, 2, \infty$: it seems one has to know all $\sigma_i$ to compute the update, which makes the problem as hard as computing the full SVD.
+However, Schatten norms do not fill the rank gap: when $p > 1$, the update has full rank, while when $p=1$ (or $p \rightarrow 1$), it has rank one. Moreover, computing the update for $p \neq 1, 2, \infty$ appears to require knowing all $\sigma_i$, making the problem as hard as computing the full SVD.
 
-\subsubsection{Ky Fan norms}
-There is another family of matrix norms that might help us: Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ is $\sum_{i=1}^{k}\sigma_i$, i.e., the sum of the $k$ largest singular values of the matrix. Special cases of the Ky Fan $k$-norm are the Ky Fan $1$-norm, which is the spectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
+\paragraph{Ky Fan norms}
+Another family of matrix norms offers a potential solution: the Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ equals $\sum_{i=1}^{k}\sigma_i$, the sum of the $k$ largest singular values. Notable special cases include the Ky Fan $1$-norm (the spectral norm) and the Ky Fan $\min\{m, n\}$-norm (the nuclear norm).
 
-Let us derive the update for an arbitrary $k$. Since $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96), the goal is to reach $\max\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i, \sigma_1\}$. $\Delta = \vu_1 \vv_1^\top$ from Neon delivers $\sigma_1$, while $\Delta = \frac{1}{k}\sum_{i=1}^{\min(m,n)}\vu_i \vv_i^\top$ from Muon (with an extra factor of $1/k$) delivers $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
+Deriving the update for arbitrary $k$: Since $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96), the goal is to reach $\max\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i, \sigma_1\}$. The Neon update $\Delta = \vu_1 \vv_1^\top$ achieves $\sigma_1$, while the scaled Muon update $\Delta = \frac{1}{k}\sum_{i=1}^{\min(m,n)}\vu_i \vv_i^\top$ achieves $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
 \[
 \mX^{t+1} = \mX^{t} - \gamma_t \vu_1 \vv_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\gamma_t}{k}\mU \mV^\top\,,
 \]
-depending on which one better minimizes the linear function $L(\mX) \equiv F(\mX^t) + \<\mM^t, \mX - \mX^t>$.
+depending on which better minimizes the linear function $L(\mX) \equiv F(\mX^t) + \mM^t(\mX - \mX^t)$.
 
-The rank gap is not closed by the Ky Fan norms because the obtained update is either one-rank or full-rank.
+The Ky Fan norms thus fail to close the rank gap: the resulting update is either rank-one or full-rank.
 
-\subsubsection{Duals to Ky Fan norms}
+\subsection{Solution: Duals to Ky Fan Norms}
+
 While Schatten norms are closed under dualization and $\norm{\mM^t}_{S_p}^\dagger = \norm{\mM^t}_{S_q}$, for Ky Fan norms it is not generally the case. $k = 1$ and $k=\min(m, n)$ are exceptional: for $k=1$ the dual norm is $\normn{\cdot}$ with $k = \min(m, n)$ and for $k = \min(m, n)$ the dual norm is $\norms{\cdot}$ with $k=1$. For each other $k$, $\normkfk{\cdot} \neq \norm{\cdot}_{\text{KF-}k'}$ for any $k'$: $k'=\min(m, n)$ and $k'= 1$ correspond to the already discussed cases, while for other $k'$ one can change $\norm{\mM^t}_{\text{KF-}k'}$ by moving a small value between $\sigma_{k'}$ and $\sigma_{k'+1}$. During this change, $\norms{\mM^t}$ and $\normn{\mM^t}$ will remain constant, hence $\normkfk{\mM^t}$ will not change as well.
+
+The key insight is to work with the duals of Ky Fan norms:
 
 \begin{lemma}\label{lemma:ky_fan_update}
 	When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \equationref{eq:our_update} turns into:
@@ -239,7 +240,18 @@ Let us note that $\Delta = \sum_{i=1}^{k} \vu_i \vv_i^\top$ delivers the value. 
 \]
 which completes the proof.
 \end{proof}
-These updates constitute the family of \emph{Fanions}, LMO-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. We call the algorithm for a particular $k$ \emph{Fanion-$k$}. Thus, Muon is Fanion-$\min\{m,n\}$, while Neon is Fanion-1. Moreover, the unsharded version of rank-$r$ Dion (Algorithm 1 from \citet{ahn2025dion}) without error feedback and without scaling of the update is actually Fanion-$r$ (see \citet{pethick2025understandingdion}, where Dion is written in a notation more similar to ours).
+
+These updates constitute the family of \emph{Fanions}, LMO-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. We call the algorithm for a particular $k$ \emph{Fanion-$k$}. This family elegantly bridges the rank gap with updates of any intermediate rank $k$.
+
+\paragraph{Connection to existing algorithms}
+The Fanion family unifies several known algorithms as special cases:
+\begin{itemize}
+	\item \textbf{Neon} is Fanion-1 (rank-one updates)
+	\item \textbf{Muon} is Fanion-$\min\{m,n\}$ (full-rank updates)
+	\item \textbf{Dion} (unsharded): The rank-$r$ Dion (Algorithm 1 from \citet{ahn2025dion}) without error feedback and without scaling of the update is actually Fanion-$r$ (see \citet{pethick2025understandingdion}, where Dion is written in a notation more similar to ours)
+\end{itemize}
+
+In \sectionref{sec:matrix-side}, we will discuss how to efficiently compute Fanion updates using the Lanczos algorithm.
 
 \section{Conic Combination of LMO-algorithms is an LMO-algorithm}
 \label{sec:conic_combo}
