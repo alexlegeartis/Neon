@@ -121,7 +121,7 @@ Training a neural network is essentially an optimization of a function of severa
 \begin{equation}\label{eq:matrix_problem}
 	F(\cdot)\colon \Rmn \to \R\,,\qquad F(\mX) \to \min_{\mX \in \Rmn}\,
 \end{equation}
-We equip the matrix space $\Rmn$ with a standard dot product $\<\cdot, \cdot> \to \R$ and a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which does not have to coincide with the Frobenius norm $\normf{\cdot}$. The dual norm $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ that is associated with $\norm{\cdot}$ is defined as
+We equip the matrix space $\Rmn$ with a standard dot product $\<\cdot, \cdot> \to \R$ and a norm $\norm{\cdot}\colon \Rmn \to \R_+$, which does not have to coincide with the Frobenius norm $\normf{\cdot} = \<\cdot,\cdot>$. The dual norm $\norm{\cdot}^\dagger\colon \Rmn \to \R_+$ that is associated with $\norm{\cdot}$ is defined as
 \begin{equation}\label{eq:dual_norm}
 	\norm{\mG}^\dagger = \sup_{\mD \in \Rmn\,:\norm{\mD}\leq 1} \<\mG,\mD>\,.
 \end{equation}
@@ -130,13 +130,12 @@ Such problems can be solved with an iterative algorithm based on the Linear Mini
 \begin{equation}\label{eq:lmo}
 	\mathrm{LMO}(\mM^k) \in \argmin_{\mD \in \cS} \<\mM^k, \mD>\,,
 \end{equation}
-where $\mM^k$ is a gradient (or a momentum) of $F$ in $\mX^k$ and $\cS \subset \Rmn$ is some set. The update of the algorithm is defined as follows:
+where $\mM^k$ is the gradient (or momentum) of $F$ at $\mX^k$ and $\cS \subset \Rmn$ is some set. The update of the algorithm is defined as follows:
 \begin{equation}\label{eq:simple_update}
 	\mX^{k + 1} = \mX^k + \gamma_k\mathrm{LMO}\left(\mM^k\right)\,.
 \end{equation}
 
-We are particularly interested in the case when $\cS$ is a unit ball in the norm $\norm{\cdot}$:
-
+We are particularly interested in the case when $\cS$ is a unit ball in some norm $\norm{\cdot}$:
 \[
 \cS = \cB_{\norm{\cdot}} = \{ \mD \in \Rmn \mid \norm{\mD} \leq 1 \}\,.
 \]
@@ -144,24 +143,24 @@ In this case,
 \[
 \argmin_{\mD \in \cS} \<\mM^k, \mD> = - \{ \mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,,
 \]
-and update for $\mX^k$ in \equationref{eq:simple_update} simplifies to
+and the update for $\mX^k$ in \equationref{eq:simple_update} simplifies to
 \begin{equation}\label{eq:our_update}
 	\mX^{k+1} = \mX^{k} - \gamma_k \{\mD \in \cB_1 \mid \<\mM^k, \mD> = \norm{\mM^k}^\dagger\}\,.
 \end{equation}
 
-Using this formula it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$:
+Using this formula, it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$:
 
 \paragraph{Frobenius norm and Normalized SGD}
 When the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \equationref{eq:our_update} turns into
 \begin{equation}\label{eq:nsgd_update}
-	\mX^{k+1} = \mX^{k} - \eta_k \frac{\mM^k}{\normf{\mM^k}}\,,
+	\mX^{k+1} = \mX^{k} - \gamma_k \frac{\mM^k}{\normf{\mM^k}}\,,
 \end{equation}
 which recovers Normalized SGD (NSGD).
 
 \paragraph{Spectral norm and Muon}
 When the norm is the spectral norm $\norms{\cdot}$, we get
 \begin{equation}\label{eq:muon_update}
-	\mX^{k+1} = \mX^{k} - \eta_k \mU \mV^\top\,,
+	\mX^{k+1} = \mX^{k} - \gamma_k \mU \mV^\top\,,
 \end{equation}
 which is Muon without the $\sqrt{m/n}$ factor.
 Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^k$ ($\mU = [\vu_1, \vu_2, \dots, \vu_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and $\mV = [\vv_1, \vv_2, \dots, \vv_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
@@ -169,7 +168,7 @@ Here, $\mM^k = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) o
 \paragraph{Chebyshev norm and SignSGD}
 When the norm is the Chebyshev norm $\normc{\cdot}$, we get
 \begin{equation}\label{eq:signsgd_update}
-	\mX^{k+1} = \mX^{k} - \eta_k \sign(\mM^k)\,,
+	\mX^{k+1} = \mX^{k} - \gamma_k \sign(\mM^k)\,,
 \end{equation}
 which recovers SignSGD~\citep{bernstein2018signsgd}. Here, $\sign(\mM^k)$ denotes the element-wise sign function. SignSGD is particularly notable for its communication efficiency in distributed training, as it compresses gradients to 1-bit per parameter.
 
@@ -180,7 +179,7 @@ After considering $\normf{\mM^k}$ and $\norms{\mM^k}$, it is natural to look at 
 \begin{lemma}\label{lemma:neon_update}
 	When $\norm{\cdot} = \normn{\cdot}$, \equationref{eq:our_update} becomes
 	\begin{equation}\label{eq:neon_update}
-		\mX^{k+1} = \mX^{k} - \eta_k \vu_1 \vv_1^\top\,.
+		\mX^{k+1} = \mX^{k} - \gamma_k \vu_1 \vv_1^\top\,.
 	\end{equation}
 \end{lemma}
 \begin{proof}
@@ -191,7 +190,7 @@ Since $\norm{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\norms{\mM^k
 which completes the proof.
 \end{proof}
 
-We name the derived algorithm \emph{Neon}. In \sectionref{sec:matrix-side}, we will discuss how to compute the Neon's update.
+We name the derived algorithm \emph{Neon}. In \sectionref{sec:matrix-side}, we will discuss how to compute Neon's update.
 
 \subsection{\texorpdfstring{$\normkfk{\mM^k}^\dagger$ and Muon, Neon, and Centralized Dion without error feedback}{Muon, Neon, and Centralized Dion without error feedback}}
 
@@ -207,10 +206,10 @@ which produce the update
 \]
 for $p$ and $q$ such that: $\frac{1}{p} + \frac{1}{q} = 1$. This formula recovers Neon when $p\rightarrow1$ provided that $\sigma_1 > \sigma_2$, which is true on real data; NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
 
-However, Schatten norms do not fill the gap rank: indeed, when $p > 1$, the rank of the update is full, while when $p=1$ ($p \rightarrow 1$) it is one. Moreover, it is not clear how to calculate the update for $p \neq 1, 2, \infty$: it seems one has to know all $\sigma_i$ to compute the update, which makes the problem as hard as the full SVD.
+However, Schatten norms do not fill the rank gap: indeed, when $p > 1$, the rank of the update is full, while when $p=1$ ($p \rightarrow 1$) it is one. Moreover, it is not clear how to calculate the update for $p \neq 1, 2, \infty$: it seems one has to know all $\sigma_i$ to compute the update, which makes the problem as hard as computing the full SVD.
 
 \subsubsection{Ky Fan norms}
-There is another family of matrix norms, which might help us: Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ is $\sum_{i=1}^{k}\sigma_i$, i.e. the sum of the $k$ largest singular values of the matrix. Special cases of the Ky Fan $k$-norm are the Ky Fan $1$-norm, which is the spectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
+There is another family of matrix norms that might help us: Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ is $\sum_{i=1}^{k}\sigma_i$, i.e., the sum of the $k$ largest singular values of the matrix. Special cases of the Ky Fan $k$-norm are the Ky Fan $1$-norm, which is the spectral norm, and the Ky Fan $\min\{m, n\}$-norm, which is the nuclear norm.
 
 Let us derive the update for an arbitrary $k$. Since $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96), the goal is to reach $\max\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i, \sigma_1\}$. $\Delta = \vu_1 \vv_1^\top$ from Neon delivers $\sigma_1$, while $\Delta = \frac{1}{k}\sum_{i=1}^{\min(m,n)}\vu_i \vv_i^\top$ from Muon (with an extra factor of $1/k$) delivers $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
 \[
@@ -240,12 +239,12 @@ Let us note that $\Delta = \sum_{i=1}^{k} \vu_i \vv_i^\top$ delivers the value. 
 \]
 which completes the proof.
 \end{proof}
-These updates constitute the family of \emph{Fanions}, LMO-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. The algorithm for a particular $k$ we will call \emph{Fanion-$k$}. Thus, Muon is a Fanion-$\min\{m,n\}$, while Neon is a Fanion-1. Moreover, the unsharded version of the rank-$r$ Dion (Algorithm 1 from \citet{ahn2025dion}) without the error feedback and without scaling of the update is actually a Fanion-$r$ (see \citet{pethick2025understandingdion}, where Dion is written down in a notation more similar to ours).
+These updates constitute the family of \emph{Fanions}, LMO-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. We call the algorithm for a particular $k$ \emph{Fanion-$k$}. Thus, Muon is Fanion-$\min\{m,n\}$, while Neon is Fanion-1. Moreover, the unsharded version of rank-$r$ Dion (Algorithm 1 from \citet{ahn2025dion}) without error feedback and without scaling of the update is actually Fanion-$r$ (see \citet{pethick2025understandingdion}, where Dion is written in a notation more similar to ours).
 
 \section{Conic Combination of LMO-algorithms is an LMO-algorithm}
 \label{sec:conic_combo}
 
-Simply applying norm dual to the Ky Fan $k$-norm however, is not enough to provide family of algorithms diverse enough for our cause. Next we consider linear combinations of algorithms from LMO framework, which happen to be LMO-algorithms too, as we show in succeeding paragraphs.
+Simply applying the norm dual to the Ky Fan $k$-norm, however, is not enough to provide a family of algorithms diverse enough for our purposes. Next, we consider linear combinations of algorithms from the LMO framework, which happen to be LMO-algorithms as well, as we show in the following paragraphs.
 
 \subsection{General Case}
 First, we need a well-known fact mentioned, for example, in \citet[Table 1]{yu2012arithmetic}. For the sake of completeness, we provide a proof here.
