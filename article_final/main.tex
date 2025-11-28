@@ -109,7 +109,7 @@ We then compare the performance of these algorithm families on various model and
 	\item Fine-tuning NanoGPT on Tiny Stories \citep{eldan2023tinystoriessmalllanguagemodels}
 \end{itemize}
 
-Our experiments reveal important insights into the role of matrix norms in optimization. First, using the example of Neon (the rank-one Fanion), we show that not every LMO-based algorithm is effective, despite sharing the same asymptotics in the general bounds of \citet{kovalev2025understanding} and \citet{riabinin2025gluon}. This suggests that existing theoretical guarantees should be refined to better explain empirical performance.
+Our experiments reveal important insights into the role of matrix norms in optimization. First, using the example of Neon (the rank-one Fanion), we show that not every LMO-based algorithm is effective, despite sharing the same asymptotics in the general bounds of \citep{kovalev2025understanding} and \citep{riabinin2025gluon}. This suggests that existing theoretical guarantees should be refined to better explain empirical performance.
 
 Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon and S-Muon achieve $94.02 \pm 0.13\%$ and $94.03 \pm 0.13\%$ accuracy, matching Muon's $94.01 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, while fully-tuned Muon achieves 3.279. Finally, S-Muon matches Muon on fine-tuning NanoGPT on Tiny Stories, while F-Muon is far more resistant to learning rate choice than Muon. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, providing an affirmative answer to the central question posed above. Moreover, the tools from \sectionref{sec:conic_combo} give researchers considerable flexibility in designing algorithms that need not be direct modifications of Muon.
 
@@ -193,7 +193,7 @@ which completes the proof.
 We call this algorithm \emph{Neon}. The nuclear norm thus yields rank-one updates, in stark contrast to the full-rank updates of Muon, NSGD, and SignSGD. This raises a natural question: can we derive algorithms with updates of intermediate ranks?
 
 \paragraph{Schatten norms}
-\citet{cesista2025schattenp} considered Schatten-$p$ norms:
+\citep{cesista2025schattenp} considered Schatten-$p$ norms:
 \[\norm{\mM^t}_{S_p} = \left(\sum_{i=1}^{\min(m, n)}\sigma_i^p\right)^{1/p}\,,
 \]
 which produce the update
@@ -207,7 +207,7 @@ However, Schatten norms do not fill the rank gap: when $p > 1$, the update has f
 \paragraph{Ky Fan norms}
 Another family of matrix norms offers a potential solution: the Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ equals $\sum_{i=1}^{k}\sigma_i$, the sum of the $k$ largest singular values. Notable special cases include the Ky Fan $1$-norm (the spectral norm) and the Ky Fan $\min\{m, n\}$-norm (the nuclear norm).
 
-To derive the update formula for arbitrary $k$, we use the expression for the norm dual to the Ky Fan $k$-norm (see, for instance \citet{bhatia2013matrix}, p. 96):
+To derive the update formula for arbitrary $k$, we use the expression for the norm dual to the Ky Fan $k$-norm (see, for instance \citep{bhatia2013matrix}, p. 96):
 \[
     \normkfk{\cdot}^\dagger = \max\left\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\right\}\,.
 \]
@@ -247,7 +247,7 @@ The Fanion family unifies several known algorithms:
 \begin{itemize}
 	\item \textbf{Neon} is Fanion-1 (rank-one updates)
 	\item \textbf{Muon} is Fanion-$\min\{m,n\}$ (full-rank updates)
-	\item \textbf{Dion} (unsharded): The rank-$r$ Dion (Algorithm 1 from \citet{ahn2025dion}) without error feedback and without scaling of the update is actually Fanion-$r$ (see \citet{pethick2025understandingdion}, where Dion is written in a notation more similar to ours)
+	\item \textbf{Dion} (unsharded): The rank-$r$ Dion (Algorithm 1 from \citep{ahn2025dion}) without error feedback and without scaling of the update is actually Fanion-$r$ (see \citep{pethick2025understandingdion}, where Dion is written in a notation more similar to ours)
 \end{itemize}
 
 In \sectionref{sec:matrix-side}, we will discuss how to efficiently compute Fanion updates using the Lanczos algorithm.
@@ -255,10 +255,10 @@ In \sectionref{sec:matrix-side}, we will discuss how to efficiently compute Fani
 \section{Conic Combination of LMO-algorithms is an LMO-algorithm}
 \label{sec:conic_combo}
 
-Simply applying the norm dual to the Ky Fan $k$-norm, however, is not enough to provide a family of algorithms diverse enough for our purposes. Next, we consider linear combinations of algorithms from the LMO framework, which happen to be LMO-algorithms as well, as we show in the following paragraphs.
+Simply applying norms dual to Ky Fan $k$-norms, however, does not provide sufficient algorithmic diversity for our purposes. We now consider linear combinations of LMO-based algorithms and show that these combinations are themselves LMO-algorithms.
 
 \subsection{General Case}
-First, we need a well-known fact mentioned, for example, in \citet[Table 1]{yu2012arithmetic}. For the sake of completeness, we provide a proof here.
+We begin with a well-known result on dual norms (see, e.g., \citep[Table 1]{yu2012arithmetic}).
 
 \begin{lemma}\label{lemma:dual_to_conv_comb}
 	Let $\norm{\cdot}_{(1)},\dots,\norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1,\dots,\alpha_n$ be non-negative reals. Define
@@ -273,70 +273,21 @@ First, we need a well-known fact mentioned, for example, in \citet[Table 1]{yu20
 	where $\sum$ denotes the Minkowski sum and $\cB_{\norm{\cdot}_{(i)}^\dagger}$ is the unit ball of the dual norm $\norm{\cdot}_{(i)}^\dagger$.
 \end{lemma}
 
-\begin{proof}
-	Let us first prove the lemma for the case $n = 2$. Denote $f(x) = \alpha_1 \norm{x}_{(1)}$ and $g(x) = \alpha_2 \norm{x}_{(2)}$, such that $\norm{x} = f(x) + g(x)$. Recall two standard facts:
-	\begin{enumerate}
-		\item For any norm $\norm{\cdot}$ and $\lambda>0$,
-		      \[
-			      (\lambda \norm{\cdot})^*(y) =
-			      \sup_{x}\bigl( \langle y,x \rangle - \lambda \norm{x}\bigr)
-			      = \delta_{\lambda \cB_{\norm{\cdot}^\dagger}}(y)\,,
-		      \]
-		      i.e., the indicator function of the scaled dual ball.
-		\item The Fenchel conjugate of a sum satisfies
-		      \[
-			      (f+g)^*(y) = \inf_{u+v=y} \bigl(f^*(u) + g^*(v)\bigr)\,.
-		      \]
-	\end{enumerate}
-	Applying these to $f$ and $g$, we have
-	\[
-		f^*(u) = \delta_{\alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger}}(u)\,,
-		\quad
-		g^*(v) = \delta_{\alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}}(v)\,.
-	\]
-	Thus,
-	\[
-		\norm{\cdot}^*(y)
-		= (f+g)^*(y)
-		= \inf_{u+v=y}
-		\bigl(
-		\delta_{\alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger}}(u)
-		+
-		\delta_{\alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}}(v)
-		\bigr)
-		=
-		\delta_{\alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger}+\alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}}(y).
-	\]
-	By definition, the conjugate of a norm is exactly the indicator of its dual unit ball:
-	\[
-	\norm{\cdot}^*(y) = \delta_{\cB_{\norm{\cdot}^\dagger}}(y)\,.
-	\]
-	Therefore, $\cB_{\norm{\cdot}^\dagger} = \alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger} + \alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}$.
-
-	Now we prove the general case by induction. The base case ($n=2$) is already proven. Suppose that the assumption of the lemma holds for $n = k$. Then, for $n = k + 1$,
-	\[
-	\norm{x} = \sum_{i = 1}^k \alpha_i \norm{x}_{(i)} + \alpha_{k + 1}\norm{x}_{(k + 1)} = \norm{x}_{(1:k)} + \alpha_{k + 1}\norm{x}_{(k + 1)}\,.
-	\]
-	Applying the result for $n=2$ combined with the induction assumption, we obtain
-	\[
-	\cB_{\norm{\cdot}^\dagger} = \cB_{\norm{\cdot}_{(1:k)}^\dagger} + \alpha_{k + 1} \cB_{\norm{\cdot}_{(k + 1)}^\dagger} = \sum_{i = 1}^{k + 1} \alpha_i \cB_{\norm{\cdot}_{(i)}^\dagger}\,,
-	\]
-	which proves the lemma.
-\end{proof}
+A proof is provided in the appendix (see \sectionref{sec:proof_dual_conv_comb}).
 
 \begin{lemma}\label{lemma:lin_comb_lmo}
 	Let $\norm{\cdot}_{(1)}, \dots, \norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1, \dots, \alpha_n$ be non-negative reals. Consider Linear Minimization Oracles $\mathrm{LMO}_{1}, \dots, \mathrm{LMO}_{n}$, corresponding to the unit balls of these norms. Then, $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{i}$ is the LMO corresponding to the norm $\norm{\cdot}$ dual to the $\sum_{i = 1}^n \alpha_i \norm{\cdot}_{(i)}^\dagger$.
 \end{lemma}
 
 \begin{proof}
-	Using \lemmaref{lemma:dual_to_conv_comb} and the fact $\norm{\cdot}^{\dagger \dagger} = \norm{\cdot}$, we can obtain general form of the unit ball in the $\norm{\cdot}$ norm: $\cB_{\norm{\cdot}} = \sum_{i = 1}^n \alpha_i \cB_{\norm{\cdot}_{(i)}}$. Thus, the linear function minimization objective on a $\norm{\cdot}$ norm ball can be transformed as follows:
+	Using \lemmaref{lemma:dual_to_conv_comb} and the biduality property $\norm{\cdot}^{\dagger \dagger} = \norm{\cdot}$, we obtain the unit ball representation: $\cB_{\norm{\cdot}} = \sum_{i = 1}^n \alpha_i \cB_{\norm{\cdot}_{(i)}}$. The linear minimization problem over this ball can thus be transformed as follows:
 	\[
 	\argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD> = \argmin_{\mD_1 \in \alpha_i \cB_{\norm{\cdot}_{(1)}},\dots,\mD_n \in \alpha_n\cB_{\norm{\cdot}_{(n)}}}\<\mM, \sum_{i = 1}^n\mD_i> = \sum_{i = 1}^n \argmin_{D_i \in \cB_{\norm{\cdot}_{(i)}}}\<\mM, \mD_i>\,,
 	\]
-	where the last summation denotes the Minkowski sum. This immediately implies $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{i} \in \argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD>$, which proves the claim of the lemma.
+	where the last summation denotes the Minkowski sum. This immediately implies $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{i} \in \argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD>$, completing the proof.
 \end{proof}
 
-Applying it to optimization algorithms, we obtain the following corollary.
+Applying this result to optimization algorithms yields the following corollary.
 
 \begin{corollary}\label{corollary:lin_comb_alg}
 	Let there be a finite family of LMO based algorithms indexed by $i = 1,\dots,n$, where the update of the $i$-th algorithm is defined by
@@ -351,32 +302,34 @@ Applying it to optimization algorithms, we obtain the following corollary.
 \end{corollary}
 
 \subsection{Frobeniusize Them: F-Muon and F-Neon}
-Let us construct the concrete examples of algorithms given by linear combinations of LMO-algorithms. It follows from \corollaryref{corollary:lin_comb_alg} that those algorithms can also be viewed as LMO-algorithms.
+We now construct concrete examples of algorithms obtained via linear combinations of LMO-algorithms. By \corollaryref{corollary:lin_comb_alg}, these combinations are themselves LMO-algorithms.
 
-Combining Fanions for various $k$ with another excellent LMO-algorithm, NSGD, we obtain the family of algorithms with updates defined by
+Combining Fanion-$k$ with NSGD yields a family of algorithms with updates
 \begin{equation}\label{eq:nsgd_muon_update}
 		\mX^{t+1} = \mX^{t} - \gamma_t \left(\alpha \sum_{i = 1}^k \vu_i \vv_i^\top + (1-\alpha)\frac{\mM^t}{\normf{\mM^t}}\right)\,.
 \end{equation}
-Recall that Fanion-$k$ update is governed by the norm dual to the Ky Fan-$k$ norm, and NSGD corresponds to the Frobenius norm, which is dual to itself. Thus, by \corollaryref{corollary:lin_comb_alg}, our new algorithm is an LMO-algorithm corresponding to the unit ball of the norm $\norm{\cdot}_{\mathrm{F-KF-k}}^\dagger$:
+Recall that Fanion-$k$ operates under the dual to the Ky Fan $k$-norm, while NSGD operates under the self-dual Frobenius norm. By \corollaryref{corollary:lin_comb_alg}, this combination defines an LMO-algorithm with norm $\norm{\cdot}_{\mathrm{F-KF-k}}^\dagger$, where
 \begin{equation}\label{eq:fkfk_norm}
 	\norm{\cdot}_{\mathrm{F-KF-k}} = \alpha \normkfk{\cdot} + (1-\alpha)\normf{\cdot}\,.
 \end{equation}
-We name the derived family of algorithms \emph{F-Fanions}.
+We call this family \emph{F-Fanions}.
 
-Two edge members of this family, with $k = 1$ and $k = \min\{m, n\}$ correspondingly, \emph{F-Neon} and \emph{F-Muon}, are of particular interest to us. A bit of information and visualizations related to the $\normfstar{\cdot} = \norm{\cdot}_{\mathrm{F-KF-1}}$ norm is presented in the appendix (see \equationref{eq:normfstardual}, \figureref{fig:fstardual}).
+The extremal members of this family are \emph{F-Neon} (with $k = 1$) and \emph{F-Muon} (with $k = \min\{m, n\}$). Additional information and visualizations for the $\normfstar{\cdot} = \norm{\cdot}_{\mathrm{F-KF-1}}$ norm appear in the appendix (see \equationref{eq:normfstardual}, \figureref{fig:fstardual}).
 
 \subsection{Add SignSGD: S-Muon and S-Neon}
 
-Another algorithm we consider is the SignSGD. Mixing its update with that of Fanion-$k$, we obtain the update of \emph{S-Fanion-$k$}:
+Similarly, combining Fanion-$k$ with SignSGD yields \emph{S-Fanion-$k$} with update
 \begin{equation}\label{eq:sign_muon_update}
 		\mX^{t+1} = \mX^{t} - \gamma_t \left(\alpha \sum_{i = 1}^k \vu_i \vv_i^\top + (1-\alpha)\eta\sign(\mM^t)\right)\,,
 \end{equation}
-where $\eta$ is the special SignSGD learning rate coefficient.
+where $\eta$ is a scaling coefficient specific to SignSGD.
 
-The norm $\norm{\cdot}_{\mathrm{C-KF-k}}^\dagger$ that produces this update in the LMO framework is again given by \corollaryref{corollary:lin_comb_alg}:
+By \corollaryref{corollary:lin_comb_alg}, this defines an LMO-algorithm with norm $\norm{\cdot}_{\mathrm{C-KF-k}}^\dagger$, where
 \begin{equation}\label{eq:ckfk_norm}
 	\norm{\cdot}_{\mathrm{C-KF-k}} = \alpha \normkfk{\cdot} + \frac{1-\alpha}{\eta}\normc{\cdot}^\dagger\,.
 \end{equation}
+
+The extremal members of this family are \emph{S-Neon} (with $k = 1$) and \emph{S-Muon} (with $k = \min\{m, n\}$).
 
 \section{Computing the Updates}\label{sec:matrix-side}
 We employ the thick-restarted Lanczos method for the symmetric eigenvalue problem (thick-restart Lanczos, TRLan) to compute the low-rank updates of Fanions. We apply TRLan to either $\mM^{t\top}\mM^t$ or $\mM^t \mM^{t\top}$ (whichever matrix is smaller). We use the CuPy implementation of \texttt{cupy.sparse.linalg.svds} \citep{cupy_svds_ref} which internally relies on TRLan \citep{simonz1998thick}.
@@ -568,7 +521,7 @@ For all one-dimensional layers, AdamW was used with a learning rate of $1\!\time
 
 \section{Algorithms for Vectors $\rightarrow$ Algorithms for Matrices}
 
-One cannot but notice the similarity between the updates of LMO optimizers in the vector $l_p$ and the matrix Schatten $S_p$ norms, which is illustrated by \tableref{tbl:mat_vs_vec_lmo}. The parallels are not limited to mere similarity of the updates and can be traced even in the empirical observations. SignSGD is very close to Adam, as noted in \citet{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well in training large models \citep{zhao2025deconstructing, liu2025muon}. NSGD is the same for both matrix and vector cases. Greedy Coordinate Descent is not applied to high-dimensional problems, so from this perspective it is not surprising that one-rank Neon underperforms on such problems.
+One cannot but notice the similarity between the updates of LMO optimizers in the vector $l_p$ and the matrix Schatten $S_p$ norms, which is illustrated by \tableref{tbl:mat_vs_vec_lmo}. The parallels are not limited to mere similarity of the updates and can be traced even in the empirical observations. SignSGD is very close to Adam, as noted in \citep{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well in training large models \citep{zhao2025deconstructing, liu2025muon}. NSGD is the same for both matrix and vector cases. Greedy Coordinate Descent is not applied to high-dimensional problems, so from this perspective it is not surprising that one-rank Neon underperforms on such problems.
 
 \begin{table}[t]
 \floatconts
@@ -605,21 +558,21 @@ One cannot but notice the similarity between the updates of LMO optimizers in th
 
 Since Muon \citep{jordan2024muon} is a very efficient optimizer for functions of weight matrices, a lot of research has been put into, first, further improving its performance, and second, explaining its success.
 
-\paragraph{Improvements of Muon} Regarding the first point, a large number of applications and improvements of Muon has been proposed in less than a year. \citet{liu2025muon} adapted the algorithm for training language models larger than NanoGPT. \citet{shah2025practical} organized efficient hyperparameter transfer by combining Muon with maximal update parametrization. To construct their COSMOS optimizer, \citet{chen2025cosmoshybridadaptive} applied computationally intensive updates of SOAP optimizer \citep{vyas2025soap} to a low-dimensional ``leading eigensubspace'' while using memory-efficient methods like Muon for the remaining parameters. \citet{amsel2025polar, grishina2025chebyshev} proposed more efficient alternatives to Newton-Schulz algorithm. \citet{si2025adamuon} introduced AdaMuon which combines element-wise adaptivity with orthogonal updates. We suppose that the described above or similar techniques can be applied to our optimizers as well. For example, F-Muon and S-Muon also benefit from faster alternatives to Newton-Schulz iterations, and Fanions may be a great substitute to Muon in COSMOS, because, as we have shown in \sectionref{sec:matrix-side}, Lanczos algorithm is much faster than Newton-Schulz iterations on very large matrices.
+\paragraph{Improvements of Muon} Regarding the first point, a large number of applications and improvements of Muon has been proposed in less than a year. \citep{liu2025muon} adapted the algorithm for training language models larger than NanoGPT. \citep{shah2025practical} organized efficient hyperparameter transfer by combining Muon with maximal update parametrization. To construct their COSMOS optimizer, \citep{chen2025cosmoshybridadaptive} applied computationally intensive updates of SOAP optimizer \citep{vyas2025soap} to a low-dimensional ``leading eigensubspace'' while using memory-efficient methods like Muon for the remaining parameters. \citep{amsel2025polar, grishina2025chebyshev} proposed more efficient alternatives to Newton-Schulz algorithm. \citep{si2025adamuon} introduced AdaMuon which combines element-wise adaptivity with orthogonal updates. We suppose that the described above or similar techniques can be applied to our optimizers as well. For example, F-Muon and S-Muon also benefit from faster alternatives to Newton-Schulz iterations, and Fanions may be a great substitute to Muon in COSMOS, because, as we have shown in \sectionref{sec:matrix-side}, Lanczos algorithm is much faster than Newton-Schulz iterations on very large matrices.
 
-\paragraph{Theory behind Muon} Regarding the second point, there has been a prolonged gap in theory behind Muon, simplistic derivation of \citet{bernstein2025deriving} based on \citet{bernstein2024oldoptimizernewnorm} excluded. This gap, as it seems to us, is not even now completely closed. For example, \citet{kovalev2025understanding} has provided convergence guarantees of Muon and in various settings, from which, however, Muon's supremacy cannot be recovered. Indeed, although the obtained bounds depend on the norm choice, the asymptotics of the convergence remain the same as for NSGD and other optimizers, $K = \cO(\epsilon^{-4})$ in an $L$-smooth stochastic case.
+\paragraph{Theory behind Muon} Regarding the second point, there has been a prolonged gap in theory behind Muon, simplistic derivation of \citep{bernstein2025deriving} based on \citep{bernstein2024oldoptimizernewnorm} excluded. This gap, as it seems to us, is not even now completely closed. For example, \citep{kovalev2025understanding} has provided convergence guarantees of Muon and in various settings, from which, however, Muon's supremacy cannot be recovered. Indeed, although the obtained bounds depend on the norm choice, the asymptotics of the convergence remain the same as for NSGD and other optimizers, $K = \cO(\epsilon^{-4})$ in an $L$-smooth stochastic case.
 
-A similar drawback has the article \citet{riabinin2025gluon}, where $L$-smoothness assumption is replaced with a more practical $(L_0, L_1)$-smoothness. By estimating smoothness and substituting it into their Theorem 1, the authors recovered the optimal fine-tuned stepsizes reported by \citet{pethick2025training}. However, they have not showed the optimality of the spectral or the RMS-to-RMS norm, which is observed in practice, as our comparison with NSGD highlights.
+A similar drawback has the article \citep{riabinin2025gluon}, where $L$-smoothness assumption is replaced with a more practical $(L_0, L_1)$-smoothness. By estimating smoothness and substituting it into their Theorem 1, the authors recovered the optimal fine-tuned stepsizes reported by \citep{pethick2025training}. However, they have not showed the optimality of the spectral or the RMS-to-RMS norm, which is observed in practice, as our comparison with NSGD highlights.
 
 Common important drawback of the analyses is the consideration of the convergence by the norm of the gradient. As we showed in our experiments on CIFAR, the gradient norm may decrease only by a factor of ten, when the accuracy reaches 100\%.
 
 We suppose that the reason for the recorded stark discrepancy between Neon and Muon performance, both of which are described by Stochastic Conditional Gradient \citep{pethick2025training} or Gluon frameworks, lies in the structure of the norm ball or in the preconditioner interpretation \citep{pethick2025trainingneuralnetworksscale}, which must be an object of further research.
 
-\paragraph{The LMO and Error Feedback} We already mentioned that rank-$k$ unsharded Dion without error feedback and scaling of the update is Fanion-$k$. Since error feedback for Dion is very important as discovered by the ablation study in \citet{ahn2025dion}, F-Fanions and S-Fanions will benefit from it as well. In the context of federated learning, error feedback is effective even for compressed Muon \citep{gruntkowska2025efmuon}. The advantage of Fanions and S-Fanions is that less bits are required for transmission: $\sum_{i=1}^k \vu_i \vv_i^\top$ is easily transmitted as $\{\vu_1, \vv_1, \dots, \vu_k, \vv_k\}$ ($(m+n)\times k$ floats), while the sign part is as usual coded in $m \times n$ bits. Thus, the compression is ``built-in''. Moreover, there is an intriguing possibility to construct differentially private Fanions and S-Fanions with the specific more optimal non-Gaussian noise, as was done with DP-signSGD \citep{jang2024dplogsign}. This we leave for future research.
+\paragraph{The LMO and Error Feedback} We already mentioned that rank-$k$ unsharded Dion without error feedback and scaling of the update is Fanion-$k$. Since error feedback for Dion is very important as discovered by the ablation study in \citep{ahn2025dion}, F-Fanions and S-Fanions will benefit from it as well. In the context of federated learning, error feedback is effective even for compressed Muon \citep{gruntkowska2025efmuon}. The advantage of Fanions and S-Fanions is that less bits are required for transmission: $\sum_{i=1}^k \vu_i \vv_i^\top$ is easily transmitted as $\{\vu_1, \vv_1, \dots, \vu_k, \vv_k\}$ ($(m+n)\times k$ floats), while the sign part is as usual coded in $m \times n$ bits. Thus, the compression is ``built-in''. Moreover, there is an intriguing possibility to construct differentially private Fanions and S-Fanions with the specific more optimal non-Gaussian noise, as was done with DP-signSGD \citep{jang2024dplogsign}. This we leave for future research.
 
-\paragraph{The nuclear norm in the LMO} As we found out only when transforming our results into an article, the nuclear norm has already been explored in the context of the linear minimization oracle. \citet{pethick2025sam} applied it to create $\nu$SAM, a new sharpness-aware minimization technique. It would be interesting to substitute $\normn{\cdot}$ with $\normkfk{\cdot}^\dagger$ in their approach. Since the SAM-neighborhood becomes more diverse, $k > 1$ might add to the accuracy boost, while preserving a small memory footprint and a small time overhead, if Dion-style power iterations are used.
+\paragraph{The nuclear norm in the LMO} As we found out only when transforming our results into an article, the nuclear norm has already been explored in the context of the linear minimization oracle. \citep{pethick2025sam} applied it to create $\nu$SAM, a new sharpness-aware minimization technique. It would be interesting to substitute $\normn{\cdot}$ with $\normkfk{\cdot}^\dagger$ in their approach. Since the SAM-neighborhood becomes more diverse, $k > 1$ might add to the accuracy boost, while preserving a small memory footprint and a small time overhead, if Dion-style power iterations are used.
 
-\paragraph{Orthogonal research} Fanions, F-Fanions, and S-Fanions benefit from the general theoretical description of \citet{riabinin2025gluon}, and better learning rates can be predicted by calculating the trajectory smoothness. They could be transformed to Drop-Fanions by updating only some layers as in \citet{gruntkowska2025dropmuon}. They could be viewed as approximations of the Non-Euclidean Broximal Point Method for the corresponding norms \citep{gruntkowska2025noneuclideanbroximal}. One can clip them to produce ClippedScion-like algorithms \citep{pethick2025generalizedgradientnormclipping}. They could be made more memory-effective by the zero-order techniques that worked for Muon \citep{petrov2025zeromuon}. Finally, the results from \citet{shulgin2025inexactmuon} can be used to explain the robustness of Muon to the norm change that occurred in our experiments and to theoretically derive faster yet working approximate schemes to calculate the LMO; power iterations with a very limited number of iterations is a good algorithm to consider for the analysis.
+\paragraph{Orthogonal research} Fanions, F-Fanions, and S-Fanions benefit from the general theoretical description of \citep{riabinin2025gluon}, and better learning rates can be predicted by calculating the trajectory smoothness. They could be transformed to Drop-Fanions by updating only some layers as in \citep{gruntkowska2025dropmuon}. They could be viewed as approximations of the Non-Euclidean Broximal Point Method for the corresponding norms \citep{gruntkowska2025noneuclideanbroximal}. One can clip them to produce ClippedScion-like algorithms \citep{pethick2025generalizedgradientnormclipping}. They could be made more memory-effective by the zero-order techniques that worked for Muon \citep{petrov2025zeromuon}. Finally, the results from \citep{shulgin2025inexactmuon} can be used to explain the robustness of Muon to the norm change that occurred in our experiments and to theoretically derive faster yet working approximate schemes to calculate the LMO; power iterations with a very limited number of iterations is a good algorithm to consider for the analysis.
 
 \section{Conclusion}
 
@@ -627,7 +580,7 @@ In this article, we have generalized several successful algorithms, like Muon, D
 
 \section{Author Contributions}
 
-IO suggested using the nuclear norm in the \citet{bernstein2024oldoptimizernewnorm} framework. DM presented the problem at the MIPT optimization course. IK suggested using composite norms (though not the ones that induce F-Fanions and S-Fanions) and refactored \sectionref{sec:conic_combo}. NK suggested Lanczos algorithm as the most precise means to compute Fanions' updates, conducted experiments to prove this, and wrote \sectionref{sec:matrix-side}. AV conducted the finetuning of NanoGPT on Tiny Stories and wrote \sectionref{subsec:finetune}. All other work was done by AK: constructing Fanions, F-Fanions, S-Fanions, experimenting on the Linear Least Squares, CIFAR-airbench and NanoGPT pretrain, and writing the manuscript.
+IO suggested using the nuclear norm in the \citep{bernstein2024oldoptimizernewnorm} framework. DM presented the problem at the MIPT optimization course. IK suggested using composite norms (though not the ones that induce F-Fanions and S-Fanions) and refactored \sectionref{sec:conic_combo}. NK suggested Lanczos algorithm as the most precise means to compute Fanions' updates, conducted experiments to prove this, and wrote \sectionref{sec:matrix-side}. AV conducted the finetuning of NanoGPT on Tiny Stories and wrote \sectionref{subsec:finetune}. All other work was done by AK: constructing Fanions, F-Fanions, S-Fanions, experimenting on the Linear Least Squares, CIFAR-airbench and NanoGPT pretrain, and writing the manuscript.
 
 \bibliography{icomp2024_conference}
 
@@ -662,6 +615,61 @@ If $\alpha = 1$, then $\mZ = \mY$, and we get $\normftwo{\mY}^\dagger = \normn{\
 
 Unfortunately, $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$ do not have a closed-form expression.
 
+\section{Proof of Lemma on Dual of Convex Combinations}\label{sec:proof_dual_conv_comb}
+
+We provide here the proof of \lemmaref{lemma:dual_to_conv_comb}.
+
+\begin{proof}
+	Let us first prove the lemma for the case $n = 2$. Denote $f(x) = \alpha_1 \norm{x}_{(1)}$ and $g(x) = \alpha_2 \norm{x}_{(2)}$, such that $\norm{x} = f(x) + g(x)$. Recall two standard facts:
+	\begin{enumerate}
+		\item For any norm $\norm{\cdot}$ and $\lambda>0$,
+		      \[
+			      (\lambda \norm{\cdot})^*(y) =
+			      \sup_{x}\bigl( \langle y,x \rangle - \lambda \norm{x}\bigr)
+			      = \delta_{\lambda \cB_{\norm{\cdot}^\dagger}}(y)\,,
+		      \]
+		      i.e., the indicator function of the scaled dual ball.
+		\item The Fenchel conjugate of a sum satisfies
+		      \[
+			      (f+g)^*(y) = \inf_{u+v=y} \bigl(f^*(u) + g^*(v)\bigr)\,.
+		      \]
+	\end{enumerate}
+	Applying these to $f$ and $g$, we have
+	\[
+		f^*(u) = \delta_{\alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger}}(u)\,,
+		\quad
+		g^*(v) = \delta_{\alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}}(v)\,.
+	\]
+	Thus,
+	\[
+		\norm{\cdot}^*(y)
+		= (f+g)^*(y)
+		= \inf_{u+v=y}
+		\bigl(
+		\delta_{\alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger}}(u)
+		+
+		\delta_{\alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}}(v)
+		\bigr)
+		=
+		\delta_{\alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger}+\alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}}(y).
+	\]
+	By definition, the conjugate of a norm is exactly the indicator of its dual unit ball:
+	\[
+	\norm{\cdot}^*(y) = \delta_{\cB_{\norm{\cdot}^\dagger}}(y)\,.
+	\]
+	Therefore, $\cB_{\norm{\cdot}^\dagger} = \alpha_1 \cB_{\norm{\cdot}_{(1)}^\dagger} + \alpha_2 \cB_{\norm{\cdot}_{(2)}^\dagger}$.
+
+	Now we prove the general case by induction. The base case ($n=2$) is already proven. Suppose that the assumption of the lemma holds for $n = k$. Then, for $n = k + 1$,
+	\[
+	\norm{x} = \sum_{i = 1}^k \alpha_i \norm{x}_{(i)} + \alpha_{k + 1}\norm{x}_{(k + 1)} = \norm{x}_{(1:k)} + \alpha_{k + 1}\norm{x}_{(k + 1)}\,.
+	\]
+	Applying the result for $n=2$ combined with the induction assumption, we obtain
+	\[
+	\cB_{\norm{\cdot}^\dagger} = \cB_{\norm{\cdot}_{(1:k)}^\dagger} + \alpha_{k + 1} \cB_{\norm{\cdot}_{(k + 1)}^\dagger} = \sum_{i = 1}^{k + 1} \alpha_i \cB_{\norm{\cdot}_{(i)}^\dagger}\,,
+	\]
+	which proves the lemma.
+\end{proof}
+
 \section{Visualization of different matrix norms}
 \subsection{Duals to F* and F2 norms}
 
@@ -688,7 +696,7 @@ In \figureref{fig:fduals} we plot these norms. On x-axis and y-axis, there are s
 
 To showcase the complex structure of the Ky Fan $k$-norm and its dual, we suggest the illustrations \figureref{fig:kyfan_combined} with the ball in the Ky Fan $2$-norm in \figureref{fig:kyfan} and its dual in \figureref{fig:kyfandual}. On x-, y-, and z-axes, there are singular values $\sigma_1$, $\sigma_2$, and $\sigma_3$ respectively of a matrix from $\R^{m\times n}$ with $\min\{m,n\}=3$. In this particular case, we do not sort the singular values. In the proposed representation, we actually plot balls in the Top-$2$ norm $\max\{\abs{x}+\abs{y}, \abs{x}+\abs{z}, \abs{y}+\abs{z}\}$ and its dual norm $\max\{\max(\abs(x),\abs{y},\abs{z}), \frac{1}{2} (\abs{x}+\abs{y}+\abs{z})\}$. The resulting balls are much more complex than balls in $l_\infty$, $l_1$ and $l_2$ norms.
 
-In fact, those balls can be described easier if we use the results from \citet{yu2012arithmetic}. The Ky Fan $2$-norm ball is an intersection of three $l_1$ balls in $(x,y)$, $(x, z)$, and $(y,z)$ spaces. The 1-ball in the dual Ky Fan $2$-norm is an intersection of 1-ball the in $l_\infty$ norm and $\frac{1}{2}$-ball in the $l_1$ norm.
+In fact, those balls can be described easier if we use the results from \citep{yu2012arithmetic}. The Ky Fan $2$-norm ball is an intersection of three $l_1$ balls in $(x,y)$, $(x, z)$, and $(y,z)$ spaces. The 1-ball in the dual Ky Fan $2$-norm is an intersection of 1-ball the in $l_\infty$ norm and $\frac{1}{2}$-ball in the $l_1$ norm.
 
 \begin{figure}[htbp]
 \floatconts
@@ -838,7 +846,7 @@ We log train and validation accuracy, and nuclear, gradient, and spectral norms 
 
 \paragraph{CIFAR airbench} We used NVIDIA RTX A4000.
 
-\paragraph{NanoGPT pretrain} We used the standard setting of 8 $\times$ H100 as documented in \citet{modded_nanogpt_2024}. 
+\paragraph{NanoGPT pretrain} We used the standard setting of 8 $\times$ H100 as documented in \citep{modded_nanogpt_2024}. 
 
 \paragraph{NanoGPT Fine-tuning.} Experiments were conducted on a single NVIDIA RTX 4090 (24GB) GPU using PyTorch~2.8 with CUDA~12.8 and cuDNN~9.0, running on a workstation equipped with an Intel Core i9-14900KS CPU and 128 GB of RAM. No distributed or mixed-hardware training setups were used, ensuring a strictly controlled and unbiased comparison across optimizers.
 
