@@ -417,7 +417,7 @@ def main(run, model):
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=10, momentum_decay=0.9, sgd_coeff=0) # 84.5%, with 0.4% variance - wrong EF
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance - wrong EF
     
-    optimizer2 = SignSGDMuon(filter_params, lr=1, momentum=0.95, nesterov=True, sgd_coeff=1, sign_lr_mult=0.003) # 91.41 +- 0.33% BASELINE
+    # optimizer2 = SignSGDMuon(filter_params, lr=1, momentum=0.95, nesterov=True, sgd_coeff=1, sign_lr_mult=0.003) # 91.41 +- 0.33% BASELINE
 
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.005) # 90.94 +- 0.4%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.003, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=1) # 90.94 +- 0.4%
@@ -426,8 +426,7 @@ def main(run, model):
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.009) # 89.66 +- 0.33%
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
     # optimizer2 = MuonOrSign(filter_params, lr=0.42, momentum=0.65, nesterov=True, sign_coeff=0.003) # 94.00% - see airbench_muon.py - no benefit
-    # optimizer2 = MuonSignedUpdate(filter_params, lr=0.003, momentum=0.8, nesterov=True) # 93.14 +- 0.17%
-    
+    optimizer2 = MuonSignedUpdate(filter_params, lr=0.005, momentum=0.8, nesterov=True) # 93.57 +- 0.11 - AWESOME
 
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible
     
