@@ -188,8 +188,9 @@ class MuonSignedUpdate(torch.optim.Optimizer):
                     if norm < 1e-10:
                         norm = 1e-10
                     p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
-                update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape).sign() # whiten the update
-                p.data.add_(update, alpha=-lr) # take a step
+                update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
+
+                p.data.add_(update.sign(), alpha=-lr) # take a step
 
 class Muon2(torch.optim.Optimizer): # not ready yet!, we must have access to gradients by sample!
     def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True):
@@ -574,12 +575,13 @@ class SGDMuon(torch.optim.Optimizer):
 
             
 class SignSGDMuon(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True, sign_lr_mult=1, sgd_coeff=0):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True, sign_lr_mult=1, sgd_coeff=0, signed=False):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
         self.norm_weight = norm_weight
         self.sign_lr_mult = sign_lr_mult
+        self.signed = signed
 
     def step(self):
         for group in self.param_groups:
@@ -605,6 +607,8 @@ class SignSGDMuon(torch.optim.Optimizer):
                     update = (1-self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * self.sign_lr_mult
                 else:
                     update = g.sign() * self.sign_lr_mult
+                if self.signed:
+                    update = update.sign()
                 p.data.add_(update, alpha=-lr) # take a step
 
 
