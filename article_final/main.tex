@@ -52,7 +52,7 @@
 \jmlryear{2025}
 \jmlrworkshop{International Conference on Computational Optimization}
 
-\title[Ky Fan Norms for Matrix Optimization]{The Ky Fan Norms and Beyond: Dual Norms and Combinations for Matrix Optimization}
+\title[Ky Fan Norms, Duals, and Norm Combinations for Matrix Optimization]{The Ky Fan Norms and Beyond: Dual Norms and Combinations for Matrix Optimization}
 
 \author{\Name{Alexey Kravatskiy}
        \Email{kravtskii.aiu@phystech.edu}\\
@@ -145,7 +145,7 @@ In this case,
 \]
 and the update for $\mX^t$ in \equationref{eq:simple_update} simplifies to
 \begin{equation}\label{eq:our_update}
-	\mX^{t+1} = \mX^{t} - \gamma_t \{\mD \in \cB_1 \mid \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,.
+	\mX^{t+1} = \mX^{t} - \gamma_t \{\mD \in \cB_{\norm{\cdot}} \mid \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,.
 \end{equation}
 
 Using this formula, it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$:
@@ -215,7 +215,7 @@ Let us derive the update for an arbitrary $k$. Since $\normkfk{\cdot}^\dagger = 
 \[
 \mX^{t+1} = \mX^{t} - \gamma_t \vu_1 \vv_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\gamma_t}{k}\mU \mV^\top\,,
 \]
-depending on which one better minimizes the linear function $L(\mX) \equiv F(\mX^t) + \mM^t(\mX - \mX^t)$.
+depending on which one better minimizes the linear function $L(\mX) \equiv F(\mX^t) + \<\mM^t, \mX - \mX^t>$.
 
 The rank gap is not closed by the Ky Fan norms because the obtained update is either one-rank or full-rank.
 
