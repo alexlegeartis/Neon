@@ -56,30 +56,28 @@
 
 \author{\Name{Alexey Kravatskiy}
        \Email{kravtskii.aiu@phystech.edu}\\
-       \addr Moscow Institute of Physics and Technology (MIPT)
+       \addr MIPT
        \AND
        \Name{Ivan Kozyrev}
        \Email{kozyrev.in@phystech.edu}\\
-       \addr Moscow Institute of Physics and Technology (MIPT)\\
-       Marchuk Institute of Numerical Mathematics
+       \addr MIPT, INM RAS
        \AND
        \Name{Nikolai Kozlov}
        \Email{kozlov.na@phystech.edu}\\
-       \addr Moscow Institute of Physics and Technology (MIPT)
+       \addr MIPT
        \AND
        \Name{Alexander Vinogradov}
        \Email{vinogradov.am@phystech.edu}\\
-       \addr Moscow Institute of Physics and Technology (MIPT)
+       \addr MIPT
        \AND
        \Name{Daniil Merkulov}
        \Email{daniil.merkulov@phystech.edu}\\
-       \addr Moscow Institute of Physics and Technology (MIPT)\\
-       Skoltech, HSE, AI4Science
+       \addr MIPT, Skoltech, HSE, AI4Science
        \AND
        \Name{Ivan Oseledets}
        \Email{i.oseledets@skoltech.ru}\\
-       \addr AIRI, Skoltech\\
-       Marchuk Institute of Numerical Mathematics}
+       \addr AIRI, Skoltech, INM RAS
+}
 
 \begin{document}
 
@@ -225,9 +223,7 @@ depending on which of those two expressions achieves smaller residual on the lin
 
 \subsection{Solution: Duals to Ky Fan Norms}
 
-Unlike Schatten norms, which satisfy $\norm{\mM^t}_{S_p}^\dagger = \norm{\mM^t}_{S_q}$ (for $p^{-1} + q^{-1} = 1$) and are thus closed under dualization, Ky Fan norms are generally not. Only two exceptional cases exist: the dual of the Ky Fan $1$-norm $\norm{\cdot}_{\text{KF-}1}$ (the spectral norm) is the Ky Fan $\min(m,n)$-norm $\norm{\cdot}_{\text{KF-}\min(m,n)}$ (the nuclear norm), and vice versa. 
-
-Thus working with duals of Ky Fan norms can open new possibilities:
+Unlike Schatten norms, which satisfy $\norm{\mM^t}_{S_p}^\dagger = \norm{\mM^t}_{S_q}$ (for $p^{-1} + q^{-1} = 1$) and are thus closed under dualization, Ky Fan norms are generally not. Only two exceptional cases exist: the dual of the Ky Fan $1$-norm $\norm{\cdot}_{\text{KF-}1}$ (the spectral norm) is the Ky Fan $\min(m,n)$-norm $\norm{\cdot}_{\text{KF-}\min(m,n)}$ (the nuclear norm), and vice versa. Thus working with duals of Ky Fan norms can open up new possibilities:
 
 \begin{lemma}\label{lemma:ky_fan_update}
 	When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \equationref{eq:our_update} turns into:
@@ -247,7 +243,7 @@ which completes the proof.
 These updates define the \emph{Fanion} family of LMO-based algorithms, each operating under a norm $\normkfk{\mM^t}^\dagger$. We denote the algorithm for a particular $k$ as \emph{Fanion-$k$}. This family elegantly bridges the rank gap, providing updates of any intermediate rank $k$.
 
 \paragraph{Connection to existing algorithms}
-The Fanion family unifies several known algorithms as special cases:
+The Fanion family unifies several known algorithms:
 \begin{itemize}
 	\item \textbf{Neon} is Fanion-1 (rank-one updates)
 	\item \textbf{Muon} is Fanion-$\min\{m,n\}$ (full-rank updates)
