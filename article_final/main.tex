@@ -141,7 +141,7 @@ We are particularly interested in the case when $\cS$ is a unit ball in some nor
 \]
 In this case,
 \[
-\argmin_{\mD \in \cS} \<\mM^t, \mD> = - \{ \mD \in \cB_1 \mid \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,,
+\argmin_{\mD \in \cS} \<\mM^t, \mD> = - \{ \mD \in \cB_{\norm{\cdot}} \mid \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,,
 \]
 and the update for $\mX^t$ in \equationref{eq:simple_update} simplifies to
 \begin{equation}\label{eq:our_update}
@@ -202,7 +202,7 @@ Neon's and Muon's updates seem to be complete opposites: one has rank one, while
 \]
 which produce the update
 \[
-\mX^{t+1} = \mX^t - \eta_t \mU \frac{\diag\left(\sigma_1^{q-1},\dots, \sigma_{\min(m,n)}^{q-1}\right)}{\left(\sum_{i=1}^{\min(m,n)}{\sigma_i^q}\right)^{\frac{q-1}{q}}}\mV^\top
+\mX^{t+1} = \mX^t - \gamma_t \mU \frac{\diag\left(\sigma_1^{q-1},\dots, \sigma_{\min(m,n)}^{q-1}\right)}{\left(\sum_{i=1}^{\min(m,n)}{\sigma_i^q}\right)^{\frac{q-1}{q}}}\mV^\top
 \]
 for $p$ and $q$ such that: $\frac{1}{p} + \frac{1}{q} = 1$. This formula recovers Neon when $p\rightarrow1$ provided that $\sigma_1 > \sigma_2$, which is true on real data; NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
 
@@ -213,20 +213,20 @@ There is another family of matrix norms that might help us: Ky Fan norms. For $k
 
 Let us derive the update for an arbitrary $k$. Since $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96), the goal is to reach $\max\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i, \sigma_1\}$. $\Delta = \vu_1 \vv_1^\top$ from Neon delivers $\sigma_1$, while $\Delta = \frac{1}{k}\sum_{i=1}^{\min(m,n)}\vu_i \vv_i^\top$ from Muon (with an extra factor of $1/k$) delivers $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
 \[
-\mX^{t+1} = \mX^{t} - \eta_t \vu_1 \vv_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\eta_t}{k}\mU \mV^\top\,,
+\mX^{t+1} = \mX^{t} - \gamma_t \vu_1 \vv_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\gamma_t}{k}\mU \mV^\top\,,
 \]
 depending on which one better minimizes the linear function $L(\mX) \equiv F(\mX^t) + \mM^t(\mX - \mX^t)$.
 
 The rank gap is not closed by the Ky Fan norms because the obtained update is either one-rank or full-rank.
 
 \subsubsection{Duals to Ky Fan norms}
-While Schatten norms are closed under dualization and $\norm{\mM^k}_{S_p}^\dagger = \norm{\mM^k}_{S_q}$, for Ky Fan norms it is not generally the case. $k = 1$ and $k=\min(m, n)$ are exceptional: for $k=1$ the dual norm is $\normn{\cdot}$ with $k = \min(m, n)$ and for $k = \min(m, n)$ the dual norm is $\norms{\cdot}$ with $k=1$. For each other $k$, $\normkfk{\cdot} \neq \norm{\cdot}_{\text{KF-}k'}$ for any $k'$: $k'=\min(m, n)$ and $k'= 1$ correspond to the already discussed cases, while for other $k'$ one can change $\norm{\mM^k}_{\text{KF-}k'}$ by moving a small value between $\sigma_{k'}$ and $\sigma_{k'+1}$. During this change, $\norms{\mM^k}$ and $\normn{\mM^k}$ will remain constant, hence $\normkfk{\mM^k}$ will not change as well.
+While Schatten norms are closed under dualization and $\norm{\mM^t}_{S_p}^\dagger = \norm{\mM^t}_{S_q}$, for Ky Fan norms it is not generally the case. $k = 1$ and $k=\min(m, n)$ are exceptional: for $k=1$ the dual norm is $\normn{\cdot}$ with $k = \min(m, n)$ and for $k = \min(m, n)$ the dual norm is $\norms{\cdot}$ with $k=1$. For each other $k$, $\normkfk{\cdot} \neq \norm{\cdot}_{\text{KF-}k'}$ for any $k'$: $k'=\min(m, n)$ and $k'= 1$ correspond to the already discussed cases, while for other $k'$ one can change $\norm{\mM^t}_{\text{KF-}k'}$ by moving a small value between $\sigma_{k'}$ and $\sigma_{k'+1}$. During this change, $\norms{\mM^t}$ and $\normn{\mM^t}$ will remain constant, hence $\normkfk{\mM^t}$ will not change as well.
 
 \begin{lemma}\label{lemma:ky_fan_update}
 	When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \equationref{eq:our_update} turns into:
 
 	\begin{equation}\label{eq:ky_fan_update}
-		\mX^{t+1} = \mX^{t} - \eta \sum_{i=1}^{k}\vu_i \vv_i^\top
+		\mX^{t+1} = \mX^{t} - \gamma_t \sum_{i=1}^{k}\vu_i \vv_i^\top
 	\end{equation}
 \end{lemma}
 
