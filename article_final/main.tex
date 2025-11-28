@@ -163,7 +163,7 @@ When the norm is the spectral norm $\norms{\cdot}$, we get
 	\mX^{t+1} = \mX^{t} - \gamma_t \mU \mV^\top\,,
 \end{equation}
 which is Muon without the $\sqrt{m/n}$ factor.
-Here, $\mM^t = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^t$ ($\mU = [\vu_1, \vu_2, \dots, \vu_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and $\mV = [\vv_1, \vv_2, \dots, \vv_r]$). Muon can be recovered by taking the RMS-to-RMS operator norm $\sqrt{\frac{n}{m}}\norms{\cdot}$.
+Here, $\mM^t = \mU \mSigma \mV^\top$ is the Singular Value Decomposition (SVD) of $\mM^t$ ($\mU = [\vu_1, \vu_2, \dots, \vu_r]$, $\mSigma = \diag(\sigma_1, \sigma_2, \dots, \sigma_r)$, and $\mV = [\vv_1, \vv_2, \dots, \vv_r]$). Muon can be recovered by taking the RMS-to-RMS norm: $\sqrt{n/m}\norms{\cdot}$.
 
 \paragraph{Chebyshev norm and SignSGD}
 When the norm is the Chebyshev norm $\normc{\cdot}$, we get
@@ -176,7 +176,7 @@ which recovers SignSGD~\citep{bernstein2018signsgd}. Here, $\sign(\mM^t)$ denote
 
 \subsection{The Rank Gap Problem}
 
-Having examined the Frobenius norm (NSGD), spectral norm (Muon), and Chebyshev norm (SignSGD), all of which produce full-rank updates, we naturally turn to the nuclear norm $\normn{\cdot}$.
+Having examined the Frobenius norm (NSGD), spectral norm (Muon), and Chebyshev norm (SignSGD), all of which produce full-rank updates, we turn to the nuclear norm $\normn{\cdot}$.
 
 \begin{lemma}\label{lemma:neon_update}
 	When $\norm{\cdot} = \normn{\cdot}$, \equationref{eq:our_update} becomes
@@ -185,9 +185,9 @@ Having examined the Frobenius norm (NSGD), spectral norm (Muon), and Chebyshev n
 	\end{equation}
 \end{lemma}
 \begin{proof}
-Since $\normn{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\norms{\mM^t} = \sigma_1$. Note that $\Delta = \vu_1 \vv_1^\top$ delivers this value. Indeed, $\normn{\Delta}=1$ and by the trace property and orthogonality of the singular vectors,
+Since $\normn{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\<\mM^t, \mD> = \sigma_1$ in \equationref{eq:our_update}. Note that $\mD = \vu_1 \vv_1^\top$ delivers this value. Indeed, $\normn{\mD}=1$ and by the trace property and orthogonality of the singular vectors,
 \[
-\<\mM^t, \Delta> =\<\mU \mSigma \mV^\top, \vu_1 \vv_1^\top> = \tr \diag({\sigma_1, 0, \dots, 0}) = \norms{\mM^t}\,,
+\<\mM^t, \mD> =\<\mU \mSigma \mV^\top, \vu_1 \vv_1^\top> = \tr \diag({\sigma_1, 0, \dots, 0}) = \norms{\mM^t}\,,
 \]
 which completes the proof.
 \end{proof}
@@ -202,46 +202,49 @@ which produce the update
 \[
 \mX^{t+1} = \mX^t - \gamma_t \mU \frac{\diag\left(\sigma_1^{q-1},\dots, \sigma_{\min(m,n)}^{q-1}\right)}{\left(\sum_{i=1}^{\min(m,n)}{\sigma_i^q}\right)^{\frac{q-1}{q}}}\mV^\top
 \]
-where $p$ and $q$ satisfy $\frac{1}{p} + \frac{1}{q} = 1$. This formula recovers Neon when $p\rightarrow1$ (provided $\sigma_1 > \sigma_2$, which holds on real data), NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
+where $p$ and $q$ satisfy $p^{-1} + q^{-1} = 1$. This formula recovers Neon when $p\rightarrow1$ (provided $\sigma_1 > \sigma_2$, which holds on real data), NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
 
-However, Schatten norms do not fill the rank gap: when $p > 1$, the update has full rank, while when $p=1$ (or $p \rightarrow 1$), it has rank one. Moreover, computing the update for $p \neq 1, 2, \infty$ appears to require knowing all $\sigma_i$, making the problem as hard as computing the full SVD.
+However, Schatten norms do not fill the rank gap: when $p > 1$, the update has full rank, while when $p=1$, it has rank one. Moreover, computing the update for $p \neq 1, 2, \infty$ appears to require knowing all $\sigma_i$, making the problem as hard as computing the full SVD.
 
 \paragraph{Ky Fan norms}
 Another family of matrix norms offers a potential solution: the Ky Fan norms. For $k \in \{1, \dots, \min(m, n)\}$, the Ky Fan $k$-norm $\normkfk{\cdot}$ equals $\sum_{i=1}^{k}\sigma_i$, the sum of the $k$ largest singular values. Notable special cases include the Ky Fan $1$-norm (the spectral norm) and the Ky Fan $\min\{m, n\}$-norm (the nuclear norm).
 
-Deriving the update for arbitrary $k$: Since $\normkfk{\cdot}^\dagger = \max\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\}$ (see \citet{bhatia2013matrix}, p. 96), the goal is to reach $\max\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i, \sigma_1\}$. The Neon update $\Delta = \vu_1 \vv_1^\top$ achieves $\sigma_1$, while the scaled Muon update $\Delta = \frac{1}{k}\sum_{i=1}^{\min(m,n)}\vu_i \vv_i^\top$ achieves $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
+To derive the update formula for arbitrary $k$, we use the expression for the norm dual to the Ky Fan $k$-norm (see, for instance \citet{bhatia2013matrix}, p. 96):
+\[
+    \normkfk{\cdot}^\dagger = \max\left\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\right\}\,.
+\]
+According to \equationref{eq:our_update}, we need to find $\mD$ such that $\normkfk{\mD} = 1$ and
+\[
+\<\mM^t, \mD> = \max\left\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i,\ \sigma_1\right\}\,.
+\]
+The Neon update $\mD = \vu_1 \vv_1^\top$ achieves $\sigma_1$, while the scaled Muon update $\mD = \frac{1}{k}\sum_{i=1}^{\min(m,n)}\vu_i \vv_i^\top$ achieves $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
 \[
 \mX^{t+1} = \mX^{t} - \gamma_t \vu_1 \vv_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\gamma_t}{k}\mU \mV^\top\,,
 \]
-depending on which better minimizes the linear function $L(\mX) \equiv F(\mX^t) + \mM^t(\mX - \mX^t)$.
-
-The Ky Fan norms thus fail to close the rank gap: the resulting update is either rank-one or full-rank.
+depending on which of those two expressions achieves smaller residual on the linear function $L(\mX) := F(\mX^t) + \<\mM^t, \mX - \mX^t>$. The Ky Fan norms thus fail to close the rank gap: the resulting update is either rank-one or full-rank.
 
 \subsection{Solution: Duals to Ky Fan Norms}
 
-While Schatten norms are closed under dualization and $\norm{\mM^t}_{S_p}^\dagger = \norm{\mM^t}_{S_q}$, for Ky Fan norms it is not generally the case. $k = 1$ and $k=\min(m, n)$ are exceptional: for $k=1$ the dual norm is $\normn{\cdot}$ with $k = \min(m, n)$ and for $k = \min(m, n)$ the dual norm is $\norms{\cdot}$ with $k=1$. For each other $k$, $\normkfk{\cdot} \neq \norm{\cdot}_{\text{KF-}k'}$ for any $k'$: $k'=\min(m, n)$ and $k'= 1$ correspond to the already discussed cases, while for other $k'$ one can change $\norm{\mM^t}_{\text{KF-}k'}$ by moving a small value between $\sigma_{k'}$ and $\sigma_{k'+1}$. During this change, $\norms{\mM^t}$ and $\normn{\mM^t}$ will remain constant, hence $\normkfk{\mM^t}$ will not change as well.
+Unlike Schatten norms, which satisfy $\norm{\mM^t}_{S_p}^\dagger = \norm{\mM^t}_{S_q}$ (for $p^{-1} + q^{-1} = 1$) and are thus closed under dualization, Ky Fan norms are generally not. Only two exceptional cases exist: the dual of the Ky Fan $1$-norm $\norm{\cdot}_{\text{KF-}1}$ (the spectral norm) is the Ky Fan $\min(m,n)$-norm $\norm{\cdot}_{\text{KF-}\min(m,n)}$ (the nuclear norm), and vice versa. 
 
-The key insight is to work with the duals of Ky Fan norms:
+Thus working with duals of Ky Fan norms can open new possibilities:
 
 \begin{lemma}\label{lemma:ky_fan_update}
 	When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \equationref{eq:our_update} turns into:
-
 	\begin{equation}\label{eq:ky_fan_update}
-		\mX^{t+1} = \mX^{t} - \gamma_t \sum_{i=1}^{k}\vu_i \vv_i^\top
+		\mX^{t+1} = \mX^{t} - \gamma_t \sum_{i=1}^{k}\vu_i \vv_i^\top\,.
 	\end{equation}
 \end{lemma}
 
 \begin{proof}
-Since $\norm{\cdot}^\dagger = \normkfk{\cdot}^{\dagger\dagger} = \normkfk{\cdot}$, the goal is to reach $\normkfk{\mM^t}$.
-
-Let us note that $\Delta = \sum_{i=1}^{k} \vu_i \vv_i^\top$ delivers the value. Indeed,
+Since $\norm{\cdot}^\dagger = \normkfk{\cdot}^{\dagger\dagger} = \normkfk{\cdot}$, the goal is to reach $\<\mM^t, \mD> = \normkfk{\mM^t}$ in \equationref{eq:our_update}. Note that $\mD = \sum_{i=1}^{k} \vu_i \vv_i^\top$ attains this value. Indeed,
 \[
-\<\mM^t, \Delta> =\<\mU \mSigma \mV^\top, \sum_{i=1}^{k} \vu_i \vv_i^\top> = \sum_{i,j=1}^{r, k}\<\vu_i \sigma_i \vv_i^\top, \vu_j \vv_j^\top> = \sum_{i=1}^{k}\sigma_i = \normkfk{\mM^t}\,,
+\<\mM^t, \mD> =\<\mU \mSigma \mV^\top, \sum_{i=1}^{k} \vu_i \vv_i^\top> = \sum_{i,j=1}^{r, k}\<\vu_i \sigma_i \vv_i^\top, \vu_j \vv_j^\top> = \sum_{i=1}^{k}\sigma_i = \normkfk{\mM^t}\,,
 \]
 which completes the proof.
 \end{proof}
 
-These updates constitute the family of \emph{Fanions}, LMO-based algorithms under the $\normkfk{\mM^t}^\dagger$ norms. We call the algorithm for a particular $k$ \emph{Fanion-$k$}. This family elegantly bridges the rank gap with updates of any intermediate rank $k$.
+These updates define the \emph{Fanion} family of LMO-based algorithms, each operating under a norm $\normkfk{\mM^t}^\dagger$. We denote the algorithm for a particular $k$ as \emph{Fanion-$k$}. This family elegantly bridges the rank gap, providing updates of any intermediate rank $k$.
 
 \paragraph{Connection to existing algorithms}
 The Fanion family unifies several known algorithms as special cases:
