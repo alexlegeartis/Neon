@@ -116,16 +116,19 @@ class Muon(torch.optim.Optimizer):
 
 
 @torch.compile
-def f_update(acc_bf16_view_u16: Tensor, mantissa: Tensor, momentum_buffer: Tensor, grad: Tensor, momentum: Tensor, eff_lr: Tensor, eff_weight_decay: Tensor, sgd_coeff=0):
+def f_update(acc_bf16_view_u16: Tensor, mantissa: Tensor, momentum_buffer: Tensor, grad: Tensor, momentum: Tensor, eff_lr: Tensor, nsgd_lr: Tensor, eff_weight_decay: Tensor,
+            sgd_coeff=0):
     assert acc_bf16_view_u16.dtype == mantissa.dtype == torch.uint16
     grad = grad.float()
     momentum_buffer.copy_(momentum * momentum_buffer + (1 - momentum) * grad)
     real_mom = momentum * momentum_buffer + (1 - momentum) * grad
-    v = (1-sgd_coeff) * zeropower_via_newtonschulz5(real_mom) + sgd_coeff * real_mom / (real_mom.norm() + 1e-12)
 
     acc_m_u32 = (acc_bf16_view_u16.to(torch.uint32) << 16) | mantissa.to(torch.uint32)
     acc_m_u32.view(torch.float32).mul_(1 - eff_weight_decay)
-    acc_m_u32.view(torch.float32).add_(other=v, alpha=-eff_lr)
+
+    acc_m_u32.view(torch.float32).add_(other=(1-sgd_coeff) * zeropower_via_newtonschulz5(real_mom), alpha=-eff_lr)
+    acc_m_u32.view(torch.float32).add_(other=sgd_coeff * real_mom / (real_mom.norm() + 1e-12), alpha=-nsgd_lr)
+
     acc_bf16_view_u16.copy_((acc_m_u32 >> 16).to(torch.uint16))
     mantissa.copy_(acc_m_u32.to(torch.uint16))
 
@@ -143,12 +146,13 @@ class FMuon(torch.optim.Optimizer):
     Warning: This optimizer should not be used for the embedding layer, the final fully connected layer,
     or any {0,1}-D parameters; those should all be optimized by a standard method (e.g., AdamW).
     """
-    def __init__(self, params, lr=0.02, weight_decay=0.01, momentum=0.95, rank=0, world_size=1, sgd_coeff=1):
+    def __init__(self, params, lr=0.02, weight_decay=0.01, momentum=0.95, rank=0, world_size=1, sgd_coeff=1, scale_sgd=True):
         self.rank = rank
         self.world_size = world_size
         defaults = dict(lr=lr, weight_decay=weight_decay, momentum=momentum)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
+        self.scale_sgd = scale_sgd
         assert all(p.dtype == torch.bfloat16 for group in self.param_groups for p in group["params"])
 
     @torch.no_grad()
@@ -165,29 +169,32 @@ class FMuon(torch.optim.Optimizer):
                     if len(state) == 0:
                         state["mantissa"] = torch.zeros_like(p, dtype=torch.uint16)
                         state["momentum_buffer"] = torch.zeros_like(p, dtype=torch.float32)
+                    eff_lr = torch._as_tensor_fullprec(group["lr"] * max(1, p.size(-2) / p.size(-1)) ** 0.5)
                     f_update(
                         p.view(torch.uint16), state["mantissa"], state["momentum_buffer"],
                         p.grad, momentum,
-                        eff_lr=torch._as_tensor_fullprec(group["lr"] * max(1, p.size(-2) / p.size(-1)) ** 0.5),
+                        eff_lr=eff_lr,
                         eff_weight_decay=torch._as_tensor_fullprec(group["lr"] * group["weight_decay"] * getattr(p, "wd_mul", 1.0)),
-                        sgd_coeff=self.sgd_coeff
+                        sgd_coeff=self.sgd_coeff,
+                        nsgd_lr=eff_lr if self.scale_sgd else group["lr"]
                     )
                 futures.append(dist.all_gather(params_pad[base_i:base_i + self.world_size], params_pad[base_i + self.rank], async_op=True).get_future())
         torch.futures.collect_all(futures).wait()
 
 
 @torch.compile
-def s_update(acc_bf16_view_u16: Tensor, mantissa: Tensor, momentum_buffer: Tensor, grad: Tensor, momentum: Tensor, eff_lr: Tensor, eff_weight_decay: Tensor,
-            sgd_coeff=0, sign_lr_mult=1):
+def s_update(acc_bf16_view_u16: Tensor, mantissa: Tensor, momentum_buffer: Tensor, grad: Tensor, momentum: Tensor, eff_lr: Tensor, sign_lr: Tensor, eff_weight_decay: Tensor,
+            sgd_coeff=0):
     assert acc_bf16_view_u16.dtype == mantissa.dtype == torch.uint16
     grad = grad.float()
     momentum_buffer.copy_(momentum * momentum_buffer + (1 - momentum) * grad)
     real_mom = momentum * momentum_buffer + (1 - momentum) * grad
-    v = (1-sgd_coeff) * zeropower_via_newtonschulz5(real_mom) + sign_lr_mult * sgd_coeff * real_mom.sign()
 
     acc_m_u32 = (acc_bf16_view_u16.to(torch.uint32) << 16) | mantissa.to(torch.uint32)
     acc_m_u32.view(torch.float32).mul_(1 - eff_weight_decay)
-    acc_m_u32.view(torch.float32).add_(other=v, alpha=-eff_lr)
+    acc_m_u32.view(torch.float32).add_(other=(1-sgd_coeff) * zeropower_via_newtonschulz5(real_mom), alpha=-eff_lr)
+    acc_m_u32.view(torch.float32).add_(other=sgd_coeff * real_mom.sign(), alpha=-sign_lr)
+
     acc_bf16_view_u16.copy_((acc_m_u32 >> 16).to(torch.uint16))
     mantissa.copy_(acc_m_u32.to(torch.uint16))
 
@@ -205,13 +212,14 @@ class SMuon(torch.optim.Optimizer):
     Warning: This optimizer should not be used for the embedding layer, the final fully connected layer,
     or any {0,1}-D parameters; those should all be optimized by a standard method (e.g., AdamW).
     """
-    def __init__(self, params, lr=0.02, weight_decay=0.01, momentum=0.95, rank=0, world_size=1, sgd_coeff=1, sign_lr_mult=1):
+    def __init__(self, params, lr=0.02, weight_decay=0.01, momentum=0.95, rank=0, world_size=1, sgd_coeff=1, sign_lr_mult=1, scale_sgd=True):
         self.rank = rank
         self.world_size = world_size
         defaults = dict(lr=lr, weight_decay=weight_decay, momentum=momentum)
         super().__init__(params, defaults)
         self.sgd_coeff = sgd_coeff
         self.sign_lr_mult = sign_lr_mult
+        self.scale_sgd = scale_sgd
         assert all(p.dtype == torch.bfloat16 for group in self.param_groups for p in group["params"])
 
     @torch.no_grad()
@@ -228,13 +236,14 @@ class SMuon(torch.optim.Optimizer):
                     if len(state) == 0:
                         state["mantissa"] = torch.zeros_like(p, dtype=torch.uint16)
                         state["momentum_buffer"] = torch.zeros_like(p, dtype=torch.float32)
+                    eff_lr = torch._as_tensor_fullprec(group["lr"] * max(1, p.size(-2) / p.size(-1)) ** 0.5)
                     s_update(
                         p.view(torch.uint16), state["mantissa"], state["momentum_buffer"],
                         p.grad, momentum,
-                        eff_lr=torch._as_tensor_fullprec(group["lr"] * max(1, p.size(-2) / p.size(-1)) ** 0.5),
+                        eff_lr=eff_lr,
                         eff_weight_decay=torch._as_tensor_fullprec(group["lr"] * group["weight_decay"] * getattr(p, "wd_mul", 1.0)),
                         sgd_coeff=self.sgd_coeff,
-                        sign_lr_mult=self.sign_lr_mult
+                        sign_lr=(eff_lr if self.scale_sgd else group["lr"]) * group["sign_lr_mult"]
                     )
                 futures.append(dist.all_gather(params_pad[base_i:base_i + self.world_size], params_pad[base_i + self.rank], async_op=True).get_future())
         torch.futures.collect_all(futures).wait()

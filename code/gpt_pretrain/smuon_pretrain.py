@@ -148,7 +148,7 @@ class SMuon(torch.optim.Optimizer):
     Warning: This optimizer should not be used for the embedding layer, the final fully connected layer,
     or any {0,1}-D parameters; those should all be optimized by a standard method (e.g., AdamW).
     """
-    def __init__(self, params, lr=0.02, weight_decay=0.01, momentum=0.95, sgd_coeff=0, sign_lr_mult=1):
+    def __init__(self, params, lr=0.02, weight_decay=0.01, momentum=0.95, sgd_coeff=0, sign_lr_mult=1, scale_sgd=True):
         defaults = dict(lr=lr, weight_decay=weight_decay, momentum=momentum, sgd_coeff=sgd_coeff, sign_lr_mult=sign_lr_mult)
         params = list(params)
         sizes = {p.shape for p in params}
@@ -160,6 +160,7 @@ class SMuon(torch.optim.Optimizer):
         super().__init__(param_groups, defaults)
         self.sgd_coeff = sgd_coeff
         self.sign_lr_mult = sign_lr_mult
+        self.scale_sgd = scale_sgd
 
     @torch.no_grad()
     def step(self):
@@ -192,6 +193,8 @@ class SMuon(torch.optim.Optimizer):
                     p = params[base_i + rank]
                     grad = p.grad
                     eff_lr = group["lr"] * max(1, p.size(-2) / p.size(-1)) ** 0.5 * getattr(p, "lr_mul", 1.0)
+                    sign_sgd_eff_lr = (eff_lr if self.scale_sgd else group["lr"]) * group["sign_lr_mult"]
+
                     eff_weight_decay = group["lr"] * group["weight_decay"] * getattr(p, "wd_mul", 1.0)
                     state = self.state[p]
                     if len(state) == 0:
@@ -202,12 +205,13 @@ class SMuon(torch.optim.Optimizer):
                     grad = grad.lerp_(momentum_buffer, momentum)
                     # eps = 1e-12
                     # g_normalized = grad / (grad.norm() + eps)
+
                     if sgd_coeff != 1:
                         update_part = zeropower_via_newtonschulz5(grad.bfloat16(), 5)
-                        update = (1 - sgd_coeff) * update_part + sgd_coeff * group["sign_lr_mult"] * grad.sign()
+                        p.add_(other=update_part, alpha=-eff_lr * (1-sgd_coeff))
+                        p.add_(other=grad.sign(), alpha=-sign_sgd_eff_lr * sgd_coeff)
                     else:
-                        update = group["sign_lr_mult"] * grad.sign()
-                    p.add_(other=update, alpha=-eff_lr)
+                        p.add_(other=grad.sign(), alpha=-sign_sgd_eff_lr * sgd_coeff)
                 idx += 1
                 all_reduce_futures.append(dist.all_gather(params_pad[base_i:base_i + world_size], params_pad[base_i + rank], async_op=True).get_future())
         torch.futures.collect_all(all_reduce_futures).wait()
