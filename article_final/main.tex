@@ -327,7 +327,7 @@ Recall that Fanion-$k$ operates under the dual to the Ky Fan $k$-norm, while NSG
 \end{equation}
 We call this family \emph{F-Fanions}.
 
-The extremal members of this family are \emph{F-Neon} (with $k = 1$) and \emph{F-Muon} (with $k = \min\{m, n\}$). Additional information and visualizations for the $\normfstar{\cdot} = \norm{\cdot}_{\mathrm{F-KF-1}}$ norm appear in the appendix (see \equationref{eq:normfstardual}, \figureref{fig:fstardual}).
+The extremal members of this family are \emph{F-Neon} (with $k = 1$) and \emph{F-Muon} (with $k = \min\{m, n\}$). Additional information and visualizations for the F-Muon generating $\normfstar{\cdot}^\dagger = \norm{\cdot}_{\mathrm{F-KF-1}}^\dagger$ and the F-Neon generating $\normftwo{\cdot}^\dagger = \norm{\cdot}_{\mathrm{F-KF-\min\{m, n\}}}^\dagger$ norms appear in the appendix (see \equationref{eq:normfstardual}, \equationref{eq:normftwodual}, \figureref{fig:fduals}).
 
 \subsection{Add SignSGD: S-Muon and S-Neon}
 
@@ -498,9 +498,11 @@ For S-Muon with $\alpha=0.5$, we tune all hyperparameters to find the optimal co
 
 The Muon-level performance is remarkable given that F-Muon and S-Muon operate with substantially different constraint geometries. \figureref{fig:cifar_ball} visualizes F-Muon by plotting the LMO balls of Muon and F-Muon (scaled by actual learning rates) in the 2D space of singular values. S-Muon cannot be visualized in this manner because the $l_\infty$ norm is not a function of singular values alone, and visualizing $\norms{\cdot}$ for $\Rmn$ with $m, n > 2$ requires at least 4D space. Nevertheless, the LMO ball of S-Muon clearly differs substantially from Muon's, as the effective SignSGD learning rate $\texttt{lr}(1-\alpha)\texttt{sign\_lr\_coeff} = 6.3 \times 10^{-4}$ is comparable to typical SignSGD learning rates in deep learning.
 
-Notably, even the pathological case $\alpha > 1$—which corresponds to an LMO constraint region that is not a norm ball—achieves accuracy nearly identical to vanilla Muon.
+Notably, even the pathological case $\alpha > 1$, which corresponds to an LMO constraint region that is not a norm ball, achieves accuracy nearly identical to vanilla Muon.
 
 These observations raise fundamental questions about the sensitivity of LMO-based algorithms to the shape of the constraint region.
+
+For gradient norm profiling and results for training with Fanions and F-Fanions, please see \sectionref{sec:cifar_underhood}.
 
 \begin{figure}[htbp]
 \floatconts
@@ -699,7 +701,9 @@ We provide here the proof of \lemmaref{lemma:dual_to_conv_comb}.
 	which proves the lemma.
 \end{proof}
 
-\section{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
+\section[Norms for F-Muon and F-Neon]%
+        {Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
+\label{sec:f2_fstar_norms}
 
 Based on the \lemmaref{lemma:dual_to_conv_comb}, we immediately find $\normfstar{\cdot}^\dagger$, which is related to F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we get
 \begin{equation}\label{eq:normfstardual}
@@ -715,7 +719,7 @@ Similarly, we find $\normftwo{\cdot}^\dagger$, which is related to F-Neon update
 
 If $\alpha = 1$, then $\mZ = \mY$, and we get $\normftwo{\mY}^\dagger = \normn{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normftwo{\mY}^\dagger = \normf{\mY}$.
 
-Unfortunately, $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$ do not have a closed-form expression.
+Unfortunately, $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$ do not have closed-form expressions and cannot be found as easy as their duals.
 
 \section{Visualization of different matrix norms}
 \subsection{Duals to F* and F2 norms}
@@ -758,13 +762,14 @@ In fact, those balls can be described easier if we use the results from \citep{y
   }
 \end{figure}
 
-\section{More data for Linear Least Squares}
+\section{More details for Linear Least Squares}
 \label{sec:lls_plots_section}
+Tuned \texttt{lr} and \texttt{momentum} coefficients are in the \tableref{tbl:lls_lrs_app}. Spectral, nuclear norm of the gradients over iterations and loss over time are in the \figureref{fig:app_lls}. Very low speed of Fanions and F-Fanions for large $k$ is probably caused by ineffective implementation of TRLan by \cite{cupy_svds_ref}, since $\mathcal{O}(mn^2 + n^2k + nk^2)$ complexity is actually $\mathcal{O}(mn^2)$.
 
 \begin{table}[htbp]
 \floatconts
   {tbl:lls_lrs_app}
-  {\caption{Tuning lrs and momentum coefficients}}
+  {\caption{Tuning \texttt{lr} and \texttt{momentum} coefficients}}
   {%
     \begin{tabular}{|c|c|c|c|}
       \arrayrulecolor{black}\hline
@@ -785,7 +790,7 @@ In fact, those balls can be described easier if we use the results from \citep{y
 \begin{figure}[htbp]
 \floatconts
   {fig:app_lls}
-  {\caption{More images for Linear least squares problem for a 500x500 matrix}}
+  {\caption{More plots for linear least squares problem for a 500x500 matrix}}
   {%
     \subfigure[The spectral norm of the gradient]{\label{fig:lls_op_grad_norm}%
       \includegraphics[width=0.5\linewidth]{figs/simple_lls/gradient_spectral_norm_vs_iteration_long_run.pdf}}%
@@ -831,9 +836,9 @@ Most bounds for Muon and other LMO-algorithms are given for the norm of the grad
   }
 \end{table}
 
-We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, F-Neon, Fanion-5, and F-Fanion-5 on CIFAR-airbench. NSGD and SignSGD are not heavily tuned. The hyperparameters of Neon, F-Neon, Fanion-5, and F-Fanion-5 are taken from Muon and F-Muon (see \tableref{tbl:cifar_lrs}). In the table, val\_accuracy is for the the weighted variant. However, to preserve the algorithms, we do not normalize the weights of the network each iteration.
+We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, F-Neon, Fanion-5, and F-Fanion-5 on CIFAR-airbench. NSGD and SignSGD are not heavily tuned. The hyperparameters of Neon, F-Neon, Fanion-5, and F-Fanion-5 are taken from Muon and F-Muon (see \tableref{tbl:cifar_lrs}). In the table, val\_accuracy after 8 epochs is for the the airbench variant with weight normalization at each step. However, in order to be faithful to the conditions of the convergence theorems \citep{kovalev2025understanding,riabinin2025gluon}, we do not normalize the weights of the network when logging gradient norms.
 
-We log train and validation accuracy, and nuclear, gradient, and spectral norms of the gradients of conv1.weight and conv2.weight for all the layers. The gradient norms decrease only by the order of ten maximum during training, while train accuracy reaches full 100\% for Muon, S-Muon, and F-Muon.
+We log train and validation accuracies (\figureref{fig:cifar_accs}), and nuclear, gradient, and spectral norms of the gradients of conv1.weight and conv2.weight for all the layers (see \figureref{fig:norms_conv1_vs_conv2} for norms in the layer 2, and \figureref{fig:total_norms_cifar} for total norms of the weights). During training, the gradient norms decrease only by the order of ten maximum, while train accuracy reaches full 100\% for Muon, S-Muon, and F-Muon. This means that the bounds of the $\max\{\frac{A}{\epsilon}, \frac{B}{\epsilon^2}, \frac{C}{\epsilon^3}, \frac{D}{\epsilon^4}\}$ type (like Corollary 2 from \citet{kovalev2025understanding}) probably should not be reduced to $\frac{D}{\epsilon^4}$ when selecting the optimal algorithm for a practical problem.
 
 \begin{figure}[htbp]
 \floatconts
@@ -848,21 +853,6 @@ We log train and validation accuracy, and nuclear, gradient, and spectral norms 
   }
 \end{figure}
 
-\begin{figure}[htbp]
-\floatconts
-  {fig:total_norms_cifar}
-  {\caption{Matrix norms of the whole gradient of CIFAR CNN}}
-  {%
-    \subfigure[Total Frobenius norm]{\label{fig:total_fro_norm_cifar}%
-      \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_frobenius.pdf}}%
-    \vspace{1em}
-    \subfigure[Total spectral norm]{\label{fig:total_spectral_norm_cifar}%
-      \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_spectral.pdf}}%
-    \vspace{1em}
-    \subfigure[Total nuclear norm]{\label{fig:total_nuclear_norm_cifar}%
-      \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_nuclear.pdf}}
-  }
-\end{figure}
 
 \begin{figure}[htbp]
 \floatconts
@@ -889,11 +879,27 @@ We log train and validation accuracy, and nuclear, gradient, and spectral norms 
   }
 \end{figure}
 
+\begin{figure}[htbp]
+  \floatconts
+    {fig:total_norms_cifar}
+    {\caption{Matrix norms of the whole gradient of CIFAR CNN}}
+    {%
+      \subfigure[Total Frobenius norm]{\label{fig:total_fro_norm_cifar}%
+        \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_frobenius.pdf}}%
+      \vspace{1em}
+      \subfigure[Total spectral norm]{\label{fig:total_spectral_norm_cifar}%
+        \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_spectral.pdf}}%
+      \vspace{1em}
+      \subfigure[Total nuclear norm]{\label{fig:total_nuclear_norm_cifar}%
+        \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_nuclear.pdf}}
+    }
+  \end{figure}
+
 \section{Technical details of the experiments}
 
-\paragraph{CIFAR airbench} We used NVIDIA RTX A4000.
+\paragraph{Linear Least Squares and CIFAR airbench} Experiments were conducted on a single NVIDIA RTX A4000. The code was run with Python 3.10.13 and Pytorch~2.6.0+cu126.
 
-\paragraph{NanoGPT pretrain} We used the standard setting of 8 $\times$ H100 as documented in \citep{modded_nanogpt_2024}. 
+\paragraph{NanoGPT and GPT-2 Medium Pretrain} We used the standard setting of 8 $\times$ NVIDIA H100 as documented in \citep{modded_nanogpt_2024}. The code was run with Python 3.10.18, Pytorch~2.10.0.dev20251124+cu126 on a computer with Xeon® Platinum 8462Y+ processor and 130 GB of RAM.
 
 \paragraph{NanoGPT Fine-tuning.} Experiments were conducted on a single NVIDIA RTX 4090 (24GB) GPU using PyTorch~2.8 with CUDA~12.8 and cuDNN~9.0, running on a workstation equipped with an Intel Core i9-14900KS CPU and 128 GB of RAM. No distributed or mixed-hardware training setups were used, ensuring a strictly controlled and unbiased comparison across optimizers.
 
