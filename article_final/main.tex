@@ -128,10 +128,18 @@ Such problems can be solved with an iterative algorithm based on the Linear Mini
 \begin{equation}\label{eq:lmo}
 	\mathrm{LMO}(\mM^t) \in \argmin_{\mD \in \cS} \<\mM^t, \mD>\,,
 \end{equation}
-where $\mM^t$ is the gradient (or momentum) of $F$ at $\mX^t$ and $\cS \subset \Rmn$ is some set. The update of the algorithm is defined as follows:
+where $\mM^t$ is the gradient or momentum buffer and $\cS \subset \Rmn$ is some constraint set. The algorithm proceeds as follows: first compute the momentum buffer $\mM^t$, then update $\mX^{t+1}$:
 \begin{equation}\label{eq:simple_update}
-	\mX^{t + 1} = \mX^t + \gamma_t\mathrm{LMO}\left(\mM^t\right)\,.
+	\begin{aligned}
+	\mM^{t} &= \begin{cases}
+		\nabla F(\mX^t) & \text{(no momentum)},\\
+		\beta \mM^{t-1} + (1 - \beta) \nabla F(\mX^t) & \text{(heavy ball)},\\
+    \beta \mM^{t-1} + (1 - \beta) \nabla F\left(\mX^{t - 1} + \gamma_t\mathrm{LMO}\left(\mM^{t-1}\right)\right) & \text{(Nesterov)},
+	\end{cases}\\
+	\mX^{t + 1} &= \mX^t + \gamma_t\mathrm{LMO}\left(\mM^t\right)\,.\\
+	\end{aligned}
 \end{equation}
+Here $\beta \in [0, 1)$ is the momentum coefficient. Throughout our experiments, we employ Nesterov momentum unless otherwise specified.
 
 We are particularly interested in the case when $\cS$ is a unit ball in some norm $\norm{\cdot}$:
 \[
@@ -141,7 +149,7 @@ In this case,
 \[
 \argmin_{\mD \in \cS} \<\mM^t, \mD> = - \{ \mD \in \cB_{\norm{\cdot}} \mid \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,,
 \]
-and the update for $\mX^t$ in \equationref{eq:simple_update} simplifies to
+and the update for $\mX^{t + 1}$ in \equationref{eq:simple_update} simplifies to
 \begin{equation}\label{eq:our_update}
 	\mX^{t+1} = \mX^{t} - \gamma_t \{\mD \in \cB_{\norm{\cdot}} \mid \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,.
 \end{equation}
@@ -399,21 +407,30 @@ For reference, \tableref{tbl:newton_schulz_reference} presents results for the N
 \subsection{Randomized Linear Least Squares}
 \label{subsec:lls_exps}
 
-First, we compare F-Fanions on the following convex $L$-smooth problem:
+We begin by evaluating F-Fanions on the following convex $L$-smooth problem:
 \begin{equation}\label{eq:lls}
   F(\mX) = \frac{1}{2} \<(\mX-\mS), \mM (\mX - \mS) \mN> \to \min_{\mX \in \Rmn}\,
 \end{equation}
-where $\mX \in \Rmn$, $m=500$ and $n=500$ are typical dimensions of a neural network weight matrix, $\mS \in \Rmn$, $\mM \in \mathbb{S}^m_{+}$ and $\mN \in \mathbb{S}^n_{+}$ are positive-semidefinite matrices. The spectra of $\mM$ and $\mN$ are uniformly distributed in the $(0, 1)$ interval. We set $\mS=0$, and $\mX^0 \sim 0.1 \cN(0, \mI)$.
+where $\mX \in \Rmn$, $m=500$ and $n=500$ represent typical dimensions of a neural network weight matrix, $\mS \in \Rmn$, and $\mM \in \mathbb{S}^m_{+}$ and $\mN \in \mathbb{S}^n_{+}$ are positive-semidefinite matrices. The spectra of $\mM$ and $\mN$ are uniformly distributed on the interval $(0, 1)$. We set $\mS=0$ and initialize $\mX^0$ with entries drawn independently from $\cN(0, 0.01)$.
 
-We run different Fanions and their respective F-Fanions with $\alpha=1/2$: Neon (Fanion-1), Fanion-2, Fanion-10, Fanion-100, and Muon (Fanion-500). Also, we test S-Fanions with $\alpha=1/2$ and \texttt{sign\_lr\_coeff=0.01}. We test them against Normalized SGD and SignSGD, which are also F-Fanion and S-Fanion respectively with $\alpha = 0$ and an arbitrary $k$.
+We evaluate several algorithms from the Fanion family and their convex combinations, using the update rule from \equationref{eq:simple_update} with Nesterov momentum:
+\begin{itemize}
+  \item \textbf{Fanions:} Neon (Fanion-1), Fanion-2, Fanion-10, Fanion-100, and Muon (Fanion-500).
+  \item \textbf{F-Fanions:} F-Neon (F-Fanion-1), F-Fanion-2, F-Fanion-10, F-Fanion-100, and F-Muon (F-Fanion-500) with $\alpha=1/2$.
+  \item \textbf{S-Fanions:} S-Neon (S-Fanion-1), S-Fanion-2, S-Fanion-10, S-Fanion-100, and S-Muon (S-Fanion-500) with $\alpha=1/2$ and \texttt{sign\_lr\_coeff=0.01}.
+\end{itemize}
+We also include baselines Normalized SGD and SignSGD, which correspond to F-Fanion and S-Fanion respectively with $\alpha = 0$ and arbitrary $k$.
 
-Since theoretical bounds \citep{kovalev2025understanding, riabinin2025gluon} rely on a very loose norm bound $\norm{\cdot}\le \rho \normf{\cdot}$, we do not derive learning rate or Nesterov momentum from the smoothness constants that also depend on the norm choice. Rather, we find such \texttt{(lr, momentum)} pair that the loss threshold $0.001$ is reached in a minimal number of iterations. This setting is the most realistic, and at the same time aligns with the corollaries of the convergence theorems where constant learning rate and momentum coefficients are proposed.
+Since theoretical bounds \citep{kovalev2025understanding, riabinin2025gluon} rely on a loose norm bound $\norm{\cdot}\le \rho \normf{\cdot}$, we do not derive the learning rate or Nesterov momentum from the smoothness constants, which also depend on the choice of norm. Instead, we identify the \texttt{(lr, momentum)} pair that reaches the loss threshold of $0.001$ in the minimal number of iterations. This setting is both realistic and consistent with the corollaries of convergence theorems that propose constant learning rate and momentum coefficients.
 
-We perform a grid search for \texttt{momentum} $\in \{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95\}$ and for \texttt{lr}. For Muon's, F-Muon's, S-Muon's \texttt{lr} $\in [0.005, 0.0020]$. For SignSGD, \texttt{lr} $\in 0.01 \times [0.005, 0.020]$, and for NSGD \texttt{lr} $\in [0.01, 0.10]$. The tuned parameters and the number of iterations to converge to $0.001$ are in \tableref{tbl:lls_lrs}. \texttt{lr} and \texttt{momentum}, and \texttt{sign\_lr\_coeff} for Fanions, F-Fanions, and S-Fanions are the same as for Muon, F-Muon, and S-Muon respectively due to the impossibility to tune them properly: their losses decrease too slow to reach 0.001.
-
-The results are presented in \figureref{fig:lls} and detailed in \sectionref{sec:lls_plots_section}.
-
-Both F-Muon and S-Muon converge faster and to a lower loss and a lower Frobenius norm of the gradient than NSGD, Muon, or SignSGD.
+We perform a grid search over the following hyperparameter ranges:
+\begin{itemize}
+  \item \texttt{momentum} $\in \{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95\}$ for all algorithms.
+  \item \texttt{lr} $\in [0.005, 0.020]$ with step $0.001$ for Muon, F-Muon, and S-Muon.
+  \item \texttt{lr} $\in [0.00005, 0.00020]$ with step $0.00001$ for SignSGD.
+  \item \texttt{lr} $\in [0.01, 0.10]$ with step $0.001$ for NSGD.
+\end{itemize}
+The tuned parameters and the number of iterations required to converge to $0.001$ are presented in \tableref{tbl:lls_lrs}. For intermediate-rank Fanions, F-Fanions, and S-Fanions, the hyperparameters \texttt{lr}, \texttt{momentum}, and \texttt{sign\_lr\_coeff} are set equal to those of Muon, F-Muon, and S-Muon respectively, as their loss decreases too slowly to reach $0.001$ within a reasonable tuning budget.
 
 \begin{table}[htbp]
 \floatconts
@@ -436,6 +453,8 @@ Both F-Muon and S-Muon converge faster and to a lower loss and a lower Frobenius
   }
 \end{table}
 
+The results are presented in \figureref{fig:lls} with additional details in \sectionref{sec:lls_plots_section}.
+
 \begin{figure}[htbp]
 \floatconts
   {fig:lls}
@@ -448,6 +467,8 @@ Both F-Muon and S-Muon converge faster and to a lower loss and a lower Frobenius
       \includegraphics[width=0.8\linewidth]{figs/simple_lls/gradient_frobenius_norm_vs_iteration_long_run.pdf}}
   }
 \end{figure}
+
+Both F-Muon and S-Muon converge faster to lower loss values and achieve lower Frobenius norms of the gradient than NSGD, Muon, or SignSGD.
 
 \subsection{CIFAR-10 airbench}
 
