@@ -116,7 +116,7 @@ Most notably, our experiments on real-world tasks demonstrate that the choice of
 
 \section{Preliminaries: Linear Minimization Oracle Framework}
 
-Training a neural network is essentially an optimization of a function of several weight matrices and a few vectors. Let us start by considering the problem of minimizing a differentiable function of a \emph{single} matrix:
+Training a neural network is essentially an optimization of a function of several weight matrices and a few vectors. Let us start by considering the problem of minimizing a differentiable function of a \emph{single} matrix (the connection to the general case is presented in \sectionref{sec:lmo_for_nn}):
 \begin{equation}\label{eq:matrix_problem}
 	F(\cdot)\colon \Rmn \to \R\,,\qquad F(\mX) \to \min_{\mX \in \Rmn}\,
 \end{equation}
@@ -225,7 +225,7 @@ According to \equationref{eq:our_update}, we need to find $\mD$ such that $\norm
 \[
 \<\mM^t, \mD> = \max\left\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i,\ \sigma_1\right\}\,.
 \]
-The Neon update $\mD = \vu_1 \vv_1^\top$ achieves $\sigma_1$, while the scaled Muon update $\mD = \frac{1}{k}\sum_{i=1}^{\min(m,n)}\vu_i \vv_i^\top$ achieves $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
+The Neon update $\mD = \vu_1 \vv_1^\top$ achieves $\sigma_1$, while the scaled Muon update $\mD = \frac{1}{k}\mU\mV^\top$ achieves $\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i$. Thus, the update is either
 \[
 \mX^{t+1} = \mX^{t} - \gamma_t \vu_1 \vv_1^\top\text{ or }\mX^{t+1} = \mX^{t} - \frac{\gamma_t}{k}\mU \mV^\top\,,
 \]
@@ -340,7 +340,7 @@ where $\eta$ is a scaling coefficient specific to SignSGD.
 
 By \corollaryref{corollary:lin_comb_alg}, this defines an LMO-algorithm with norm $\norm{\cdot}_{\mathrm{C-KF-k}}^\dagger$, where
 \begin{equation}\label{eq:ckfk_norm}
-	\norm{\cdot}_{\mathrm{C-KF-k}} = \alpha \normkfk{\cdot} + \frac{1-\alpha}{\eta}\normc{\cdot}^\dagger\,.
+	\norm{\cdot}_{\mathrm{C-KF-k}} = \alpha \normkfk{\cdot} + \frac{1-\alpha}{\eta}\normc{\cdot}^\dagger\,.sec:lmo_for_nn
 \end{equation}
 
 The extremal members of this family are \emph{S-Neon} (with $k = 1$) and \emph{S-Muon} (with $k = \min\{m, n\}$).
@@ -433,7 +433,7 @@ We perform a grid search over the following hyperparameter ranges:
 \begin{itemize}
   \item \texttt{momentum} $\in \{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95\}$ for all algorithms.
   \item \texttt{lr} $\in [0.005, 0.020]$ with step $0.001$ for Muon, F-Muon, and S-Muon.
-  \item \texttt{lr} $\in [0.00005, 0.00020]$ with step $0.00001$ for SignSGD.
+  \item \texttt{lr} $\in [5 \times 10^{-5}, 20 \times 10^{-5}]$ with step $10^{-5}$ for SignSGD.
   \item \texttt{lr} $\in [0.01, 0.10]$ with step $0.001$ for NSGD.
 \end{itemize}
 The tuned parameters and the number of iterations required to converge to $0.001$ are presented in \tableref{tbl:lls_lrs}. For intermediate-rank Fanions, F-Fanions, and S-Fanions, the hyperparameters \texttt{lr}, \texttt{momentum}, and \texttt{sign\_lr\_coeff} are set equal to those of Muon, F-Muon, and S-Muon respectively, as their loss decreases too slowly to reach $0.001$ within a reasonable tuning budget.
@@ -480,9 +480,9 @@ Both F-Muon and S-Muon converge faster to lower loss values and achieve lower Fr
 
 We evaluate the algorithms on the CIFAR-10 airbench \citep{cifar2023airbench}. To assess the impact of the mixing parameter $\alpha$, we first run F-Muon for different values of $\alpha$ using hyperparameters tuned for vanilla Muon by Keller Jordan: \texttt{lr=0.24(1 - step/total\_steps), momentum=0.65, nesterov=True} with weight normalization. We perform 10 repetitions for each $\alpha$ value and record the accuracy after 8 epochs of training (\figureref{fig:muon_alphas}).
 
-Next, we tune F-Muon specifically with $\alpha = 0.5$, obtaining optimal hyperparameters \texttt{lr=0.4(1 - step/total\_steps), momentum=0.6, nesterov = True}. Tuned F-Muon achieves $94.02 \pm 0.13\%$ validation accuracy after 8 epochs (averaged over 200 runs), matching Muon's accuracy and variance. We again measure the validation accuracy as a function of $\alpha$ (\figureref{fig:fmuon_alphas}) and observe that even at $\alpha=0.1$, the accuracy substantially exceeds that of vanilla NSGD.
+Next, we tune F-Muon specifically with $\alpha = 0.5$, obtaining optimal hyperparameters \texttt{lr=0.4(1 - step/\allowbreak{}total\_steps)}, \texttt{momentum=0.6}, \texttt{nesterov = True}. Tuned F-Muon achieves $94.02 \pm 0.13\%$ validation accuracy after 8 epochs (averaged over 200 runs), matching Muon's accuracy and variance. We again measure the validation accuracy as a function of $\alpha$ (\figureref{fig:fmuon_alphas}) and observe that even at $\alpha=0.1$, the accuracy substantially exceeds that of vanilla NSGD.
 
-For S-Muon with $\alpha=0.5$, we tune all hyperparameters to find the optimal configuration \texttt{lr=0.42(1 - step/total\_steps), momentum=0.63, nesterov = True, sign\_lr\_coeff = 0.003}, achieving $\mathbf{94.03} \pm 0.13\%$ validation accuracy, which slightly exceeds vanilla Muon's performance.
+For S-Muon with $\alpha=0.5$, we tune all hyperparameters to find the optimal configuration \texttt{lr=0.42(1 - step/\allowbreak{}total\_steps)}, \texttt{momentum=0.63}, \texttt{nesterov = True}, \texttt{sign\_lr\_coeff = 0.003}, achieving $94.03 \pm 0.13\%$ validation accuracy, which slightly exceeds vanilla Muon's performance.
 
 \begin{figure}[htbp]
 \floatconts
@@ -531,7 +531,7 @@ We scale from NanoGPT to GPT-2 Medium. After testing for 5960 steps with F-Muon 
 \subsection{NanoGPT Fine-Tuning}
 \label{subsec:finetune}
 
-We fine-tuned the NanoGPT framework by Karpathy \citep{Karpathy2022} using the standard \textit{NanoGPT-medium} configuration, which corresponds to GPT-2 Medium. This model consists of 24 transformer layers, a hidden dimension of 1024, 16 attention heads, and approximately 345 million parameters. We selected the \textit{Tiny Stories} corpus \citep{eldan2023tinystoriessmalllanguagemodels} as the training dataset for its high entropy and structural diversity, which amplify the differences in optimization dynamics. All training runs were initialized with the same random seed, weight initialization, and learning rate schedule to ensure that performance differences arose solely from the choice of optimizer.
+We fine-tuned the NanoGPT framework by Karpathy \citep{Karpathy2022} using the standard \emph{NanoGPT-medium} configuration, which corresponds to GPT-2 Medium. This model consists of 24 transformer layers, a hidden dimension of 1024, 16 attention heads, and approximately 345 million parameters. We selected the \emph{Tiny Stories} corpus \citep{eldan2023tinystoriessmalllanguagemodels} as the training dataset for its high entropy and structural diversity, which amplify the differences in optimization dynamics. All training runs were initialized with the same random seed, weight initialization, and learning rate schedule to ensure that performance differences arose solely from the choice of optimizer.
 
 For all one-dimensional layers, we used AdamW with a learning rate of $1\!\times\!10^{-3}$. Since momentum exhibited negligible influence on training dynamics, it was held constant across all experiments. \figureref{fig:nanogptftexps} presents a comparative analysis of optimization performance.
 
@@ -631,35 +631,9 @@ IO suggested using the nuclear norm in the \citep{bernstein2024oldoptimizernewno
 \bibliography{icomp2024_conference}
 
 \appendix
-\section{LMO for Neural Networks}
+\section{LMO for Neural Networks}\label{sec:lmo_for_nn}
 
 In a typical neural network, the objective function $F$ depends on a set of weight matrices $\{ \mW_1, \mW_2, \ldots \}$. The optimization framework we have described is applied in a layer-wise fashion. At each iteration $t$, a stochastic gradient $g(\mX^t, \xi^t)$ is computed using a mini-batch of data with the $\xi^t$ noise via backpropagation. This yields a separate gradient component, $\mG_i^t$, for each matrix $\mX_i$. The LMO-based update rule is then applied to each matrix $\mX_i$ using its corresponding gradient component $\mG_i^t$.
-
-The update rule used in Muon optimizer is uSCG \citep{pethick2025training}. In the most general case, which involves momentum, it can be written as
-\begin{equation}\label{eq:usgd_update}
-  \begin{aligned}
-    \mM^{t}     & = \alpha_{t} g(\mX^t, \xi^t) + (1 - \alpha_t)\mM^{t - 1}\,, \\
-    \mX^{t + 1} & = \mX^t + \gamma_t\mathrm{LMO}(\mM^{t})\,.
-  \end{aligned}
-\end{equation}
-
-\section{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
-
-Based on the lemma, we immediately find $\normfstar{\cdot}^\dagger$, which is related to F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we get
-\begin{equation}\label{eq:normfstardual}
-  \normfstar{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \norms{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
-\end{equation}
-
-If $\alpha = 1$, then $\mZ = \mY$, and we get $\normfstar{\mY}^\dagger = \norms{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normfstar{\mY}^\dagger = \normf{\mY}$.
-
-Similarly, we find $\normftwo{\cdot}^\dagger$, which is related to F-Neon update:
-\begin{equation}\label{eq:normftwodual}
-  \normftwo{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \normn{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
-\end{equation}
-
-If $\alpha = 1$, then $\mZ = \mY$, and we get $\normftwo{\mY}^\dagger = \normn{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normftwo{\mY}^\dagger = \normf{\mY}$.
-
-Unfortunately, $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$ do not have a closed-form expression.
 
 \section{Proof of Lemma on Dual of Convex Combinations}\label{sec:proof_dual_conv_comb}
 
@@ -715,6 +689,24 @@ We provide here the proof of \lemmaref{lemma:dual_to_conv_comb}.
 	\]
 	which proves the lemma.
 \end{proof}
+
+\section{Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
+
+Based on the \lemmaref{lemma:dual_to_conv_comb}, we immediately find $\normfstar{\cdot}^\dagger$, which is related to F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we get
+\begin{equation}\label{eq:normfstardual}
+  \normfstar{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \norms{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
+\end{equation}
+
+If $\alpha = 1$, then $\mZ = \mY$, and we get $\normfstar{\mY}^\dagger = \norms{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normfstar{\mY}^\dagger = \normf{\mY}$.
+
+Similarly, we find $\normftwo{\cdot}^\dagger$, which is related to F-Neon update:
+\begin{equation}\label{eq:normftwodual}
+  \normftwo{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \normn{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
+\end{equation}
+
+If $\alpha = 1$, then $\mZ = \mY$, and we get $\normftwo{\mY}^\dagger = \normn{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normftwo{\mY}^\dagger = \normf{\mY}$.
+
+Unfortunately, $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$ do not have a closed-form expression.
 
 \section{Visualization of different matrix norms}
 \subsection{Duals to F* and F2 norms}
@@ -888,7 +880,6 @@ We log train and validation accuracy, and nuclear, gradient, and spectral norms 
 \end{figure}
 
 \section{Technical details of the experiments}
-
 
 \paragraph{CIFAR airbench} We used NVIDIA RTX A4000.
 
