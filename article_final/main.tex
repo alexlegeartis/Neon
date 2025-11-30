@@ -332,26 +332,26 @@ By \corollaryref{corollary:lin_comb_alg}, this defines an LMO-algorithm with nor
 The extremal members of this family are \emph{S-Neon} (with $k = 1$) and \emph{S-Muon} (with $k = \min\{m, n\}$).
 
 \section{Computing the Updates}\label{sec:matrix-side}
-We employ the thick-restarted Lanczos method for the symmetric eigenvalue problem (thick-restart Lanczos, TRLan) to compute the low-rank updates of Fanions. We apply TRLan to either $\mM^{t\top}\mM^t$ or $\mM^t \mM^{t\top}$ (whichever matrix is smaller). We use the CuPy implementation of \texttt{cupy.sparse.linalg.svds} \citep{cupy_svds_ref} which internally relies on TRLan \citep{simonz1998thick}.
+We employ the thick-restart Lanczos method for the symmetric eigenvalue problem (TRLan) to compute the low-rank updates of Fanions. We apply TRLan to either $\mM^{t\top}\mM^t$ or $\mM^t \mM^{t\top}$, selecting whichever matrix is smaller. We use the CuPy implementation of \texttt{cupy.sparse.linalg.svds} \citep{cupy_svds_ref}, which internally relies on TRLan \citep{simonz1998thick}.
 
-TRLan is specifically designed for efficiently approximating the largest singular values and corresponding singular vectors of very large matrices. The thick-restart strategy retains the most informative Ritz vectors across restarts, which dramatically accelerates convergence while keeping memory consumption moderate. TRLan is particularly attractive in our GPU setting because its dominant cost is a modest number of highly parallelizable matrix-vector multiplications (matvecs) and it avoids full reorthogonalization against the entire Krylov basis by using short recurrence relations combined with thick restarting.
+TRLan is specifically designed for efficiently approximating the largest singular values and corresponding singular vectors of very large matrices. The thick-restart strategy retains the most informative Ritz vectors across restarts, which dramatically accelerates convergence while maintaining moderate memory consumption. TRLan is particularly well-suited to our GPU setting because its dominant computational cost consists of a modest number of highly parallelizable matrix-vector multiplications (matvecs), and it avoids full reorthogonalization against the entire Krylov basis by employing short recurrence relations combined with thick restarting.
 
 The per-cycle complexity is $\mathcal{O}(mn^2 + n^2k + nk^2)$, where $m \geq n$ are the dimensions of the target matrix and $k$ is the size of the retained subspace (typically $k \ll n$).
 
-In \tableref{tbl:matrix_methods}, we compare TRLan against randomized SVD (RSVD) and simple power iterations when computing the rank-$k$ update used in Fanion-$k$ and related algorithms. Experiments are performed on dense random matrices with i.i.d. $\mathcal{N}(0,1)$ entries and use CPU implementations for fair comparison.
+In \tableref{tbl:matrix_methods}, we compare TRLan against randomized SVD (RSVD) and simple power iterations for computing the rank-$k$ update used in Fanion-$k$ and related algorithms. Experiments are performed on dense random matrices with i.i.d. $\mathcal{N}(0,1)$ entries using CPU implementations for fair comparison.
 We report:
 \begin{itemize}
   \item $err_1$: relative error in the Frobenius norm of $\sum_i^k \vu_i \vv_i^T$,
   \item $err_2$: relative error in the Frobenius norm of $\sum_i^k \sigma_i \vu_i \vv_i^T$.
 \end{itemize}
 
-On $500\times500$ matrices, TRLan and RSVD require comparable wall-clock time, but TRLan delivers orders-of-magnitude lower error and far fewer matvecs. On larger $5000\times5000$ matrices the advantage becomes even more pronounced: TRLan is 3-4 times faster than RSVD while using $\sim$30 times fewer matvecs at comparable or better accuracy.
+On $500\times500$ matrices, TRLan and RSVD require comparable wall-clock time, but TRLan delivers orders-of-magnitude lower error with far fewer matvecs. On larger $5000\times5000$ matrices, this advantage becomes even more pronounced: TRLan is 3-4 times faster than RSVD while using $\sim$30 times fewer matvecs at comparable or superior accuracy.
 
-An interesting empirical observation is that RSVD tends to approximate the \emph{singular values} themselves reasonably well but the reconstructed low-rank matrix noticeably deviates from the truncated SVD, whereas TRLan provides an excellent approximation to the truncated SVD matrix itself (low $err_2$) at the cost of occasionally less accurate individual singular values. This makes TRLan the preferred choice for algorithms like Neon/Fanion-$k$ that only need the low-rank term $\sum \sigma_i \vu_i \vv_i^\top$, but less ideal for methods (e.g., Dion) that explicitly require accurate $\sigma_i$ for error feedback or step-size control.
+An interesting empirical observation is that RSVD tends to approximate the \emph{singular values} themselves reasonably well, but the reconstructed low-rank matrix exhibits noticeable deviation from the truncated SVD. In contrast, TRLan provides an excellent approximation to the truncated SVD matrix itself (low $err_2$), albeit at the cost of occasionally less accurate individual singular values. This makes TRLan the preferred choice for algorithms like Neon/Fanion-$k$ that only require the low-rank term $\sum \sigma_i \vu_i \vv_i^\top$, but less suitable for methods (e.g., Dion) that explicitly require accurate $\sigma_i$ for error feedback or step-size control.
 
-A current practical limitation is the lack of a native PyTorch implementation of thick-restart Lanczos; existing PyTorch-based randomized SVD routines cannot match TRLan's accuracy/efficiency combination for the matrix reconstruction task.
+A current practical limitation is the absence of a native PyTorch implementation of thick-restart Lanczos; existing PyTorch-based randomized SVD routines cannot match TRLan's accuracy-efficiency combination for the matrix reconstruction task.
 
-For reference, \tableref{tbl:newton_schulz_reference} shows results for the Newton-Schulz polar decomposition iteration on the same matrices, $err_1$ is the relative error of $\mU\mV^T$ (29-30 iterations to converge, significantly higher matvec count than TRLan).
+For reference, \tableref{tbl:newton_schulz_reference} presents results for the Newton-Schulz polar decomposition iteration on the same matrices, where $err_1$ is the relative error of $\mU\mV^T$ (29-30 iterations to converge, resulting in a significantly higher matvec count than TRLan).
 
 \begin{table}[ht]
 \floatconts
