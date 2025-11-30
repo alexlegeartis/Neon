@@ -483,9 +483,9 @@ These observations raise the question of how much LMO-based algorithms are sensi
   {\includegraphics[width=0.6\linewidth]{figs/norms/fstardual_cifar.pdf}}
 \end{figure}
 
-\subsection{NanoGPT speedrun}
+\subsection{NanoGPT Speedrun}
 
-We test F-Muon on the NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha = 0.5$, the optimal parameters are \texttt{lr=0.07, momentum=0.95}, while for Muon they were \texttt{lr=0.05, momentum=0.95}. After testing for 1750 steps we get 3.281 cross-entropy loss. For Muon, it falls below the target threshold 3.28 and reaches 3.279. However, this difference is negligible if one looks at \figureref{fig:gpt_loss}. It is even more striking, considering the fact that this F-Muon is an average of Muon and NSGD, and the latter performed quite poorly.
+We test F-Muon and S-Muon with $\alpha=0.5$ on the NanoGPT speedrun \citep{modded_nanogpt_2024}. The optimal parameters are in the legend \figureref{fig:gpt_loss}, \texttt{sign\_sgd\_coeff=0.0003/0.07}. After testing for 1750 steps we get 3.281 cross-entropy loss for F-Muon and 3.287 for S-Muon. For Muon, it falls below the target threshold 3.28 and reaches 3.279. However, this difference is negligible if one looks at \figureref{fig:gpt_loss}. It is even more striking, considering the fact that this F-Muon is an average of Muon and NSGD, and the latter performed quite poorly. The same is true for S-Muon.
 
 \begin{figure}[htbp]
 \floatconts
@@ -494,7 +494,12 @@ We test F-Muon on the NanoGPT speedrun \citep{modded_nanogpt_2024}. For $\alpha 
   {\includegraphics[width=0.7\linewidth]{figs/nanogpt/val_loss_vs_step.pdf}}
 \end{figure}
 
-Again, as on the CIFAR airbench, if we set $\alpha=-0.1$ that corresponds to no ball, we get a 3.2818 loss, which is a small difference from the baseline.
+Again, as on the CIFAR airbench, if for F-Muon we set $\alpha=-0.1$ that corresponds to no ball, we get a 3.2818 loss, which is a small difference from the baseline.
+
+It is noteworthy that F-Muon with NSGD-part that is not scaled by Muon's rule gives 3.288 loss (0.007 increase), while S-Muon scaled with Muon's rule gives 3.292 loss (0.005 increase)
+
+\subsection{GPT-2 Medium Speedrun}
+We scale from NanoGPT to GPT-2 Medium. After testing for 5960 steps with F-Muon we get 2.9215 loss, while for Muon it is 2.9198. In ? steps, F-Muon reaches <2.92 loss, thus needing only ?\% more iterations than Muon. 
 
 \subsection{NanoGPT Fine-Tuning}
 \label{subsec:finetune}
