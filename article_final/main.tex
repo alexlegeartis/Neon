@@ -84,7 +84,7 @@
 \maketitle
 
 \begin{abstract}
-	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm underlying the Muon update, we leverage duals of the Ky Fan $k$-norms to introduce a family of Muon-like algorithms we name \emph{Fanions}, which are closely related to Dion. By working with duals of convex combinations of the Ky Fan $k$-norms with either the Frobenius norm or the $l_\infty$ norm, we construct the families of \emph{F-Fanions} and \emph{S-Fanions}, respectively. Their most prominent members are \emph{F-Muon} and \emph{S-Muon}. We complement our theoretical analysis with an extensive empirical study of these algorithms across a wide range of tasks and settings, demonstrating that F-Muon and S-Muon consistently match Muon's performance, while outperforming vanilla Muon on synthetic linear least squares problems.
+	In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in training large language models. Moving beyond the spectral norm underlying the Muon update, we leverage duals of the Ky Fan $k$-norms to introduce a family of Muon-like algorithms we name \emph{Fanions}, which are closely related to Dion. By working with duals of convex combinations of the Ky Fan $k$-norms with either the Frobenius norm or the $l_\infty$ norm, we construct the families of \emph{F-Fanions} and \emph{S-Fanions}, respectively. Their most prominent members are \emph{F-Muon} and \emph{S-Muon}. We complement our theoretical analysis with an extensive empirical study of these algorithms across a wide range of tasks and settings, demonstrating that F-Muon and S-Muon consistently match Muon's performance, while outperforming vanilla Muon on a synthetic linear least squares problem.
 \end{abstract}
 
 \section{Introduction}
@@ -111,7 +111,7 @@ After that in \sectionref{sec:experiments} compare the performance of these algo
 
 Our experiments reveal important insights into the role of matrix norms in optimization. First, using the example of Neon (the rank-one Fanion), we show that not every LMO-based algorithm is effective, despite sharing the same asymptotics in the general bounds of \citep{kovalev2025understanding} and \citep{riabinin2025gluon}. This suggests that existing theoretical guarantees should be refined to better explain empirical performance.
 
-Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon and S-Muon achieve $94.02 \pm 0.13\%$ and $94.03 \pm 0.13\%$ accuracy, matching Muon's $94.01 \pm 0.13\%$ performance. On NanoGPT pre-training, F-Muon achieves 3.281 cross-entropy loss, while fully-tuned Muon achieves 3.279. Finally, S-Muon matches Muon on fine-tuning NanoGPT on Tiny Stories, while F-Muon is far more resistant to learning rate choice than Muon. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, providing an affirmative answer to the central question posed above. Moreover, the tools from \sectionref{sec:conic_combo} give researchers considerable flexibility in designing algorithms that need not be direct modifications of Muon.
+Most notably, our experiments on real-world tasks demonstrate that the choice of underlying matrix norm is remarkably flexible. On CIFAR-10 airbench, properly-tuned F-Muon and S-Muon achieve $94.02 \pm 0.13\%$ and $94.03 \pm 0.13\%$ accuracy, matching Muon's $94.01 \pm 0.13\%$ performance. On pre-training of NanoGPT F-Muon achieves 3.281 cross-entropy loss, while fully-tuned Muon achieves 3.279; of GPT-2 Medium - F-Muon 2.9215 and Muon 2.9198. Finally, S-Muon matches Muon on fine-tuning NanoGPT on Tiny Stories, while F-Muon is far more resistant to learning rate choice than Muon. These results show that Muon-like algorithms can maintain competitive performance even when the underlying norm constraint is significantly modified, providing an affirmative answer to the central question posed above. Moreover, the tools from \sectionref{sec:conic_combo} give researchers considerable flexibility in designing algorithms that need not be direct modifications of Muon.
 
 \section{Preliminaries: Linear Minimization Oracle Framework}
 
@@ -232,7 +232,7 @@ depending on which of those two expressions achieves smaller residual on the lin
 
 \subsection{Solution: Duals to Ky Fan Norms}
 
-Unlike Schatten norms, which satisfy $\norm{\mM^t}_{S_p}^\dagger = \norm{\mM^t}_{S_q}$ (for $p^{-1} + q^{-1} = 1$) and are thus closed under dualization, Ky Fan norms are generally not. Only two exceptional cases exist: the dual of the Ky Fan $1$-norm $\norm{\cdot}_{\text{KF-}1}$ (the spectral norm) is the Ky Fan $\min(m,n)$-norm $\norm{\cdot}_{\text{KF-}\min(m,n)}$ (the nuclear norm), and vice versa. Thus working with duals of Ky Fan norms can open up new possibilities:
+Unlike Schatten norms, which satisfy $\norm{\mM^t}_{S_p}^\dagger = \norm{\mM^t}_{S_q}$ (for $p^{-1} + q^{-1} = 1$) and are thus closed under dualization, Ky Fan norms are generally not. Only two exceptional cases exist: the dual to the Ky Fan $1$-norm $\norm{\cdot}_{\text{KF-}1}$ (the spectral norm) is the Ky Fan $\min(m,n)$-norm $\norm{\cdot}_{\text{KF-}\min(m,n)}$ (the nuclear norm), and vice versa. Thus working with duals of Ky Fan norms can open up new possibilities:
 
 \begin{lemma}\label{lemma:ky_fan_update}
 	When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \equationref{eq:our_update} turns into:
@@ -339,7 +339,7 @@ where \texttt{sign\_lr\_coeff} $\eta$ is a scaling coefficient specific to SignS
 
 By \corollaryref{corollary:lin_comb_alg}, this defines an LMO-algorithm with norm $\norm{\cdot}_{\mathrm{C-KF-k}}^\dagger$, where
 \begin{equation}\label{eq:ckfk_norm}
-	\norm{\cdot}_{\mathrm{C-KF-k}} = \alpha \normkfk{\cdot} + \frac{1-\alpha}{\eta}\normc{\cdot}^\dagger\,.sec:lmo_for_nn
+	\norm{\cdot}_{\mathrm{C-KF-k}} = \alpha \normkfk{\cdot} + \frac{1-\alpha}{\eta}\normc{\cdot}^\dagger\,.
 \end{equation}
 
 The extremal members of this family are \emph{S-Neon} (with $k = 1$) and \emph{S-Muon} (with $k = \min\{m, n\}$).
@@ -409,7 +409,7 @@ For reference, \tableref{tbl:newton_schulz_reference} presents results for the N
 
 \section{Experiments}\label{sec:experiments}
 
-\subsection{Randomized Linear Least Squares}
+\subsection{Linear Least Squares}
 \label{subsec:lls_exps}
 
 We begin by evaluating F-Fanions on the following convex $L$-smooth problem:
@@ -505,27 +505,34 @@ These observations raise fundamental questions about the sensitivity of LMO-base
 \begin{figure}[htbp]
 \floatconts
   {fig:cifar_ball}
-  {\caption{Visualization of the LMO balls for Muon and F-Muon.}}
+  {\caption{Visualization of the LMO balls for Muon and F-Muon for CNN training.}}
   {\includegraphics[width=0.6\linewidth]{figs/norms/fstardual_cifar.pdf}}
 \end{figure}
 
 \subsection{NanoGPT Speedrun}
 
-We evaluate F-Muon and S-Muon with $\alpha=0.5$ against Muon, SignSGD, and NSGD on the NanoGPT speedrun benchmark \citep{modded_nanogpt_2024}. The optimal hyperparameters are shown in the legend of \figureref{fig:gpt_loss}, with \texttt{sign\_sgd\_coeff} values of 0.0003/0.07 for S-Muon. After 1750 training steps, F-Muon achieves a cross-entropy loss of 3.281, S-Muon achieves 3.287, and Muon achieves 3.279, falling below the target threshold of 3.280. As illustrated in \figureref{fig:gpt_loss}, these differences are negligible. Notably, F-Muon represents a convex combination of Muon and NSGD, despite NSGD performing poorly in isolation. The same observation holds for S-Muon.
+We evaluate F-Muon and S-Muon with $\alpha=0.5$ against Muon, SignSGD, and NSGD on the NanoGPT speedrun benchmark \citep{modded_nanogpt_2024}. The optimal hyperparameters are shown in the legend of \figureref{fig:nano_gpt_loss}, with \texttt{sign\_sgd\_coeff} values of 3e-4/0.07 for S-Muon. After 1750 training steps, F-Muon achieves a cross-entropy loss of 3.281, S-Muon achieves 3.287, and Muon achieves 3.279, falling below the target threshold of 3.280. As illustrated in \figureref{fig:nano_gpt_loss}, these differences are negligible. Notably, F-Muon represents a convex combination of Muon and NSGD, despite NSGD performing poorly in isolation. The same observation holds for S-Muon.
 
 \begin{figure}[htbp]
 \floatconts
-  {fig:gpt_loss}
+  {fig:nano_gpt_loss}
   {\caption{The validation loss for NanoGPT}}
-  {\includegraphics[width=0.7\linewidth]{figs/nanogpt/val_loss_vs_step.pdf}}
+  {\includegraphics[width=0.7\linewidth]{figs/nanogpt/nano/val_loss_vs_step.pdf}}
 \end{figure}
 
-As observed in the CIFAR airbench experiments, setting $\alpha=-0.1$ for F-Muon (corresponding to the no-ball configuration) yields a loss of 3.2818, representing only a marginal difference from the baseline.
+As observed in the CIFAR airbench experiments, setting $\alpha=1.1$ for F-Muon (corresponding to the no-ball configuration) yields a loss of 3.2818, representing only a marginal difference from the baseline.
 
-Notably, F-Muon with the NSGD component not scaled by Muon's rule yields a loss of 3.288 (an increase of 0.007), while S-Muon scaled with Muon's rule achieves a loss of 3.292 (an increase of 0.005).
+Notably, F-Muon with the NSGD component not scaled by Muon's rule yields a loss of 3.288 (an increase of 0.007), while S-Muon scaled with this rule achieves a loss of 3.292 (an increase of 0.005).
 
 \subsection{GPT-2 Medium Speedrun}
 We scale from NanoGPT to GPT-2 Medium. After testing for 5960 steps we get 2.9215 loss for F-Muon and 2.9235 for S-Muon, while for Muon it is 2.9198 (the speedrun threshold is 2.92).
+
+\begin{figure}[htbp]
+  \floatconts
+    {fig:med_gpt_loss}
+    {\caption{The validation loss for GPT-2 Medium}}
+    {\includegraphics[width=0.7\linewidth]{figs/nanogpt/medium/val_loss_vs_step.pdf}}
+  \end{figure}
 
 \subsection{NanoGPT Fine-Tuning}
 \label{subsec:finetune}
@@ -554,7 +561,7 @@ For all one-dimensional layers, we used AdamW with a learning rate of $1\!\times
 
 \subsection{Algorithms for Vectors $\rightarrow$ Algorithms for Matrices}
 
-The updates of LMO optimizers exhibit striking similarities between vector $l_p$ norms and matrix Schatten $S_p$ norms, as illustrated in \tableref{tbl:mat_vs_vec_lmo}. These parallels extend beyond the update formulas themselves to empirical performance characteristics. SignSGD closely resembles Adam, as noted in \citep{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well when training large models \citep{zhao2025deconstructing, liu2025muon}. NSGD maintains identical updates in both vector and matrix cases. Greedy Coordinate Descent is rarely applied to high-dimensional problems, which provides perspective on why one-rank Neon underperforms in such settings.
+The updates of LMO optimizers exhibit striking similarities between vector $l_p$ norms and matrix Schatten $S_p$ norms, as illustrated in \tableref{tbl:mat_vs_vec_lmo}. These parallels extend beyond the update formulas themselves to empirical performance characteristics. SignSGD closely resembles Adam, as noted in \citep{bernstein2024oldoptimizernewnorm}, and both Adam and Muon perform well during training large models \citep{zhao2025deconstructing, liu2025muon}. NSGD maintains identical updates in both vector and matrix cases. Greedy Coordinate Descent is rarely applied to high-dimensional problems, which provides perspective on why one-rank Neon underperforms in such settings.
 
 \begin{table}[htbp]
 \floatconts
@@ -599,7 +606,7 @@ There has been a prolonged gap in the theoretical understanding of Muon, excludi
 
 A similar limitation affects \citep{riabinin2025gluon}, where the $L$-smoothness assumption is replaced with a more practical $(L_0, L_1)$-smoothness. By estimating smoothness and substituting it into their Theorem 1, the authors recovered the optimal fine-tuned step sizes reported by \citep{pethick2025training}. However, they did not demonstrate the optimality of the spectral or RMS-to-RMS norm, which is observed in practice, as our comparison with NSGD highlights.
 
-A common limitation of these analyses is their focus on convergence measured by the gradient norm. As we showed in our CIFAR experiments \cref{sec:cifar_underhood}, the gradient norm may decrease by only a factor of ten when the accuracy reaches 100\%.
+A common limitation of these analyses is their focus on convergence measured by the gradient norm. As we showed in our CIFAR experiments \sectionref{sec:cifar_underhood}, the gradient norm may decrease by only a factor of ten when the accuracy reaches 100\%.
 
 We hypothesize that the stark performance discrepancy between Neon and Muon, both of which are described by the Stochastic Conditional Gradient \citep{pethick2025training} or Gluon frameworks, lies in the structure of the norm ball or in the preconditioner interpretation \citep{pethick2025trainingneuralnetworksscale}, which warrants further investigation.
 
@@ -619,13 +626,16 @@ Fanions, F-Fanions, and S-Fanions benefit from the general theoretical descripti
 
 In this article, we addressed the central question of why one should constrain by the spectral or any other operator norm in deriving Muon-like updates, and how alternative norms affect performance and computational cost. Our answer is that the choice of matrix norm is remarkably flexible: properly-tuned variants based on alternative norms can match or even slightly exceed Muon's performance on real-world tasks, while offering additional benefits such as improved learning rate robustness.
 
-We generalized several successful algorithms, including Muon, Dion, and $\nu$SAM, to LMO-based algorithms using the family of norms dual to Ky Fan $k$-norms, yielding the Fanion family with low-rank updates. We further proposed the technique of regularizing these updates by combining them with NSGD or SignSGD, creating the F-Fanion and S-Fanion families through the $\norm{\cdot}_{\mathrm{F-KF-k}}$ and $\norm{\cdot}_{\mathrm{C^\dagger-KF-k}}$ norms. Our experiments demonstrate that F-Muon and S-Muon achieve competitive performance with Muon on CIFAR-10 airbench and NanoGPT tasks, confirming that the underlying norm constraint can be significantly modified without sacrificing effectiveness.
+We generalized several successful algorithms, including Muon, Dion, and $\nu$SAM, to LMO-based algorithms using the family of norms dual to Ky Fan $k$-norms, yielding the Fanion family with low-rank updates. We further proposed the technique of regularizing these updates by combining them with NSGD or SignSGD, creating the F-Fanion and S-Fanion families through the $\norm{\cdot}_{\mathrm{F-KF-k}}^\dagger$ and $\norm{\cdot}_{\mathrm{C^\dagger-KF-k}}^\dagger$ norms. Our experiments demonstrate that F-Muon and S-Muon achieve competitive performance with Muon on CIFAR-10 airbench and NanoGPT tasks, confirming that the underlying norm constraint can be significantly modified without sacrificing effectiveness.
 
 However, our results also reveal that not every LMO-based algorithm is effective: Neon (rank-one Fanion) underperforms despite sharing the same theoretical convergence asymptotics as Muon in existing bounds. We suggest that future work on non-Euclidean LMO algorithms should explain in the corollaries to their convergence theorems the empirical superiority of Muon over other Fanions, and ideally account for the robustness of F-Muon and S-Muon as well. Without such refinements, it is difficult to believe that current theoretical bounds are relevant for practitioners.
 
-\section{Author Contributions}
+\section*{Author Contributions}
 
-IO suggested using the nuclear norm in the \citep{bernstein2024oldoptimizernewnorm} framework. DM presented the problem at the MIPT optimization course. IK suggested using composite norms (though not the ones that induce F-Fanions and S-Fanions) and helped to draft and rewise the manuscript. NK suggested Lanczos algorithm as the most precise means to compute Fanions' updates, conducted experiments to prove this, and wrote \sectionref{sec:matrix-side}. AV conducted the finetuning of NanoGPT on Tiny Stories and wrote \sectionref{subsec:finetune}. All other work was done by AK: constructing Fanions, F-Fanions, S-Fanions, experimenting on the Linear Least Squares, CIFAR-airbench and NanoGPT pretrain, and writing the manuscript.
+IO suggested using the nuclear norm in the \citep{bernstein2024oldoptimizernewnorm} framework. DM presented the problem at the MIPT optimization course. IK suggested using composite norms (though not the ones that induce Fanions, F-Fanions or S-Fanions) and helped to draft and rewise the manuscript. NK suggested Lanczos algorithm as the most precise means to compute Fanions' updates, conducted experiments to prove this, and wrote \sectionref{sec:matrix-side}. AV conducted the finetuning of NanoGPT on Tiny Stories and wrote \sectionref{subsec:finetune}. All other work was done by AK: constructing Fanions, F-Fanions, S-Fanions, experimenting on the Linear Least Squares and CIFAR-airbench, pretraining NanoGPT and GPT-2 Medium, and writing the manuscript.
+
+\section*{Acknowledgements}
+We thank Dmitry Kovalev and Egor Shulgin for helpful discussions.
 
 \bibliography{icomp2024_conference}
 
@@ -634,7 +644,7 @@ IO suggested using the nuclear norm in the \citep{bernstein2024oldoptimizernewno
 
 In a typical neural network, the objective function $F$ depends on a set of weight matrices $\{ \mW_1, \mW_2, \ldots \}$. The optimization framework we have described is applied in a layer-wise fashion. At each iteration $t$, a stochastic gradient $g(\mX^t, \xi^t)$ is computed using a mini-batch of data with the $\xi^t$ noise via backpropagation. This yields a separate gradient component, $\mG_i^t$, for each matrix $\mX_i$. The LMO-based update rule is then applied to each matrix $\mX_i$ using its corresponding gradient component $\mG_i^t$.
 
-\section{Proof of Lemma on Dual of Convex Combinations}\label{sec:proof_dual_conv_comb}
+\section{Proof of Lemma on the Dual to Convex Combinations}\label{sec:proof_dual_conv_comb}
 
 We provide here the proof of \lemmaref{lemma:dual_to_conv_comb}.
 
@@ -778,20 +788,20 @@ In fact, those balls can be described easier if we use the results from \citep{y
   {\caption{More images for Linear least squares problem for a 500x500 matrix}}
   {%
     \subfigure[The spectral norm of the gradient]{\label{fig:lls_op_grad_norm}%
-      \includegraphics[width=0.6\linewidth]{figs/simple_lls/gradient_spectral_norm_vs_iteration_long_run.pdf}}%
+      \includegraphics[width=0.5\linewidth]{figs/simple_lls/gradient_spectral_norm_vs_iteration_long_run.pdf}}%
     \vspace{1em}
     \subfigure[The nuclear norm of the gradient]{\label{fig:lls_nuclear_grad_norm}%
-      \includegraphics[width=0.6\linewidth]{figs/simple_lls/gradient_nuclear_norm_vs_iteration_long_run.pdf}}%
+      \includegraphics[width=0.5\linewidth]{figs/simple_lls/gradient_nuclear_norm_vs_iteration_long_run.pdf}}%
     \vspace{1em}
     \subfigure[The loss over time]{\label{fig:lls_loss_time}%
-      \includegraphics[width=0.6\linewidth]{figs/simple_lls/loss_vs_time_long_run.pdf}}
+      \includegraphics[width=0.5\linewidth]{figs/simple_lls/loss_vs_time_long_run.pdf}}
   }
 \end{figure}
 
 \section{Under the hood of CNN on CIFAR-10}
 \label{sec:cifar_underhood}
 
-Most bounds for Muon and other LMO-algorithms are given for the norm of the gradient \citep{kovalev2025understanding, pethick2025training, riabinin2025gluon,kovalev2025noneuclideansgdstructuredoptimization}. Accordingly, it is natural to measure those norms on a real deep learning problem.
+Most bounds for Muon and other LMO-algorithms are given for the norm of the gradient \citep{li2025noteconvergencemuon, kovalev2025understanding, pethick2025training, riabinin2025gluon,kovalev2025noneuclideansgdstructuredoptimization}. Accordingly, it is natural to measure those norms on a real deep learning problem.
 
 \begin{table}[htbp]
 \floatconts
@@ -821,7 +831,7 @@ Most bounds for Muon and other LMO-algorithms are given for the norm of the grad
   }
 \end{table}
 
-We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, and F-Neon, Fanion-5, and F-Fanion-5 on CIFAR-airbench. NSGD and SignSGD are not heavily tuned. The hyperparameters of Neon, F-Neon, Fanion-5, and F-Fanion-5 are taken from Muon and F-Muon. The parameters are in the table \tableref{tbl:cifar_lrs}. val\_accuracy is for the the weighted variant. However, to preserve the algorithms, we do not normalize the weights of the network each iteration.
+We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, F-Neon, Fanion-5, and F-Fanion-5 on CIFAR-airbench. NSGD and SignSGD are not heavily tuned. The hyperparameters of Neon, F-Neon, Fanion-5, and F-Fanion-5 are taken from Muon and F-Muon (see \tableref{tbl:cifar_lrs}). In the table, val\_accuracy is for the the weighted variant. However, to preserve the algorithms, we do not normalize the weights of the network each iteration.
 
 We log train and validation accuracy, and nuclear, gradient, and spectral norms of the gradients of conv1.weight and conv2.weight for all the layers. The gradient norms decrease only by the order of ten maximum during training, while train accuracy reaches full 100\% for Muon, S-Muon, and F-Muon.
 
