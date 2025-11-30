@@ -105,7 +105,7 @@ We then compare the performance of these algorithm families on various model and
 \begin{itemize}
 	\item Synthetic least squares experiment \sectionref{subsec:lls_exps}
 	\item CIFAR-10 airbench \citep{cifar2023airbench}
-	\item Pre-training NanoGPT on FineWeb dataset \citep{modded_nanogpt_2024}
+	\item Pre-training NanoGPT and GPT-2 Medium on FineWeb dataset \citep{modded_nanogpt_2024}
 	\item Fine-tuning NanoGPT on Tiny Stories \citep{eldan2023tinystoriessmalllanguagemodels}
 \end{itemize}
 
@@ -331,7 +331,7 @@ Similarly, combining Fanion-$k$ with SignSGD yields \emph{S-Fanion-$k$} with upd
 \begin{equation}\label{eq:sign_muon_update}
 		\mX^{t+1} = \mX^{t} - \gamma_t \left(\alpha \sum_{i = 1}^k \vu_i \vv_i^\top + (1-\alpha)\eta\sign(\mM^t)\right)\,,
 \end{equation}
-where $\eta$ is a scaling coefficient specific to SignSGD.
+where \texttt{sign\_lr\_coeff} $\eta$ is a scaling coefficient specific to SignSGD.
 
 By \corollaryref{corollary:lin_comb_alg}, this defines an LMO-algorithm with norm $\norm{\cdot}_{\mathrm{C-KF-k}}^\dagger$, where
 \begin{equation}\label{eq:ckfk_norm}
@@ -428,7 +428,7 @@ We perform a grid search over the following hyperparameter ranges:
 \begin{itemize}
   \item \texttt{momentum} $\in \{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95\}$ for all algorithms.
   \item \texttt{lr} $\in [0.005, 0.020]$ with step $0.001$ for Muon, F-Muon, and S-Muon.
-  \item \texttt{lr} $\in [0.00005, 0.00020]$ with step $0.00001$ for SignSGD.
+  \item \texttt{lr} $\in [5\mathrm{e}{-5},\, 2\mathrm{e}{-4}]$ with step $1\mathrm{e}{-5}$.
   \item \texttt{lr} $\in [0.01, 0.10]$ with step $0.001$ for NSGD.
 \end{itemize}
 The tuned parameters and the number of iterations required to converge to $0.001$ are presented in \tableref{tbl:lls_lrs}. For intermediate-rank Fanions, F-Fanions, and S-Fanions, the hyperparameters \texttt{lr}, \texttt{momentum}, and \texttt{sign\_lr\_coeff} are set equal to those of Muon, F-Muon, and S-Muon respectively, as their loss decreases too slowly to reach $0.001$ within a reasonable tuning budget.
@@ -507,7 +507,7 @@ These observations raise fundamental questions about the sensitivity of LMO-base
 
 \subsection{NanoGPT Speedrun}
 
-We evaluate F-Muon and S-Muon with $\alpha=0.5$ on the NanoGPT speedrun benchmark \citep{modded_nanogpt_2024}. The optimal hyperparameters are shown in the legend of \figureref{fig:gpt_loss}, with \texttt{sign\_sgd\_coeff} values of 0.0003 for F-Muon and 0.07 for S-Muon. After 1750 training steps, F-Muon achieves a cross-entropy loss of 3.281, S-Muon achieves 3.287, and Muon achieves 3.279, falling below the target threshold of 3.28. As illustrated in \figureref{fig:gpt_loss}, these differences are negligible. Notably, F-Muon represents a convex combination of Muon and NSGD, despite NSGD performing poorly in isolation. The same observation holds for S-Muon.
+We evaluate F-Muon and S-Muon with $\alpha=0.5$ against Muon, SignSGD, and NSGD on the NanoGPT speedrun benchmark \citep{modded_nanogpt_2024}. The optimal hyperparameters are shown in the legend of \figureref{fig:gpt_loss}, with \texttt{sign\_sgd\_coeff} values of 0.0003/0.07 for S-Muon. After 1750 training steps, F-Muon achieves a cross-entropy loss of 3.281, S-Muon achieves 3.287, and Muon achieves 3.279, falling below the target threshold of 3.280. As illustrated in \figureref{fig:gpt_loss}, these differences are negligible. Notably, F-Muon represents a convex combination of Muon and NSGD, despite NSGD performing poorly in isolation. The same observation holds for S-Muon.
 
 \begin{figure}[htbp]
 \floatconts
@@ -521,7 +521,7 @@ Again, as on the CIFAR airbench, if for F-Muon we set $\alpha=-0.1$ that corresp
 It is noteworthy that F-Muon with NSGD-part that is not scaled by Muon's rule gives 3.288 loss (0.007 increase), while S-Muon scaled with Muon's rule gives 3.292 loss (0.005 increase)
 
 \subsection{GPT-2 Medium Speedrun}
-We scale from NanoGPT to GPT-2 Medium. After testing for 5960 steps with F-Muon we get 2.9215 loss, while for Muon it is 2.9198. In ? steps, F-Muon reaches <2.92 loss, thus needing only ?\% more iterations than Muon. 
+We scale from NanoGPT to GPT-2 Medium. After testing for 5960 steps we get 2.9215 loss for F-Muon and 2.9235 for S-Muon, while for Muon it is 2.9198 (the speedrun threshold is 2.92).
 
 \subsection{NanoGPT Fine-Tuning}
 \label{subsec:finetune}
@@ -591,7 +591,7 @@ Since Muon \citep{jordan2024muon} is a very efficient optimizer for functions of
 
 A similar drawback has the article \citep{riabinin2025gluon}, where $L$-smoothness assumption is replaced with a more practical $(L_0, L_1)$-smoothness. By estimating smoothness and substituting it into their Theorem 1, the authors recovered the optimal fine-tuned stepsizes reported by \citep{pethick2025training}. However, they have not showed the optimality of the spectral or the RMS-to-RMS norm, which is observed in practice, as our comparison with NSGD highlights.
 
-Common important drawback of the analyses is the consideration of the convergence by the norm of the gradient. As we showed in our experiments on CIFAR, the gradient norm may decrease only by a factor of ten, when the accuracy reaches 100\%.
+Common important drawback of the analyses is the consideration of the convergence by the norm of the gradient. As we showed in our experiments on CIFAR \cref{sec:cifar_underhood}, the gradient norm may decrease only by a factor of ten even when the accuracy reaches 100\%.
 
 We suppose that the reason for the recorded stark discrepancy between Neon and Muon performance, both of which are described by Stochastic Conditional Gradient \citep{pethick2025training} or Gluon frameworks, lies in the structure of the norm ball or in the preconditioner interpretation \citep{pethick2025trainingneuralnetworksscale}, which must be an object of further research.
 
@@ -779,6 +779,7 @@ In fact, those balls can be described easier if we use the results from \citep{y
 \end{figure}
 
 \section{Under the hood of CNN on CIFAR-10}
+\label{sec:cifar_underhood}
 
 Most bounds for Muon and other LMO-algorithms are given for the norm of the gradient \citep{kovalev2025understanding, pethick2025training, riabinin2025gluon,kovalev2025noneuclideansgdstructuredoptimization}. Accordingly, it is natural to measure those norms on a real deep learning problem.
 
