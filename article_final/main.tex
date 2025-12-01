@@ -763,28 +763,7 @@ These balls can be described more simply using the results from \citet{yu2012ari
 
 \section{More details for Linear Least Squares}
 \label{sec:lls_plots_section}
-Tuned \texttt{lr} and \texttt{momentum} coefficients are presented in \tableref{tbl:lls_lrs_app}. The spectral and nuclear norms of the gradients over iterations, as well as the loss over time, are shown in \figureref{fig:app_lls}. The poor performance of Fanions and F-Fanions in terms of speed for large $k$ is likely caused by the inefficient implementation of TRLan.
-
-\begin{table}[htbp]
-\floatconts
-  {tbl:lls_lrs_app}
-  {\caption{Tuned \texttt{lr} and \texttt{momentum} coefficients in the lease squares experiment.}}
-  {%
-    \begin{tabular}{|c|c|c|c|}
-      \arrayrulecolor{black}\hline
-      Algorithm & \texttt{lr}  & \texttt{momentum}  & Iterations to 0.001 loss \\
-      \arrayrulecolor{black}\hline
-      Muon & 0.007 & 0.5 & 1060 \\
-      \hdashline
-      NSGD & 0.08 & 0.95 & 1020 \\
-      F-Muon & 0.015 & 0.7 & 910 \\
-      \hdashline
-      SignSGD & 0.016 $\times$ 0.01 & 0.95 & 2650 \\
-      S-Muon & 0.011 & 0.9 & 890 \\
-      \arrayrulecolor{black}\hline
-    \end{tabular}%
-  }
-\end{table}
+The spectral and nuclear norms of the gradients over iterations, as well as the loss over time, are shown in \figureref{fig:app_lls}. The poor performance of Fanions and F-Fanions in terms of speed for large $k$ is likely caused by the inefficient implementation of TRLan.
 
 \begin{figure}[htbp]
 \floatconts
