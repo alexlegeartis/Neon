@@ -31,7 +31,7 @@
 \DeclarePairedDelimiter{\norms}{\|}{\|_{\mathrm{2}}}
 \DeclarePairedDelimiter{\normc}{\|}{\|_{\mathrm{C}}}
 \DeclarePairedDelimiter{\normn}{\|}{\|_{*}}
-\newcommand{\normkfk}[1]{\|#1\|_{\text{KF-}k}}
+\DeclarePairedDelimiter{\normkfk}{\|}{\|_{\text{KF-}k}}
 \DeclarePairedDelimiter{\normfstar}{\|}{\|_\mathrm{F*}}
 \DeclarePairedDelimiter{\normftwo}{\|}{\|_\mathrm{F2}}
 \DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
@@ -272,12 +272,12 @@ We begin with a well-known result on dual norms (see, e.g., \citep[Table 1]{yu20
 \begin{lemma}\label{lemma:dual_to_conv_comb}
 	Let $\norm{\cdot}_{(1)},\dots,\norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1,\dots,\alpha_n$ be non-negative reals. Define
 	\[
-		\norm{\cdot} := \sum_{i = 1}^n \alpha_i \norm{\cdot}_{(i)}.
+		\norm{\cdot} := \sum_{i = 1}^n \alpha_i \norm{\cdot}_{(i)}\,.
 	\]
 	Then the dual unit ball of $\norm{\cdot}$ satisfies
 	\[
 		\cB_{\norm{\cdot}^\dagger}
-		= \sum_{i = 1}^n \alpha_i \cB_{\norm{\cdot}_{(i)}^\dagger}
+		= \sum_{i = 1}^n \alpha_i \cB_{\norm{\cdot}_{(i)}^\dagger}\,,
 	\]
 	where $\sum$ denotes the Minkowski sum and $\cB_{\norm{\cdot}_{(i)}^\dagger}$ is the unit ball of the dual norm $\norm{\cdot}_{(i)}^\dagger$.
 \end{lemma}
@@ -375,17 +375,17 @@ For reference, \tableref{tbl:newton_schulz_reference} presents results for the N
       \arrayrulecolor{black}\hline
       Matrix sizes & $k$  & Method           & Time (s) & Matvecs & Iterations & $err_1$         & $err_2$       \\
       \arrayrulecolor{black}\hline
-      $500 \times 500$      & 5  & Power Iterations           & 0.062   & 2005    & 200        & 9.2$\cdot 10^{-3}$ & 9.1$\cdot10^{-3}$\\
-      $500 \times 500$      & 5  & RSVD             & 0.017   & 1170    & 38         & 9.8$\cdot 10^{-3}$ & 9.6$\cdot10^{-3}$\\
-      $500 \times 500$      & 5  & TRLan            & 0.018   & 131     & 65         & 9.6$\cdot 10^{-5}$ & 9.4$\cdot10^{-5}$\\
+      $500 \times 500$      & 5  & Power Iterations           & 0.062   & 2005    & 200        & $9.2 \cdot 10^{-3}$ & $9.1 \cdot 10^{-3}$\\
+      $500 \times 500$      & 5  & RSVD             & 0.017   & 1170    & 38         & $9.8 \cdot 10^{-3}$ & $9.6 \cdot 10^{-3}$\\
+      $500 \times 500$      & 5  & TRLan            & 0.018   & 131     & 65         & $9.6 \cdot 10^{-5}$ & $9.4 \cdot 10^{-5}$\\
       \hdashline
-      $500 \times 500$      & 50 & Power Iterations           & 0.44    & 43750   & 437      & 9.9$\cdot 10^{-3}$ & 9.0$\cdot10^{-3}$\\
-      $500 \times 500$      & 50 & RSVD             & 0.61    & 6120    & 50      & 9.9$\cdot 10^{-3}$ & 9.1$\cdot10^{-3}$\\
-      $500 \times 500$      & 50 & TRLan            & 0.16    & 462     & 231      & 3.3$\cdot 10^{-7}$ & 3.0$\cdot10^{-7}$\\
-      \hdashline 
-      $5000 \times 5000$    & 5  & Power Iterations           & 9.6     & 9065    & 906      & 8.6$\cdot 10^{-3}$ & 8.6$\cdot10^{-3}$\\
-      $5000 \times 5000$    & 5  & RSVD             & 2.1     & 5640    & 187      & 9.7$\cdot 10^{-3}$ & 9.7$\cdot10^{-3}$\\
-      $5000 \times 5000$    & 5  & TRLan            & 0.70    & 205     & 102      & 7.7$\cdot 10^{-3}$ & 7.7$\cdot10^{-3}$\\
+      $500 \times 500$      & 50 & Power Iterations           & 0.44    & 43750   & 437      & $9.9 \cdot 10^{-3}$ & $9.0 \cdot 10^{-3}$\\
+      $500 \times 500$      & 50 & RSVD             & 0.61    & 6120    & 50      & $9.9 \cdot 10^{-3}$ & $9.1 \cdot 10^{-3}$\\
+      $500 \times 500$      & 50 & TRLan            & 0.16    & 462     & 231      & $3.3 \cdot 10^{-7}$ & $3.0 \cdot 10^{-7}$\\
+      \hdashline
+      $5000 \times 5000$    & 5  & Power Iterations           & 9.6     & 9065    & 906      & $8.6 \cdot 10^{-3}$ & $8.6 \cdot 10^{-3}$\\
+      $5000 \times 5000$    & 5  & RSVD             & 2.1     & 5640    & 187      & $9.7 \cdot 10^{-3}$ & $9.7 \cdot 10^{-3}$\\
+      $5000 \times 5000$    & 5  & TRLan            & 0.70    & 205     & 102      & $7.7 \cdot 10^{-3}$ & $7.7 \cdot 10^{-3}$\\
       \arrayrulecolor{black}\hline
     \end{tabular}%
   }
@@ -394,14 +394,14 @@ For reference, \tableref{tbl:newton_schulz_reference} presents results for the N
 \begin{table}[ht]
 \floatconts
   {tbl:newton_schulz_reference}
-  {\caption{Newton-Schulz iterations on the same matrices (for reference).}}
+  {\caption{Newton-Schulz iterations performance on random dense matrices (for reference).}}
   {%
     \begin{tabular}{|c|c|c|c|c|}
       \arrayrulecolor{black}\hline
       Matrix size    & Time (s) & Matvecs & Iterations & $err_1$ \\
       \arrayrulecolor{black}\hline
-      $500 \times 500$     & 0.041    & 27 000  & 27         & 4.8e-3  \\
-      $5000 \times 5000$   & 26.4     & 290 000 & 29         & 6.5e-3  \\
+      $500 \times 500$     & 0.041    & 27 000  & 27         & $4.8 \cdot 10^{-3}$  \\
+      $5000 \times 5000$   & 26.4     & 290 000 & 29         & $6.5 \cdot 10^{-3}$  \\
       \arrayrulecolor{black}\hline
     \end{tabular}%
   }
@@ -414,7 +414,7 @@ For reference, \tableref{tbl:newton_schulz_reference} presents results for the N
 
 We begin by evaluating F-Fanions on the following convex $L$-smooth problem:
 \begin{equation}\label{eq:lls}
-  F(\mX) = \frac{1}{2} \<(\mX-\mS), \mM (\mX - \mS) \mN> \to \min_{\mX \in \Rmn}\,
+  F(\mX) = \frac{1}{2} \<(\mX-\mS), \mM (\mX - \mS) \mN> \to \min_{\mX \in \Rmn}\,,
 \end{equation}
 where $\mX \in \Rmn$, $m=500$ and $n=500$ represent typical dimensions of a neural network weight matrix, $\mS \in \Rmn$, and $\mM \in \mathbb{S}^m_{+}$ and $\mN \in \mathbb{S}^n_{+}$ are positive-semidefinite matrices. The spectra of $\mM$ and $\mN$ are uniformly distributed on the interval $(0, 1)$. We set $\mS=0$ and initialize $\mX^0$ with entries drawn independently from $\cN(0, 0.01)$.
 
@@ -432,7 +432,7 @@ We perform a grid search over the following hyperparameter ranges:
 \begin{itemize}
   \item \texttt{momentum} $\in \{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95\}$ for all algorithms.
   \item \texttt{lr} $\in [0.005, 0.020]$ with step $0.001$ for Muon, F-Muon, and S-Muon.
-  \item \texttt{lr} $\in [5\mathrm{e}{-5},\, 2\mathrm{e}{-4}]$ with step $1\mathrm{e}{-5}$.
+  \item \texttt{lr} $\in [5 \cdot 10^{-5},\, 2 \cdot 10^{-4}]$ with step $1 \cdot 10^{-5}$.
   \item \texttt{lr} $\in [0.01, 0.10]$ with step $0.001$ for NSGD.
 \end{itemize}
 The tuned parameters and the number of iterations required to converge to $0.001$ are presented in \tableref{tbl:lls_lrs}. For intermediate-rank Fanions, F-Fanions, and S-Fanions, the hyperparameters \texttt{lr}, \texttt{momentum}, and \texttt{sign\_lr\_coeff} are set equal to those of Muon, F-Muon, and S-Muon respectively, as their loss decreases too slowly to reach $0.001$ within a reasonable tuning budget.
@@ -440,7 +440,7 @@ The tuned parameters and the number of iterations required to converge to $0.001
 \begin{table}[htbp]
 \floatconts
   {tbl:lls_lrs}
-  {\caption{Tuning learning rates and momentum coefficients}}
+  {\caption{Tuned learning rates and momentum coefficients in the linear least squares experiment.}}
   {%
     \begin{tabular}{|c|c|c|c|}
       \arrayrulecolor{black}\hline
@@ -463,7 +463,7 @@ The results are presented in \figureref{fig:lls} with additional details in \sec
 \begin{figure}[htbp]
 \floatconts
   {fig:lls}
-  {\caption{Linear least squares problem for a 500x500 matrix}}
+  {\caption{Linear least squares problem for a 500x500 matrix.}}
   {%
     \subfigure[The loss]{\label{fig:lls_loss}%
       \includegraphics[width=0.8\linewidth]{figs/simple_lls/loss_long_run_16_increase.pdf}}%
@@ -477,16 +477,16 @@ Both F-Muon and S-Muon converge faster to lower loss values and achieve lower Fr
 
 \subsection{CIFAR-10 airbench}
 
-We evaluate the algorithms on the CIFAR-10 airbench \citep{cifar2023airbench}. To assess the impact of the mixing parameter $\alpha$, we first run F-Muon for different values of $\alpha$ using hyperparameters tuned for vanilla Muon by Keller Jordan: \texttt{lr=0.24(1 - step/total\_steps), momentum=0.65, nesterov=True} with weight normalization. We perform 10 repetitions for each $\alpha$ value and record the accuracy after 8 epochs of training (\figureref{fig:muon_alphas}).
+We evaluate the algorithms on the CIFAR-10 airbench \citep{cifar2023airbench}. To assess the impact of the mixing parameter $\alpha$, we first run F-Muon for different values of $\alpha$ using hyperparameters tuned for vanilla Muon by Keller Jordan: \texttt{lr=0.24(1 - step/total\_steps)}, \texttt{momentum=0.65}, \texttt{nesterov=True} with weight normalization. We perform 10 repetitions for each $\alpha$ value and record the accuracy after 8 epochs of training (\figureref{fig:muon_alphas}).
 
-Next, we tune F-Muon specifically with $\alpha = 0.5$, obtaining optimal hyperparameters \texttt{lr=0.4(1 - step/\allowbreak{}total\_steps)}, \texttt{momentum=0.6}, \texttt{nesterov = True}. Tuned F-Muon achieves $94.02 \pm 0.13\%$ validation accuracy after 8 epochs (averaged over 200 runs), matching Muon's accuracy and variance. We again measure the validation accuracy as a function of $\alpha$ (\figureref{fig:fmuon_alphas}) and observe that even at $\alpha=0.1$, the accuracy substantially exceeds that of vanilla NSGD.
+Next, we tune F-Muon specifically with $\alpha = 0.5$, obtaining optimal hyperparameters \texttt{lr=0.4(1 - step/total\_steps)}, \texttt{momentum=0.6}, \texttt{nesterov = True}. Tuned F-Muon achieves $94.02 \pm 0.13\%$ validation accuracy after 8 epochs (averaged over 200 runs), matching Muon's accuracy and variance. We again measure the validation accuracy as a function of $\alpha$ (\figureref{fig:fmuon_alphas}) and observe that even at $\alpha=0.1$, the accuracy substantially exceeds that of vanilla NSGD.
 
-For S-Muon with $\alpha=0.5$, we tune all hyperparameters to find the optimal configuration \texttt{lr=0.42(1 - step/\allowbreak{}total\_steps)}, \texttt{momentum=0.63}, \texttt{nesterov = True}, \texttt{sign\_lr\_coeff = 0.003}, achieving $94.03 \pm 0.13\%$ validation accuracy, which slightly exceeds vanilla Muon's performance.
+For S-Muon with $\alpha=0.5$, we tune all hyperparameters to find the optimal configuration \texttt{lr=0.42(1 - step/\allowbreak{}total\_steps)}, \texttt{momentum=0.63}, \texttt{nesterov = True}, \texttt{sign\_lr\_coeff = 0.003}, achieving $94.03 \pm 0.13\%$ validation accuracy (\figureref{fig:diff_alphas}), which slightly exceeds vanilla Muon's performance.
 
 \begin{figure}[htbp]
 \floatconts
   {fig:diff_alphas}
-  {\caption{Mean validation accuracies for F-Muon with different $\alpha$}}
+  {\caption{Mean validation accuracies for F-Muon with different $\alpha$.}}
   {%
     \subfigure[With parameters tuned for Muon]{\label{fig:muon_alphas}%
       \includegraphics[width=0.48\linewidth]{figs/muon_tuned_diff_alpha.pdf}}%
@@ -496,13 +496,7 @@ For S-Muon with $\alpha=0.5$, we tune all hyperparameters to find the optimal co
   }
 \end{figure}
 
-The Muon-level performance is remarkable given that F-Muon and S-Muon operate with substantially different constraint geometries. \figureref{fig:cifar_ball} visualizes F-Muon by plotting the LMO balls of Muon and F-Muon (scaled by actual learning rates) in the 2D space of singular values. S-Muon cannot be visualized in this manner because the $l_\infty$ norm is not a function of singular values alone, and visualizing $\norms{\cdot}$ for $\Rmn$ with $m, n > 2$ requires at least 4D space. Nevertheless, the LMO ball of S-Muon clearly differs substantially from Muon's, as the effective SignSGD learning rate $\texttt{lr}(1-\alpha)\texttt{sign\_lr\_coeff} = 6.3 \times 10^{-4}$ is comparable to typical SignSGD learning rates in deep learning.
-
-Notably, even the pathological case $\alpha > 1$, which corresponds to an LMO constraint region that is not a norm ball, achieves accuracy nearly identical to vanilla Muon.
-
-These observations raise fundamental questions about the sensitivity of LMO-based algorithms to the shape of the constraint region.
-
-For gradient norm profiling and results for training with Fanions and F-Fanions, please see \sectionref{sec:cifar_underhood}.
+The Muon-level performance is remarkable given that F-Muon and S-Muon operate with substantially different constraint geometries. \figureref{fig:cifar_ball} visualizes F-Muon by plotting the LMO balls of Muon and F-Muon (scaled by actual learning rates) in the 2D space of singular values (with all other singular values set to zero). S-Muon cannot be visualized in this manner because the Chebyshev norm is not a function of singular values alone, and visualizing $\norms{\cdot}$ for $\Rmn$ with $m, n > 2$ requires at least 4D space. Nevertheless, the LMO ball of S-Muon clearly differs substantially from Muon's, as the effective SignSGD learning rate $\texttt{lr} = (1-\alpha)\texttt{sign\_lr\_coeff} = 6.3 \cdot 10^{-4}$ is comparable to typical SignSGD learning rates in deep learning.
 
 \begin{figure}[htbp]
 \floatconts
@@ -511,14 +505,18 @@ For gradient norm profiling and results for training with Fanions and F-Fanions,
   {\includegraphics[width=0.6\linewidth]{figs/norms/fstardual_cifar.pdf}}
 \end{figure}
 
+Notably, even the pathological case $\alpha > 1$, which corresponds to an LMO constraint region that is not a norm ball, achieves accuracy nearly identical to vanilla Muon. These observations raise fundamental questions about the sensitivity of LMO-based algorithms to the shape of the constraint region.
+
+Additional results, including gradient norm profiling and performance comparisons with Fanions and F-Fanions, are provided in \sectionref{sec:cifar_underhood}.
+
 \subsection{NanoGPT Speedrun}
 
-We evaluate F-Muon and S-Muon with $\alpha=0.5$ against Muon, SignSGD, and NSGD on the NanoGPT speedrun benchmark \citep{modded_nanogpt_2024}. The optimal hyperparameters are shown in the legend of \figureref{fig:nano_gpt_loss}, with \texttt{sign\_sgd\_coeff} values of 3e-4/0.07 for S-Muon. After 1750 training steps, F-Muon achieves a cross-entropy loss of 3.281, S-Muon achieves 3.287, and Muon achieves 3.279, falling below the target threshold of 3.280. As illustrated in \figureref{fig:nano_gpt_loss}, these differences are negligible. Notably, F-Muon represents a convex combination of Muon and NSGD, despite NSGD performing poorly in isolation. The same observation holds for S-Muon.
+We evaluate F-Muon and S-Muon with $\alpha=0.5$ against Muon, SignSGD, and NSGD on the NanoGPT speedrun benchmark \citep{modded_nanogpt_2024}. The optimal hyperparameters are shown in the legend of \figureref{fig:nano_gpt_loss}, with \texttt{sign\_sgd\_coeff} values of $3 \cdot 10^{-4}$ and $0.07$ for S-Muon. After 1750 training steps, F-Muon achieves a cross-entropy loss of 3.281, S-Muon achieves 3.287, and Muon achieves 3.279, falling below the target threshold of 3.280. As illustrated in \figureref{fig:nano_gpt_loss}, these differences are negligible. Notably, F-Muon represents a convex combination of Muon and NSGD, despite NSGD performing poorly in isolation. The same observation holds for S-Muon.
 
 \begin{figure}[htbp]
 \floatconts
   {fig:nano_gpt_loss}
-  {\caption{The validation loss for NanoGPT}}
+  {\caption{The validation loss for NanoGPT.}}
   {\includegraphics[width=0.7\linewidth]{figs/nanogpt/nano/val_loss_vs_step.pdf}}
 \end{figure}
 
@@ -527,27 +525,28 @@ As observed in the CIFAR airbench experiments, setting $\alpha=1.1$ for F-Muon (
 Notably, F-Muon with the NSGD component not scaled by Muon's rule yields a loss of 3.288 (an increase of 0.007), while S-Muon scaled with this rule achieves a loss of 3.292 (an increase of 0.005).
 
 \subsection{GPT-2 Medium Speedrun}
-We scale from NanoGPT to GPT-2 Medium. After testing for 5960 steps we get 2.9215 loss for F-Muon and 2.9235 for S-Muon, while for Muon it is 2.9198 (the speedrun threshold is 2.92).
+
+We scale from NanoGPT to GPT-2 Medium (24 transformer layers, 1024 hidden dimension, 16 attention heads, approximately 345 million parameters), evaluating the same algorithms with $\alpha=0.5$ on the FineWeb dataset. After 5960 training steps, Muon achieves a validation loss of 2.9198, successfully reaching the speedrun threshold of 2.92. F-Muon achieves 2.9215 and S-Muon achieves 2.9235, narrowly missing the threshold. As illustrated in \figureref{fig:med_gpt_loss}, the performance gap remains remarkably small: F-Muon trails Muon by only 0.0017, while S-Muon trails by 0.0037. These minimal differences demonstrate that alternative norm constraints maintain competitive performance even at this significantly larger model scale.
 
 \begin{figure}[htbp]
   \floatconts
     {fig:med_gpt_loss}
-    {\caption{The validation loss for GPT-2 Medium}}
+    {\caption{The validation loss for GPT-2 Medium.}}
     {\includegraphics[width=0.7\linewidth]{figs/nanogpt/medium/val_loss_vs_step.pdf}}
   \end{figure}
 
 \subsection{NanoGPT Fine-Tuning}
 \label{subsec:finetune}
 
-We fine-tuned the NanoGPT framework by Karpathy \citep{Karpathy2022} using the standard \emph{NanoGPT-medium} configuration, which corresponds to GPT-2 Medium. This model consists of 24 transformer layers, a hidden dimension of 1024, 16 attention heads, and approximately 345 million parameters. We selected the \emph{Tiny Stories} corpus \citep{eldan2023tinystoriessmalllanguagemodels} as the training dataset for its high entropy and structural diversity, which amplify the differences in optimization dynamics. All training runs were initialized with the same random seed, weight initialization, and learning rate schedule to ensure that performance differences arose solely from the choice of optimizer.
+We fine-tuned the NanoGPT framework by Karpathy \citep{Karpathy2022} using the standard \emph{NanoGPT-medium} configuration, which again corresponds to GPT-2 Medium. We selected the \emph{Tiny Stories} corpus \citep{eldan2023tinystoriessmalllanguagemodels} as the training dataset for its high entropy and structural diversity, which amplify the differences in optimization dynamics. All training runs were initialized with the same random seed, weight initialization, and learning rate schedule to ensure that performance differences arose solely from the choice of optimizer.
 
-For all one-dimensional layers, we used AdamW with a learning rate of $1\!\times\!10^{-3}$. Since momentum exhibited negligible influence on training dynamics, it was held constant across all experiments. \figureref{fig:nanogptftexps} presents a comparative analysis of optimization performance.
+For all one-dimensional layers, we used AdamW with a learning rate of $1 \cdot 10^{-3}$. Since momentum exhibited negligible influence on training dynamics, it was held constant across all experiments. \figureref{fig:nanogptftexps} presents a comparative analysis of optimization performance.
 
 \begin{figure}[htbp]
 \floatconts
   {fig:nanogptftexps}
   {\caption{Comparison of validation loss for Muon, F-Muon, and S-Muon across a range of learning rates. Stars denote the best learning rate identified for each optimizer.}}
-  {\includegraphics[width=0.8\linewidth]{figs/nanogpt/optimizers_comparison.pdf}}
+  {\includegraphics[width=0.7\linewidth]{figs/nanogpt/optimizers_comparison.pdf}}
 \end{figure}
 
 \figureref{fig:nanogptftexps2} presents the training and validation loss curves at the optimal learning rate for each optimizer. While F-Muon and S-Muon maintain consistent behavior, vanilla Muon achieves the lowest loss overall, outperforming other algorithms by a small margin.
@@ -568,7 +567,7 @@ The updates of LMO optimizers exhibit striking similarities between vector $l_p$
 \begin{table}[htbp]
 \floatconts
   {tbl:mat_vs_vec_lmo}
-  {\caption{LMO optimizers in Schatten $S_p$ norms and in $l_p$ norms. $g$ is the gradient. When it is a matrix, $g = \mU \mSigma \mV^\top$}}
+  {\caption{LMO optimizers in Schatten $S_p$ norms and in $l_p$ norms. $g$ is the gradient. When it is a matrix, $g = \mU \mSigma \mV^\top$.}}
   {%
     \begingroup
     \def\arraystretch{1.2}
@@ -705,33 +704,33 @@ We provide here the proof of \lemmaref{lemma:dual_to_conv_comb}.
         {Norms $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$}
 \label{sec:f2_fstar_norms}
 
-Based on the \lemmaref{lemma:dual_to_conv_comb}, we immediately find $\normfstar{\cdot}^\dagger$, which is related to F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we get
+Based on \lemmaref{lemma:dual_to_conv_comb}, we immediately find $\normfstar{\cdot}^\dagger$, which is related to the F-Muon update. Indeed, after setting $\beta=1-\alpha$ and remembering that for smooth and bounded cases we can use $\min$ instead of $\inf$, we obtain
 \begin{equation}\label{eq:normfstardual}
-  \normfstar{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \norms{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
+  \normfstar{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \norms{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}\,.
 \end{equation}
 
 If $\alpha = 1$, then $\mZ = \mY$, and we get $\normfstar{\mY}^\dagger = \norms{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normfstar{\mY}^\dagger = \normf{\mY}$.
 
-Similarly, we find $\normftwo{\cdot}^\dagger$, which is related to F-Neon update:
+Similarly, we find $\normftwo{\cdot}^\dagger$, which is related to the F-Neon update:
 \begin{equation}\label{eq:normftwodual}
-  \normftwo{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \normn{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}
+  \normftwo{\mY}^\dagger = \min_{\mZ} \min_t\{t, s.t. \normn{\mZ}\leq \alpha t, \normf{\mY-\mZ}\leq (1-\alpha) t\}\,.
 \end{equation}
 
 If $\alpha = 1$, then $\mZ = \mY$, and we get $\normftwo{\mY}^\dagger = \normn{\mY}$. If $\alpha = 0$, then $\mZ = 0$, and we get $\normftwo{\mY}^\dagger = \normf{\mY}$.
 
-Unfortunately, $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$ do not have closed-form expressions and cannot be found as easy as their duals.
+Unfortunately, $\normfstar{\cdot}^\dagger$ and $\normftwo{\cdot}^\dagger$ do not have simple closed-form expressions and cannot be computed as easily as their duals.
 
 \section{Visualization of different matrix norms}
 \subsection{Duals to F* and F2 norms}
 
 It follows from \lemmaref{lemma:dual_to_conv_comb} that the norm ball in $\normfstar{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\normn{\cdot}$ and $(1-\alpha)\normf{\cdot}$ and the norm ball in $\normftwo{\cdot}^\dagger$ is the Minkowski sum of the norm ball in $\alpha\norms{\cdot}$ and $(1-\alpha)\normf{\cdot}$.
 
-In \figureref{fig:fduals} we plot these norms. On x-axis and y-axis, there are singular values $\sigma_1$, $\sigma_2$ respectively of a matrix from $\R^{m\times n}$ with $\min\{m,n\}=2$.
+In \figureref{fig:fduals}, we plot these norms. The x-axis and y-axis represent the singular values $\sigma_1$ and $\sigma_2$, respectively, of a matrix from $\R^{m\times n}$ with $\min\{m,n\}=2$.
 
 \begin{figure}[htbp]
 \floatconts
   {fig:fduals}
-  {\caption{Balls in the duals to F* and F2 norms for different $\alpha$}}
+  {\caption{Balls in the duals to F* and F2 norms for different $\alpha$.}}
   {%
     \subfigure[lmo balls for F-Muon for different $\alpha$]{\label{fig:fstardual}%
       \includegraphics[width=0.48\linewidth]{figs/norms/fstardualball.pdf}}%
@@ -743,16 +742,14 @@ In \figureref{fig:fduals} we plot these norms. On x-axis and y-axis, there are s
 
 \subsection{The Ky Fan norm and its dual}
 
-1-balls in $l_\infty$, $l_1$ and $l_2$ norms are well-known from textbooks. But what about the Ky Fan $k$-norm? How can it be represented?
+While 1-balls in $l_\infty$, $l_1$, and $l_2$ norms are well-known from textbooks, the Ky Fan $k$-norm presents a more intricate structure.
 
-To showcase the complex structure of the Ky Fan $k$-norm and its dual, we suggest the illustrations \figureref{fig:kyfan_combined} with the ball in the Ky Fan $2$-norm in \figureref{fig:kyfan} and its dual in \figureref{fig:kyfandual}. On x-, y-, and z-axes, there are singular values $\sigma_1$, $\sigma_2$, and $\sigma_3$ respectively of a matrix from $\R^{m\times n}$ with $\min\{m,n\}=3$. In this particular case, we do not sort the singular values. In the proposed representation, we actually plot balls in the Top-$2$ norm $\max\{\abs{x}+\abs{y}, \abs{x}+\abs{z}, \abs{y}+\abs{z}\}$ and its dual norm $\max\{\max(\abs(x),\abs{y},\abs{z}), \frac{1}{2} (\abs{x}+\abs{y}+\abs{z})\}$. The resulting balls are much more complex than balls in $l_\infty$, $l_1$ and $l_2$ norms.
-
-In fact, those balls can be described easier if we use the results from \citep{yu2012arithmetic}. The Ky Fan $2$-norm ball is an intersection of three $l_1$ balls in $(x,y)$, $(x, z)$, and $(y,z)$ spaces. The 1-ball in the dual Ky Fan $2$-norm is an intersection of 1-ball the in $l_\infty$ norm and $\frac{1}{2}$-ball in the $l_1$ norm.
+To showcase the complex geometry of the Ky Fan $k$-norm and its dual, we present \figureref{fig:kyfan_combined}, which displays the unit ball in the Ky Fan $2$-norm (\figureref{fig:kyfan}) and its dual (\figureref{fig:kyfandual}). The x-, y-, and z-axes represent the singular values $\sigma_1$, $\sigma_2$, and $\sigma_3$, respectively, of a matrix from $\R^{m\times n}$ with $\min\{m,n\}=3$. In this representation, we do not sort the singular values. We plot unit balls in the Top-$2$ norm $\max\{\abs{x}+\abs{y}, \abs{x}+\abs{z}, \abs{y}+\abs{z}\}$ and its dual norm $\max\{\max(\abs{x},\abs{y},\abs{z}), (\abs{x}+\abs{y}+\abs{z})/2\}$. The resulting balls exhibit significantly greater complexity than those in $l_\infty$, $l_1$, and $l_2$ norms.
 
 \begin{figure}[htbp]
 \floatconts
   {fig:kyfan_combined}
-  {\caption{Ky Fan 2-norm and its dual}}
+  {\caption{Ky Fan 2-norm and its dual in the space of 3 singular values.}}
   {%
     \subfigure[The Ky Fan $2$-norm]{\label{fig:kyfan}%
       \includegraphics[width=0.45\linewidth]{figs/norms/KyFan.pdf}}%
@@ -762,14 +759,16 @@ In fact, those balls can be described easier if we use the results from \citep{y
   }
 \end{figure}
 
+These balls can be described more simply using the results from \citet{yu2012arithmetic}. The Ky Fan $2$-norm ball is an intersection of three $l_1$ balls in $(x,y)$, $(x, z)$, and $(y,z)$ spaces. The unit ball in the dual Ky Fan $2$-norm is an intersection of the unit ball in the $l_\infty$ norm and the $1/2$-ball in the $l_1$ norm.
+
 \section{More details for Linear Least Squares}
 \label{sec:lls_plots_section}
-Tuned \texttt{lr} and \texttt{momentum} coefficients are in the \tableref{tbl:lls_lrs_app}. Spectral, nuclear norm of the gradients over iterations and loss over time are in the \figureref{fig:app_lls}. Very low speed of Fanions and F-Fanions for large $k$ is probably caused by ineffective implementation of TRLan by \cite{cupy_svds_ref}.
+Tuned \texttt{lr} and \texttt{momentum} coefficients are presented in \tableref{tbl:lls_lrs_app}. The spectral and nuclear norms of the gradients over iterations, as well as the loss over time, are shown in \figureref{fig:app_lls}. The poor performance of Fanions and F-Fanions in terms of speed for large $k$ is likely caused by the inefficient implementation of TRLan.
 
 \begin{table}[htbp]
 \floatconts
   {tbl:lls_lrs_app}
-  {\caption{Tuning \texttt{lr} and \texttt{momentum} coefficients}}
+  {\caption{Tuned \texttt{lr} and \texttt{momentum} coefficients in the lease squares experiment.}}
   {%
     \begin{tabular}{|c|c|c|c|}
       \arrayrulecolor{black}\hline
@@ -790,7 +789,7 @@ Tuned \texttt{lr} and \texttt{momentum} coefficients are in the \tableref{tbl:ll
 \begin{figure}[htbp]
 \floatconts
   {fig:app_lls}
-  {\caption{More plots for linear least squares problem for a 500x500 matrix}}
+  {\caption{More plots for linear least squares problem for a 500x500 matrix.}}
   {%
     \subfigure[The spectral norm of the gradient]{\label{fig:lls_op_grad_norm}%
       \includegraphics[width=0.5\linewidth]{figs/simple_lls/gradient_spectral_norm_vs_iteration_long_run.pdf}}%
@@ -803,15 +802,15 @@ Tuned \texttt{lr} and \texttt{momentum} coefficients are in the \tableref{tbl:ll
   }
 \end{figure}
 
-\section{Under the hood of CNN on CIFAR-10}
+\section{Gradient Norm Analysis for CIFAR-10 Experiments}
 \label{sec:cifar_underhood}
 
-Most bounds for Muon and other LMO-algorithms are given for the norm of the gradient \citep{li2025noteconvergencemuon, kovalev2025understanding, pethick2025training, riabinin2025gluon,kovalev2025noneuclideansgdstructuredoptimization}. Accordingly, it is natural to measure those norms on a real deep learning problem.
+Theoretical convergence bounds for Muon and other LMO-based algorithms are typically expressed in terms of gradient norms \citep{li2025noteconvergencemuon, kovalev2025understanding, pethick2025training, riabinin2025gluon,kovalev2025noneuclideansgdstructuredoptimization}. Accordingly, we measure these norms during training on a real deep learning problem to validate theoretical predictions.
 
 \begin{table}[htbp]
 \floatconts
   {tbl:cifar_lrs}
-  {\caption{Parameters for CIFAR-airbench. \texttt{sign\_lr\_mult} for S-Muon is 0.003}}
+  {\caption{Parameters for CIFAR-airbench. \texttt{sign\_lr\_mult} for S-Muon is 0.003.}}
   {%
     \begin{tabular}{|c|c|c|c|}
       \arrayrulecolor{black}\hline
@@ -836,14 +835,14 @@ Most bounds for Muon and other LMO-algorithms are given for the norm of the grad
   }
 \end{table}
 
-We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, F-Neon, Fanion-5, and F-Fanion-5 on CIFAR-airbench. NSGD and SignSGD are not heavily tuned. The hyperparameters of Neon, F-Neon, Fanion-5, and F-Fanion-5 are taken from Muon and F-Muon (see \tableref{tbl:cifar_lrs}). In the table, val\_accuracy after 8 epochs is for the the airbench variant with weight normalization at each step. However, in order to be faithful to the conditions of the convergence theorems \citep{kovalev2025understanding,riabinin2025gluon}, we do not normalize the weights of the network when logging gradient norms.
+We compare Muon, F-Muon, S-Muon, NSGD, SignSGD, Neon, F-Neon, Fanion-5, and F-Fanion-5 on CIFAR-airbench. NSGD and SignSGD are not heavily tuned. The hyperparameters of Neon, F-Neon, Fanion-5, and F-Fanion-5 are taken from Muon and F-Muon (see \tableref{tbl:cifar_lrs}). The validation accuracies reported after 8 epochs correspond to the airbench variant with weight normalization applied at each step. However, to remain faithful to the conditions assumed in convergence theorems \citep{kovalev2025understanding,riabinin2025gluon}, we do not normalize network weights when logging gradient norms.
 
-We log train and validation accuracies (\figureref{fig:cifar_accs}), and nuclear, gradient, and spectral norms of the gradients of conv1.weight and conv2.weight for all the layers (see \figureref{fig:norms_conv1_vs_conv2} for norms in the layer 2, and \figureref{fig:total_norms_cifar} for total norms of the weights). During training, the gradient norms decrease only by the order of ten maximum, while train accuracy reaches full 100\% for Muon, S-Muon, and F-Muon. This means that the bounds of the $\max\{\frac{A}{\epsilon}, \frac{B}{\epsilon^2}, \frac{C}{\epsilon^3}, \frac{D}{\epsilon^4}\}$ type (like Corollary 2 from \citet{kovalev2025understanding}) probably should not be reduced to $\frac{D}{\epsilon^4}$ when selecting the optimal algorithm for a practical problem.
+We log train and validation accuracies (\figureref{fig:cifar_accs}), as well as the Frobenius, spectral, and nuclear norms of the gradients for \texttt{conv1.weight} and \texttt{conv2.weight} across all layers (see \figureref{fig:norms_conv1_vs_conv2} for norms in layer 2, and \figureref{fig:total_norms_cifar} for total gradient norms). During training, gradient norms decrease by at most one order of magnitude, while training accuracy reaches 100\% for Muon, S-Muon, and F-Muon. This observation suggests that convergence bounds of the form $\max\{\frac{A}{\epsilon}, \frac{B}{\epsilon^2}, \frac{C}{\epsilon^3}, \frac{D}{\epsilon^4}\}$ (such as Corollary 2 from \citet{kovalev2025understanding}) should not be simplified to $\frac{D}{\epsilon^4}$ when selecting an optimal algorithm for practical applications.
 
 \begin{figure}[htbp]
 \floatconts
   {fig:cifar_accs}
-  {\caption{Different optimizers on CIFAR airbench without weight normalization}}
+  {\caption{Different optimizers on CIFAR airbench without weight normalization.}}
   {%
     \subfigure[Train accuracy]{\label{fig:train_acc_cifar}%
       \includegraphics[width=0.7\linewidth]{figs/cifar_logger/train_acc.pdf}}%
@@ -857,7 +856,7 @@ We log train and validation accuracies (\figureref{fig:cifar_accs}), and nuclear
 \begin{figure}[htbp]
 \floatconts
   {fig:norms_conv1_vs_conv2}
-  {\caption{Matrix norms of layer2.conv1 (left) and layer2.conv2 (right) gradients of CIFAR CNN}}
+  {\caption{Matrix norms of layer2.conv1 (left) and layer2.conv2 (right) gradients of CIFAR CNN.}}
   {%
     \subfigure[Frobenius norm of layer2.conv1]{\label{fig:fro_conv1}%
       \includegraphics[width=0.45\linewidth]{figs/cifar_logger/layers_2_conv1_weight_frobenius.pdf}}%
@@ -882,7 +881,7 @@ We log train and validation accuracies (\figureref{fig:cifar_accs}), and nuclear
 \begin{figure}[htbp]
   \floatconts
     {fig:total_norms_cifar}
-    {\caption{Matrix norms of the whole gradient of CIFAR CNN}}
+    {\caption{Matrix norms of the whole gradient of CIFAR CNN.}}
     {%
       \subfigure[Total Frobenius norm]{\label{fig:total_fro_norm_cifar}%
         \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_frobenius.pdf}}%
