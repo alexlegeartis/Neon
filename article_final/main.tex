@@ -349,7 +349,7 @@ We employ the thick-restart Lanczos method for the symmetric eigenvalue problem 
 
 TRLan is specifically designed for efficiently approximating the largest singular values and corresponding singular vectors of very large matrices. The thick-restart strategy retains the most informative Ritz vectors across restarts, which dramatically accelerates convergence while maintaining moderate memory consumption. TRLan is particularly well-suited to our GPU setting because its dominant computational cost consists of a modest number of highly parallelizable matrix-vector multiplications (matvecs), and it avoids full reorthogonalization against the entire Krylov basis by employing short recurrence relations combined with thick restarting.
 
-The per-cycle complexity is $\mathcal{O}(mn^2 + n^2d + nd^2)$, where $m \geq n$ are the dimensions of the target matrix and $d$ is the size of the retained subspace (typically $d \ll n$).
+The per-iteration complexity of TRLan is $\mathcal{O}(mn)$, where $m \geq n$ are the dimensions of the target matrix.
 
 In \tableref{tbl:matrix_methods}, we compare TRLan against randomized SVD (RSVD) and simple power iterations for computing the rank-$k$ update used in Fanion-$k$ and related algorithms. Experiments are performed on dense random matrices with i.i.d. $\mathcal{N}(0,1)$ entries using CPU implementations for fair comparison.
 We report:
