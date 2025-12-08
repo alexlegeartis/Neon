@@ -22,7 +22,7 @@ import torchvision.transforms as T
 import pandas as pd
 from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon
 
-
+SEED = 142
 
 #############################################
 #               Muon optimizer              #
@@ -500,7 +500,10 @@ def save_norm_dataframe(norm_data_list, run=None, optimizer_name=None, combo_nam
     
     # Create meaningful filename - use combo_name if provided, otherwise optimizer_name
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename_parts = ['grad_norms']
+    if SEED != 42:
+        filename_parts = [f'seed_{SEED}_grad_norms']
+    else:
+        filename_parts = [f'grad_norms']
     if combo_name:
         filename_parts.append(combo_name)
     elif optimizer_name:
@@ -775,7 +778,7 @@ def run_optimizer_experiments(num_runs=1, warmup=True):
     # Run each optimizer configuration
     for combo_name, optimizer_config in optimizer_configs.items():
         print(f"\n=== Running experiment: {combo_name} ===")
-        set_seed(42)
+        set_seed(SEED)
         accs = torch.tensor([
             main(run, model, optimizer_config=optimizer_config, combo_name=combo_name) 
             for run in range(num_runs)
