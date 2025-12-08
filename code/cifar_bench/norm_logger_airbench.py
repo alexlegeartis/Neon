@@ -551,7 +551,7 @@ def main(run, model, optimizer_config=None, combo_name=None):
     if is_warmup:
         # The only purpose of the first run is to warmup the compiled model, so we can use dummy data
         train_loader.labels = torch.randint(0, 10, size=(len(train_loader.labels),), device=train_loader.labels.device)
-    total_train_steps = ceil(15 * len(train_loader))
+    total_train_steps = ceil(50 * len(train_loader))
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
     # Create optimizers and learning rate schedulers
@@ -641,7 +641,7 @@ def main(run, model, optimizer_config=None, combo_name=None):
                 eta = (step / total_train_steps) # percentage of training
                 group["momentum"] = (group["target_momentum"] - 0.1) * eta + group["target_momentum"] * (1 - eta)
             '''
-            if step % 10 == 0 and not is_warmup:
+            if step % 5 == 0 and not is_warmup:
                 val_acc_step = evaluate(model, test_loader, tta_level=0)
                 model.train()
                 _, (total_fro, total_spec, total_nuc) = log_grad_frobenius_norms(
