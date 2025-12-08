@@ -191,7 +191,7 @@ import re
 from datetime import datetime
 
 
-def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 11, 27, 0, 50, 0)):
+def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 12, 8, 0, 50, 0)):
     """
     Collect grad_norm CSV logs whose timestamp is strictly after `after_dt`.
 
