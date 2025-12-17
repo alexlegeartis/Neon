@@ -191,7 +191,7 @@ import re
 from datetime import datetime
 
 
-def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 12, 8, 0, 50, 0)):
+def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 12, 16, 0, 50, 0)):
     """
     Collect grad_norm CSV logs whose timestamp is strictly after `after_dt`.
 
@@ -206,26 +206,53 @@ def collect_grad_norm_files(folder_path, after_dt=datetime(2025, 12, 8, 0, 50, 0
     -------
     dict : {key: filename}
     """
-    pattern = re.compile(
-        r"grad_norms_(.*?)_run\d+_(\d{8})_(\d{6})\.csv$"
+    # Pattern 1: Standard (e.g., grad_norms_Muon_run0_...)
+    pattern_std = re.compile(
+        r"^grad_norms_(.*?)_run\d+_(\d{8})_(\d{6})\.csv$"
     )
-    
+
+    # Pattern 2: Seeded (e.g., seed_142_grad_norms_Muon_run0_...)
+    pattern_seed = re.compile(
+        r"^seed_(\d+)_grad_norms_(.*?)_run\d+_(\d{8})_(\d{6})\.csv$"
+    )
+
     result = {}
 
     for filename in os.listdir(folder_path):
         if not filename.endswith(".csv"):
             continue
 
-        m = pattern.match(filename)
-        if not m:
+        # Try matching the "Seeded" format first
+        m_seed = pattern_seed.match(filename)
+        m_std = pattern_std.match(filename)
+
+        if m_seed:
+            # Groups: 1=Seed, 2=Name, 3=Date, 4=Time
+            seed_val = m_seed.group(1)
+            raw_key = m_seed.group(2)
+            if raw_key not in {"Muon", "SignMuon_mom_06", "SignSGD"}:
+                continue
+            date_str = m_seed.group(3)
+            time_str = m_seed.group(4)
+
+            # Create the requested key format: Muon_seed142
+            key = f"{raw_key}_seed{seed_val}"
+
+        elif m_std:
+            # Groups: 1=Name, 2=Date, 3=Time
+            key = m_std.group(1)
+            date_str = m_std.group(2)
+            time_str = m_std.group(3)
+
+        else:
+            # Neither pattern matched
             continue
 
-        key = m.group(1)
-        date_str = m.group(2)   # YYYYMMDD
-        time_str = m.group(3)   # HHMMSS
-
         # Parse into datetime
-        file_dt = datetime.strptime(date_str + time_str, "%Y%m%d%H%M%S")
+        try:
+            file_dt = datetime.strptime(date_str + time_str, "%Y%m%d%H%M%S")
+        except ValueError:
+            continue # Skip if date/time parsing fails
 
         if file_dt > after_dt:
             result[key] = filename
@@ -253,5 +280,5 @@ if __name__ == "__main__":
         "val_acc"     # Validation accuracy (plotted separately)
     ]
     
-    plot_norm_comparison(log_files, metrics)
+    plot_norm_comparison(log_files, metrics, output_dir="signmuon")
 

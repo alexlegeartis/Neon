@@ -156,7 +156,7 @@ class Muon(torch.optim.Optimizer):
 
 
 class MuonSignedUpdate(torch.optim.Optimizer):
-    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True, sign_lr_mult=1):
         if lr < 0.0:
             raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
@@ -166,6 +166,7 @@ class MuonSignedUpdate(torch.optim.Optimizer):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
         super().__init__(params, defaults)
         self.norm_weight = norm_weight
+        self.sign_lr_mult = sign_lr_mult
 
     def step(self):
         for group in self.param_groups:
@@ -190,7 +191,8 @@ class MuonSignedUpdate(torch.optim.Optimizer):
                     p.data.mul_(len(p.data)**0.5 / norm) # normalize the weight
                 update = zeropower_via_newtonschulz5(g.reshape(len(g), -1)).view(g.shape) # whiten the update
 
-                p.data.add_(update.sign(), alpha=-lr) # take a step
+                p.data.add_(update.sign(), alpha=-lr * self.sign_lr_mult) # take a step
+
 
 class Muon2(torch.optim.Optimizer): # not ready yet!, we must have access to gradients by sample!
     def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True):

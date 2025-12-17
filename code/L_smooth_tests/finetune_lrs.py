@@ -8,7 +8,7 @@ import os
 
 import torch
 
-from optimizers import Muon, Neon, NormalizedMuon, RandomNormalizedMuon, NeonMuon, SignSGDMuon
+from optimizers import Muon, Neon, NormalizedMuon, RandomNormalizedMuon, NeonMuon, SignSGDMuon, MuonSignedUpdate
 from mlion import MLion, Lion
 from L_smooth_tests.optimizer_runner import MatrixProblem, run_optimizer_on_problem
 from L_smooth_tests.benchmark_plotter import build_default_panels, plot_from_descriptions, plot_and_save_default_panels, save_experiments_to_csv
@@ -279,7 +279,8 @@ def main() -> None:
         np.round(np.linspace(0.01, 0.1, 19), 3),
         np.round(np.linspace(0.15, 1, 18), 3)
     ))
-    learning_rates = np.round(np.linspace(0.01, 0.1, 19), 3) # - for 0.01 loss
+    learning_rates = [0.015, 0.02, 0.025]
+    # learning_rates = np.round(np.linspace(0.01, 0.1, 19), 3) # - for 0.01 loss
     # learning_rates = learning_rates[learning_rates < 0.06]
     # learning_rates = np.round(np.logspace(np.log10(0.005), np.log10(0.5), 15), 4) # - for 0.001 loss
     #learning_rates = np.round(np.linspace(0.005, 0.020, 16), 3) # - for 0.001 loss
@@ -290,6 +291,7 @@ def main() -> None:
     momentums = None
     if True:# args.momentum_start is not None and args.momentum_end is not None:
         momentums = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95] # [0.1, 0.5, 0.8, 0.9, 0.95]# [0, 0.5, 0.9, 0.95, 0.99]# np.linspace(args.momentum_start, args.momentum_end, args.momentum_num)
+        # momentums = [0.9]
         momentums = np.round(momentums, 3)
         print(f"Momentum grid: {momentums}")
         print(f"Loss threshold: {args.loss_threshold}")
@@ -300,14 +302,14 @@ def main() -> None:
     rint = 10
     # Define algorithm specifications (without fixed lr and momentum if grid searching)
     algorithm_specs: List[Dict[str, Any]] = [
-        dict(
-            name="NSGD",
-            optimizer_class=NormalizedMuon,
-            optimizer_kwargs=dict(nesterov=True, sgd_coeff=1),
-            num_iterations=1500,
-            record_interval=rint,
-            use_momentum=momentums is not None,  # Use momentum grid search if momentums are provided
-        ),
+        # dict(
+        #     name="NSGD",
+        #     optimizer_class=NormalizedMuon,
+        #     optimizer_kwargs=dict(nesterov=True, sgd_coeff=1),
+        #     num_iterations=1500,
+        #     record_interval=rint,
+        #     use_momentum=momentums is not None,  # Use momentum grid search if momentums are provided
+        # ),
         # dict(
         #     name="MLion",
         #     optimizer_class=MLion,
@@ -408,6 +410,14 @@ def main() -> None:
         #     num_iterations=4500,
         #     record_interval=100,
         # ),
+        dict(
+            name="SignMuon",
+            optimizer_class=MuonSignedUpdate,
+            optimizer_kwargs=dict(nesterov=True, sign_lr_mult=0.01),
+            num_iterations=3000,
+            record_interval=rint,
+            use_momentum=momentums is not None,
+        ),
         
     ]
     

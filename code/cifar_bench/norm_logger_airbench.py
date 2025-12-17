@@ -20,7 +20,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
 import pandas as pd
-from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon
+from optimizers import Dion, Muon, MuonSignedUpdate, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon
 
 SEED = 142
 
@@ -554,7 +554,7 @@ def main(run, model, optimizer_config=None, combo_name=None):
     if is_warmup:
         # The only purpose of the first run is to warmup the compiled model, so we can use dummy data
         train_loader.labels = torch.randint(0, 10, size=(len(train_loader.labels),), device=train_loader.labels.device)
-    total_train_steps = ceil(50 * len(train_loader))
+    total_train_steps = ceil(25 * len(train_loader))
     whiten_bias_train_steps = ceil(3 * len(train_loader))
 
     # Create optimizers and learning rate schedulers
@@ -724,44 +724,48 @@ def run_optimizer_experiments(num_runs=1, warmup=True):
 
     # Define optimizer configurations with names
     optimizer_configs = {
-        'Muon': lambda filter_params: Muon(
-            filter_params, lr=0.24, momentum=0.6, nesterov=True, norm_weight=False
+        # 'Muon': lambda filter_params: Muon(
+        #     filter_params, lr=0.24, momentum=0.6, nesterov=True, norm_weight=False
+        # ),
+        'SignMuon_mom_06': lambda filter_params: MuonSignedUpdate(
+            filter_params, lr=0.005, momentum=0.6, nesterov=True, norm_weight=False
         ),
-        'Neon': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.24, momentum=0.6, nesterov=True, norm_weight=False
-        ),
-        'F-Neon': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5
-        ),
+        
+        # 'Neon': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.24, momentum=0.6, nesterov=True, norm_weight=False
+        # ),
+        # 'F-Neon': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5
+        # ),
         # 'Neon_kyfan_lr04': lambda filter_params: Neon(
         #     filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0
         # ),
         # 'FNeon_kyfan_lr04': lambda filter_params: Neon(
         #     filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5
         # ),
-        'Fanion-5': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, k=5,
-        ),
-        'F-Fanion-5': lambda filter_params: Neon(
-            filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5, k=5,
-        ),
-        # 'Neon_kyfan_k10_lr045': lambda filter_params: Neon(
+        # 'Fanion-5': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, k=5,
+        # ),
+        # 'F-Fanion-5': lambda filter_params: Neon(
+        #     filter_params, neon_mode='kyfan', lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5, k=5,
+        # ),
+        # # 'Neon_kyfan_k10_lr045': lambda filter_params: Neon(
         #     filter_params, neon_mode='kyfan', lr=0.45, k=10, momentum=0.65, nesterov=True, sgd_coeff=0
         # ),
         # 'FNeon_kyfan_k10_lr045': lambda filter_params: Neon(
         #     filter_params, neon_mode='kyfan', lr=0.45, k=10, momentum=0.65, nesterov=True, sgd_coeff=0.5
         # ),
         
-        'F-Muon': lambda filter_params: NormalizedMuon(
-            filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True, norm_weight=False
-        ),
-        'S-Muon': lambda filter_params: SignSGDMuon(
-            filter_params, lr=0.42, momentum=0.65, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.003, norm_weight=False 
-        ),
-        'SignSGD': lambda filter_params: SignSGDMuon(
-            filter_params, lr=1, momentum=0.95, nesterov=True, sgd_coeff=1, sign_lr_mult=0.003, norm_weight=False 
-        ),
-        'NSGD': lambda filter_params: NormalizedMuon(filter_params, lr=0.5, momentum=0.95, sgd_coeff=1, nesterov=True, norm_weight=False)
+        # 'F-Muon': lambda filter_params: NormalizedMuon(
+        #     filter_params, lr=0.4, momentum=0.65, sgd_coeff=0.5, nesterov=True, norm_weight=False
+        # ),
+        # 'S-Muon': lambda filter_params: SignSGDMuon(
+        #     filter_params, lr=0.42, momentum=0.65, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.003, norm_weight=False 
+        # ),
+        # 'SignSGD': lambda filter_params: SignSGDMuon(
+        #     filter_params, lr=1, momentum=0.95, nesterov=True, sgd_coeff=1, sign_lr_mult=0.003, norm_weight=False 
+        # ),
+        # 'NSGD': lambda filter_params: NormalizedMuon(filter_params, lr=0.5, momentum=0.95, sgd_coeff=1, nesterov=True, norm_weight=False)
     }
     
     # You can add more configurations here or modify existing ones
