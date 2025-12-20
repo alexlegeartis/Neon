@@ -104,6 +104,20 @@ MIPT \hspace{1em}%
     \includegraphics[width=\linewidth]{norms/KyFanDual.pdf}
   \end{textblock*}
 \end{frame}
+%------------------------------------------------------------------------------------
+\begin{frame}{Problem Statement}
+\begin{block}{Problem}
+$\argmin_{\mX\in\R^{m\times n}} f(\mX)$; especially when $\mX$ is a weight matrix in a neural network 
+\end{block}
+
+\begin{block}{Goals}
+Utilize the matrix structure beyond the spectral norm and Muon to get other fast algorithms
+\end{block}
+
+\begin{block}{Solution}
+Generalization of Muon to Fanions that shed light on Dion; combinations of duals to Ky Fan norms with Frobenius or Chebyshev norms to induce algorithms that combine Fanions with NSGD or SignSGD
+\end{block}
+\end{frame}
 %-------------------------------------------------------------------------------------
 \begin{frame}{Moving beyond the spectral norm and Muon}
     \begin{block}{F-Fanions: Muon, Neon, NSGD, Dion without EF, and so much more}
