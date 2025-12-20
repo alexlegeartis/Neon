@@ -86,7 +86,7 @@
  \maketitle
  
  \begin{abstract}
-   In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in deep learning. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals of the Ky Fan $k$-norms to introduce to introduce the \emph{Fanion} family of linear minimization oracle (LMO) algorithms, which are closely related to Muon, $\nu$-SAM, and Dion. Staying inside the LMO, we construct the families of \emph{F-Fanions} and \emph{S-Fanions}, whose updates are a convex combination of the updates of Fanions and Normalized SGD or SignSGD, respectively. The most promising algorithms from these familes are \emph{F-Muon} and \emph{S-Muon}. By conducting an extensive empirical study of all three algorithm families across a wide range of tasks and settings, we demonstrate that F-Muon and S-Muon consistently match Muon's performance, while outperforming Muon on a synthetic smooth convex problem.
+   In this article, we explore the use of various matrix norms for optimizing functions of weight matrices, a crucial problem in deep learning. Moving beyond the spectral norm that underlies the Muon update, we leverage the duals of the Ky Fan $k$-norms to introduce to introduce the \emph{Fanion} family of linear minimization oracle (LMO) algorithms, which are closely related to Muon, $\nu$-SAM, and Dion. Staying inside the LMO, we construct the families of \emph{F-Fanions} and \emph{S-Fanions}, whose updates are a convex combination of the updates of Fanions and Normalized SGD or SignSGD, respectively. The most promising algorithms in these familes are \emph{F-Muon} and \emph{S-Muon}. By conducting an extensive empirical study of all three algorithm families across a wide range of tasks and settings, we demonstrate that F-Muon and S-Muon consistently match Muon's performance, while outperforming Muon on a synthetic smooth convex problem.
  \end{abstract}
  
  \section{Introduction}
@@ -105,7 +105,7 @@
  
  In \sectionref{sec:experiments}, we compare the performance of these algorithm families on various model and real-world problems:
  \begin{itemize}
-   \item Synthetic least squares experiment
+   \item Synthetic smooth convex problem for a matrix argument
    \item CIFAR-10 airbench \citep{cifar2023airbench}
    \item Pre-training NanoGPT and GPT-2 Medium on FineWeb dataset \citep{modded_nanogpt_2024}
    \item Fine-tuning NanoGPT on Tiny Stories dataset \citep{eldan2023tinystoriessmalllanguagemodels}
