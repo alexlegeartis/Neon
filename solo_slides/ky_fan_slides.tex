@@ -122,15 +122,15 @@ MIPT \hspace{1em}%
 Let us equip $\Rmn$ with a norm $\norm{\cdot}$. Its dual is $\norm{\mX}^\dagger = \sup_{\norm{\mX'}\leq 1} \<\mX,\mX'>$. $\<\cdot, \cdot>$ is the Frobenius product.
 \vspace{0.4em}
 
-LMO leads to the update
+$\mathrm{LMO}(\mM^t) \in \argmin_{\mD \in \cS} \langle\mM^t, \mD\rangle\,,$ where $\mM^t$ is either gradient or momentum, leads to the update
 $$\mX^{t+1} = \mX^{t} - \eta \arg\max_{\mX \in \cB_1} \<\mM^t, \mX> = \mX^{t} - \eta \{\Delta \in \cB_1 \mid \<\mM^t, \Delta> = \norm{\mM^t}^\dagger\}$$
 
 \vspace{0.4em}
 
-\textbf{Recipe}: It means we seek $\Delta$ from the 1-norm ball that delivers $\<\mM^t, \Delta> = \norm{\mM^t}^\dagger$
+\textbf{Recipe}: We seek $\Delta$ from the 1-norm ball that delivers $\<\mM^t, \Delta> = \norm{\mM^t}^\dagger$
 \vspace{0.4em}
 
-We will often utilize the SVD of $\mM^t$: $\mM^t = \mU \Sigma \mV^\top$.
+We will utilize the SVD of $\mM^t$: $\mM^t = \mU \Sigma \mV^\top$.
 \end{frame}
 \begin{frame}{Of Matrix and Vector Algorithms}
     %\centering
@@ -191,7 +191,7 @@ Thus, the updates are either one-rank or full-rank.
     \end{block}
 \end{frame}
 %-----------------------------------------------------------------------------------------------------------
-\begin{frame}{Geometric point of view: Ky Fan norms}
+\begin{frame}{Geometric point of view: Ky Fan norms are edged}
   \centering
   \begin{minipage}{0.46\textwidth}
       \includegraphics[height=0.75\textheight,keepaspectratio]{norms/KyFan.pdf}
@@ -236,19 +236,15 @@ Thus, the updates are either one-rank or full-rank.
 \end{corollary}
 \end{frame}
 %-----------------------------------------------------------------------------------------------------------
-\begin{frame}{$\normfkfk{\mM^k}^\dagger$ and F-Fanions}
+\begin{frame}{$\normfkfk{\mM^k}^\dagger$ and F-Fanions, $\norm{\cdot}^\dagger_{\mathrm{C^\dagger-KF-k}}$ and S-Fanions}
 
-    \begin{block}{Deriving F-Fanions by Recipe}
-    $\normfkfk{\mM^t}^{\dagger\dagger} = \normfkfk{\mM^t}$, and $\Delta = \alpha\sum_{i=1}^k{u_i v_i^\top} + (1-\alpha)\frac{\mM^k}{\normf{\mM^k}}$ delivers it:
-\begin{enumerate}
-    \item $\normfkfk{\Delta}^\dagger \leq 1$ because $\sum_{i=1}^k{u_i v_i^\top}$ lies in $B_{\normkfk{\cdot}}$ and $\frac{\mM^k}{\normf{\mM^k}}$ lies in $B_{\normf{\cdot}}$, so $\Delta$ lies in the Minkowski sum
-    \item $\<\mM^t, \Delta> =\alpha \<\mU \mSigma \mV^\top, \sum_{i=1}^{k} u_i v_i^\top> + (1-\alpha)\<\mM^t, \frac{\mM^t}{\normf{\mM^t}}> = \alpha \sum_{i=1}^{k}\sigma_i + (1-\alpha) \normf{\mM^t}= \normfkfk{\mM^t}$
-\end{enumerate}
-\vspace{1em}
+  $\alpha \times$Fanion ($\normkfk{\cdot}^\dagger$ norm) + $(1-\alpha) \times$NSGD ($\normf{\cdot}$ norm) = F-Fanion:
+  $$\mX^{t+1} = \mX^{t} - \eta \left(\alpha \sum_{i=1}^k{u_i v_i^\top} + (1-\alpha)\frac{\mM^t}{\normf{\mM^t}}\right)$$
 
-        Hence,
-        $$\mX^{t+1} = \mX^{t} - \eta \Big(\alpha\sum_{i=1}^{k} u_i v_i^\top + (1-\alpha)\frac{\mM^t}{\normf{\mM^t}}\Big)$$
-        \end{block}
+  $\alpha \times$Fanion + $(1-\alpha)\eta\times$SignSGD ($||\cdot||_\infty \equiv ||\cdot||_C$ norm) = S-Fanion:  
+
+  $$\mX^{t+1} = \mX^{t} - \gamma_t \left(\alpha \sum_{i = 1}^k \vu_i \vv_i^\top + (1-\alpha)\eta\sign(\mM^t)\right)$$
+
 \end{frame}
 %----------------------------------------
 \begin{frame}{A smooth convex problem for a matrix}
@@ -256,20 +252,34 @@ Thus, the updates are either one-rank or full-rank.
     \begin{column}{0.48\textwidth}
       \includegraphics[width=\linewidth]{simple_lls/loss_long_run_16_increase.pdf}
       \centering
-      \scriptsize Loss vs iteration
+      \scriptsize Loss
     \end{column}
     \begin{column}{0.48\textwidth}
       \includegraphics[width=\linewidth]{simple_lls/gradient_frobenius_norm_vs_iteration_long_run.pdf}
       \centering
-      \scriptsize Frobenius norm of the gradient vs iteration
+      \scriptsize Frobenius norm of the gradient
     \end{column}
   \end{columns}
   \vspace{0.3em}
   \centering
   \footnotesize $F(\mX) = \frac{1}{2}\normf{\mM^{1/2}\mX\mN^{1/2}}^2 \to \min_{\mX \in \R^{500\times 500}}\,$, $\lambda(\mM), \lambda(\mN) \sim U[0,1]$, $\mX^0_{ij} \sim \cN(0,1)$
 \end{frame}
-
 %---------------------------------------
+\begin{frame}{Fanions, F-Fanions, S-Fanions on CIFAR-10}
+  \begin{columns}[T,totalwidth=\textwidth]
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\linewidth]{cifar_logger/train_acc.pdf}
+      \centering
+      \scriptsize Train accuracy
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\linewidth]{cifar_logger/val_acc.pdf}
+      \centering
+      \scriptsize Validation accuracy
+    \end{column}
+  \end{columns}
+\end{frame}
+%--------------------------------------------
 \begin{frame}{F-Muon on CIFAR-10 airbench}
     \begin{columns}[T,totalwidth=\textwidth]
       \begin{column}{0.48\textwidth}
@@ -300,6 +310,23 @@ Thus, the updates are either one-rank or full-rank.
     \footnotesize LMO balls for the learning rates from the experiments
 
   \end{figure}
+\end{frame}
+%-----------------------------------------
+\begin{frame}{Stochastic gradient norms of layer2.conv2 weights on CIFAR-10}
+  \begin{columns}[T,totalwidth=\textwidth]
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\linewidth]{cifar_logger/layers_2_conv1_weight_frobenius.pdf}
+      \centering
+      \scriptsize Frobenius norm
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\linewidth]{cifar_logger/layers_2_conv1_weight_nuclear.pdf}
+      \centering
+      \scriptsize Nuclear norm
+    \end{column}
+  \end{columns}
+  \vspace{0.3em}
+  \centering
 \end{frame}
 %-----------------------------------------
 \begin{frame}{NanoGPT and GPT-2 Medium}
