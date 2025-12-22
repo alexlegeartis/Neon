@@ -1,0 +1,30 @@
+% Local fallback of the ifoddpage package.
+% Provides \checkoddpage and the \ifoddpage / \ifoddpageoroneside
+% conditionals used by packages such as algorithm2e.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{ifoddpage}[2025/12/10 v0.1 Local fallback]
+
+\newif\ifoddpage
+\newif\ifoddpageoroneside
+
+% Update the conditionals based on the current page number.
+% On one-sided documents every page is treated as odd.
+\newcommand{\checkoddpage}{%
+  \ifodd\value{page}%
+    \global\oddpagetrue
+    \global\oddpageoronesidetrue
+  \else
+    \global\oddpagefalse
+    \if@twoside
+      \global\oddpageoronesidefalse
+    \else
+      \global\oddpageoronesidetrue
+    \fi
+  \fi
+}
+
+% Convenience command mirroring the upstream package.
+\newcommand{\strictpagecheck}{\checkoddpage}
+
+\endinput
+

@@ -1,0 +1,11 @@
+% Local lightweight stub for arydshln.
+% Provides dashed line commands used in tables; here we fall back to solid lines
+% to avoid dependency on the full package when it's unavailable.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{arydshln}[2025/12/10 v0.1 Local stub]
+
+\providecommand{\hdashline}{\hline}
+\providecommand{\cdashline}[1]{\cline{#1}}
+
+\endinput
+
