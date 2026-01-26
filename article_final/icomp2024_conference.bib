@@ -38,16 +38,6 @@
   year={2025}
 }
 
-% we don't need this, or muon performance
-@misc{tveit2025muonoptimizeracceleratesgrokking,
-      title={Muon Optimizer Accelerates Grokking}, 
-      author={Amund Tveit and Bjørn Remseth and Arve Skogvold},
-      year={2025},
-      eprint={2504.16041},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2504.16041}, 
-}
 
 % about bounds, though that's not an ideal
 @misc{li2025noteconvergencemuon,
@@ -57,19 +47,8 @@
       eprint={2502.02900},
       archivePrefix={arXiv},
       primaryClass={math.OC},
-      url={https://arxiv.org/abs/2502.02900}, 
 }
 
-% do we need Shampoo at all? Probably, yes, it's a function of a matrix
-@misc{gupta2018shampoopreconditionedstochastictensor,
-      title={Shampoo: Preconditioned Stochastic Tensor Optimization}, 
-      author={Vineet Gupta and Tomer Koren and Yoram Singer},
-      year={2018},
-      eprint={1802.09568},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/1802.09568}, 
-}
 
 % muon in llms
 @misc{chen2025cosmoshybridadaptive,
@@ -79,7 +58,6 @@
       eprint={2502.17410},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2502.17410}, 
 }
 
 @misc{ahn2025dion,
@@ -89,28 +67,17 @@
       eprint={2504.05295},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2504.05295}, 
 }
 
-% AdamW classics
-@Article{Loshchilov2017FixingWD,
- author = {I. Loshchilov and F. Hutter},
- booktitle = {arXiv.org},
- journal = {ArXiv},
- title = {Fixing Weight Decay Regularization in {Adam}},
- volume = {abs/1711.05101},
- year = {2017}
+@misc{loshchilov2019decoupled,
+      title={Decoupled Weight Decay Regularization}, 
+      author={Ilya Loshchilov and Frank Hutter},
+      year={2019},
+      eprint={1711.05101},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
 }
 
-% do we need this?
-@inproceedings{
-morwani2025a,
-title={A New Perspective on Shampoo's Preconditioner},
-author={Depen Morwani and Itai Shapira and Nikhil Vyas and eran malach and Sham M. Kakade and Lucas Janson},
-booktitle={The Thirteenth International Conference on Learning Representations},
-year={2025},
-url={https://openreview.net/forum?id=c6zI3Cp8c6}
-}
 %------------------------------------------------------- my literature:
 
 % different layers, different norms, boring, but (L0, L1)
@@ -128,15 +95,14 @@ author={Thomas Pethick and Parameswaran Raman and Lenon Minorics and Mingyi Hong
 journal={Transactions on Machine Learning Research},
 issn={2835-8856},
 year={2025},
-url={https://openreview.net/forum?id=V6ia5hWIMD},
 }
 
 % basic framewok, but without the nuclear norm
-@article{pethick2025training,
-  title={Training deep learning models with norm-constrained {LMOs}},
-  author={Pethick, Thomas and Xie, Wanyun and Antonakopoulos, Kimon and Zhu, Zhenyu and Silveti-Falls, Antonio and Cevher, Volkan},
-  journal={arXiv preprint arXiv:2502.07529},
-  year={2025}
+@inproceedings{pethick2025training,
+title={Training Deep Learning Models with Norm-Constrained {LMO}s},
+author={Thomas Pethick and Wanyun Xie and Kimon Antonakopoulos and Zhenyu Zhu and Antonio Silveti-Falls and Volkan Cevher},
+booktitle={Forty-second International Conference on Machine Learning},
+year={2025},
 }
 
 % non-euclidean norm clipping analysis
@@ -147,7 +113,6 @@ url={https://openreview.net/forum?id=V6ia5hWIMD},
       eprint={2506.01913},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2506.01913}, 
 }
 
 % trust-region and Muon, L-smooth bounds
@@ -255,10 +220,6 @@ number = {2},
 pages = {602-616},
 year = {2000},
 doi = {10.1137/S0895479898334605},
-
-URL = {
-        https://doi.org/10.1137/S0895479898334605
-},
 eprint = { 
         https://doi.org/10.1137/S0895479898334605
 },
@@ -275,7 +236,7 @@ eprint = {
 
 @misc{cifar2023airbench,
   author = {Jordan Keller},
-  title = {cifar10-airbench},
+  title = {{CIFAR-10} airbench},
   year = {2023},
   publisher = {GitHub},
   journal = {GitHub repository},
@@ -367,7 +328,6 @@ eprint = {
       eprint={2510.02239},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2510.02239}, 
 }
 
 % inexact lmo analysis
@@ -378,7 +338,6 @@ eprint = {
       eprint={2510.19933},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2510.19933}, 
 }
 
 % x_k+1 = argmin f(z) for z in B(x_k, t_k)
@@ -389,7 +348,6 @@ eprint = {
       eprint={2510.00823},
       archivePrefix={arXiv},
       primaryClass={math.OC},
-      url={https://arxiv.org/abs/2510.00823}, 
 }
 
 % works for all LMO
@@ -400,7 +358,6 @@ eprint = {
       eprint={2510.00643},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2510.00643}, 
 }
 
 % dp sign
@@ -415,8 +372,6 @@ eprint = {
   series = 	 {Proceedings of Machine Learning Research},
   month = 	 {21--27 Jul},
   publisher =    {PMLR},
-  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v235/main/assets/jang24a/jang24a.pdf},
-  url = 	 {https://proceedings.mlr.press/v235/jang24a.html},
   abstract = 	 {Deep neural networks (DNNs) have a risk of remembering sensitive data from their training datasets, inadvertently leading to substantial information leakage through privacy attacks like membership inference attacks. DP-SGD is a simple but effective defense method, incorporating Gaussian noise into gradient updates to safeguard sensitive information. With the prevalence of large neural networks, DP-signSGD, a variant of DP-SGD, has emerged, aiming to curtail memory usage while maintaining security. However, it is noteworthy that most DP-signSGD algorithms default to Gaussian noise, suitable only for DP-SGD, without scant discussion of its appropriateness for signSGD. Our study delves into an intriguing question: <b>"Can we find a more efficient substitute for Gaussian noise to secure privacy in DP-signSGD?"</b> We propose an answer with a Logistic mechanism, which conforms to signSGD principles and is interestingly evolved from an exponential mechanism. In this paper, we provide both theoretical and experimental evidence showing that our method surpasses DP-signSGD.}
 }
 
@@ -427,7 +382,6 @@ eprint = {
       eprint={2506.04430},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2506.04430}, 
 }
 
 @misc{vyas2025soap,
@@ -437,7 +391,6 @@ eprint = {
       eprint={2409.11321},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2409.11321}, 
 }
 % overview of scion
 @misc{pethick2025trainingneuralnetworksscale,
@@ -447,7 +400,6 @@ eprint = {
       eprint={2511.11163},
       archivePrefix={arXiv},
       primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2511.11163}, 
 }
 
 % like PolarExpress
@@ -457,8 +409,7 @@ eprint = {
       year={2025},
       eprint={2506.10935},
       archivePrefix={arXiv},
-      primaryClass={math.NA},
-      url={https://arxiv.org/abs/2506.10935}, 
+      primaryClass={math.NA}, 
 }
 
 @misc{Karpathy2022,
@@ -475,7 +426,6 @@ eprint = {
       eprint={2305.07759},
       archivePrefix={arXiv},
       primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2305.07759}, 
 }
 
 @misc{kovalev2025noneuclideansgdstructuredoptimization,
@@ -485,7 +435,6 @@ eprint = {
       eprint={2511.11466},
       archivePrefix={arXiv},
       primaryClass={math.OC},
-      url={https://arxiv.org/abs/2511.11466}, 
 }
 
 @inproceedings{
@@ -494,11 +443,10 @@ title={Deconstructing What Makes a Good Optimizer for Autoregressive Language Mo
 author={Rosie Zhao and Depen Morwani and David Brandfonbrener and Nikhil Vyas and Sham M. Kakade},
 booktitle={The Thirteenth International Conference on Learning Representations},
 year={2025},
-url={https://openreview.net/forum?id=zfeso8ceqr}
 }
 
 @article{fan2025implicit,
-  title={Implicit Bias of Spectral Descent and Muon on Multiclass Separable Data},
+  title={Implicit Bias of Spectral Descent and {M}uon on Multiclass Separable Data},
   author={Fan, Chen and Schmidt, Mark and Thrampoulidis, Christos},
   journal={arXiv preprint arXiv:2502.04664},
   year={2025}
