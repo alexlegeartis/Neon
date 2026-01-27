@@ -628,7 +628,7 @@
  
  \section{Conclusion}
  
- In this article, we addressed the central question of why one should constrain by the spectral or any other operator norm in deriving Muon-like updates, and how alternative norms affect performance and computational cost. Our answer is that the choice of the matrix norm is remarkably flexible: properly-tuned variants based on alternative norms can match or even slightly exceed Muon's performance on real-world tasks, while offering additional benefits such as improved learning rate robustness.
+ In this article, we addressed the central question of whether one should constrain by the spectral or any other operator norm in deriving Muon-like updates, and how alternative norms affect performance and computational cost. Our answer is that the choice of the matrix norm is remarkably flexible: properly-tuned variants based on alternative norms can match or even slightly exceed Muon's performance on real-world tasks, while offering additional benefits such as improved learning rate robustness.
  
  We generalized several successful algorithms, including Muon, Dion, and $\nu$SAM, to LMO-based algorithms using the family of norms dual to Ky Fan $k$-norms, yielding the Fanion family with low-rank updates. We further proposed the technique of combining them with NSGD or SignSGD, creating the F-Fanion and S-Fanion families through the $\norm{\cdot}_{\mathrm{F-KF-k}}^\dagger$ and $\norm{\cdot}_{\mathrm{C^\dagger-KF-k}}^\dagger$ norms. Our experiments demonstrate that F-Muon and S-Muon achieve competitive performance with Muon on CIFAR-10 airbench and NanoGPT speedrun tasks, confirming that the underlying norm constraint can be significantly modified without sacrificing effectiveness.
  
