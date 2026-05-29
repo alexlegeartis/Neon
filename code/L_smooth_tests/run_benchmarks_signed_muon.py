@@ -6,6 +6,7 @@ import numpy as np
 import torch
 
 from optimizers import Muon, MuonSignedUpdate, Neon, NormalizedMuon, RandomNormalizedMuon, NeonMuon, SignSGDMuon
+from freon_optimizers import Kaon, FKaon, KaonSignedUpdate, Freon, FFreon
 from mlion import MLion, Lion
 from L_smooth_tests.optimizer_runner import MatrixProblem, run_optimizer_on_problem
 from L_smooth_tests.benchmark_plotter import build_default_panels, plot_from_descriptions, plot_and_save_default_panels, save_experiments_to_csv
@@ -98,7 +99,7 @@ def main() -> None:
     m, n = 500, 500
     # problem = LogisticRegressionProblem(m, n) 
     problem = SimpleQuadratic(m, n, device=device, seed=42, eig_range_M=(0,1), eig_range_N=(0,1), shift_scale=0)
-    iter_num_nuc = iter_num_op = iter_num_fro = 5000
+    iter_num_nuc = iter_num_op = iter_num_fro = 3500
     record_period = 10
     # iter_num = 100000
     X0 = 0.1 * torch.randn(m, n, dtype=torch.float32, device=device)
@@ -156,6 +157,63 @@ def main() -> None:
             verbose=True,
             lr_scheduler=const_lr,
         ),
+        "Freon3/4": dict(
+            optimizer_class=Freon,
+            optimizer_kwargs=dict(lr=muon_lr, momentum=muon_mom, nesterov=True, a=3, b=4), # 0.025, 0.5 for 0.01 loss
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+        ),
+        "FFreon3/4": dict(
+            optimizer_class=FFreon,
+            optimizer_kwargs=dict(lr=muon_lr, momentum=muon_mom, nesterov=True, a=3, b=4, sgd_coeff=0.5), # 0.025, 0.5 for 0.01 loss
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+        ),
+        "Freon1/4": dict(
+            optimizer_class=Freon,
+            optimizer_kwargs=dict(lr=muon_lr, momentum=muon_mom, nesterov=True, a=1, b=4), # 0.025, 0.5 for 0.01 loss
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+        ),
+        "FFreon1/4": dict(
+            optimizer_class=FFreon,
+            optimizer_kwargs=dict(lr=muon_lr, momentum=muon_mom, nesterov=True, a=1, b=4, sgd_coeff=0.5), # 0.025, 0.5 for 0.01 loss
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+        ),
+        "Kaon": dict(
+            optimizer_class=Kaon,
+            optimizer_kwargs=dict(lr=0.008, momentum=0.7, nesterov=True),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+        ),
+        "F-Kaon": dict(
+            optimizer_class=FKaon,
+            optimizer_kwargs=dict(lr=0.016, momentum=0.7, nesterov=True, sgd_coeff=0.5),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+        ),
+        "SignedKaon": dict(
+            optimizer_class=KaonSignedUpdate,
+            optimizer_kwargs=dict(lr=0.018 * 0.01, momentum=0.5, nesterov=True),
+            num_iterations=iter_num_fro,
+            record_interval=record_period,
+            verbose=True,
+            lr_scheduler=const_lr,
+        ),
+
         "F-Muon": dict(
             optimizer_class=NormalizedMuon,
             optimizer_kwargs=dict[str, float](lr=fmuon_lr, momentum=fmuon_mom, nesterov=True, sgd_coeff=0.5), # lr=0.035, momentum=0.5 for 0.01 loss
@@ -164,14 +222,14 @@ def main() -> None:
             verbose=True,
             lr_scheduler=const_lr,
         ),
-        "S-Muon": dict(
-            optimizer_class=SignSGDMuon,
-            optimizer_kwargs=dict(lr=smuon_lr, momentum=smuon_mom, nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5), # lr=0.035, momentum=0.8 for 0.01 loss
-            num_iterations=iter_num_fro,
-            record_interval=record_period,
-            verbose=True,
-            lr_scheduler=const_lr,
-        ),
+        # "S-Muon": dict(
+        #     optimizer_class=SignSGDMuon,
+        #     optimizer_kwargs=dict(lr=smuon_lr, momentum=smuon_mom, nesterov=True, sign_lr_mult=0.01, sgd_coeff=0.5), # lr=0.035, momentum=0.8 for 0.01 loss
+        #     num_iterations=iter_num_fro,
+        #     record_interval=record_period,
+        #     verbose=True,
+        #     lr_scheduler=const_lr,
+        # ),
         # "SGD": dict(
         #     optimizer_class=torch.optim.SGD,
         #     optimizer_kwargs=dict(lr=0.04, momentum=0.95, nesterov=True),
@@ -238,7 +296,7 @@ def main() -> None:
         panels = build_default_panels(experiments)
         title_suffix = args.title_suffix if args.title_suffix is not None else f"{m}x{n}"
         # Save individual plots
-        plot_and_save_default_panels(experiments, title_suffix=title_suffix, base_save_dir="L_smooth_tests/signmuon_lls", )
+        plot_and_save_default_panels(experiments, title_suffix=title_suffix, base_save_dir="L_smooth_tests/freon_lls", )
         # Also save the combined plot (optional)
         if args.combined_plot_path is not None:
             plot_from_descriptions(panels, ncols=2, title_suffix=title_suffix, save_path=args.combined_plot_path)

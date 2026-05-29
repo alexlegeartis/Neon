@@ -20,6 +20,7 @@ import torchvision
 import torchvision.transforms as T
 from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon, NuclearNormalizedMuon, MuonCringeMomentum
 from optimizers import SpectrallyNormalizedNeon, MuonOrNSGD, MuonOrSign, RealFanion, NeonMuon, SingleDeviceNorMuon, MuonSignedUpdate
+from freon_optimizers import Kaon, Freon, KaonSignedUpdate, FKaon, FFreon, FDynFreon, FreonSignedUpdate
 from mlion import MLion, NLion
 
 #############################################
@@ -417,7 +418,7 @@ def main(run, model):
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=10, momentum_decay=0.9, sgd_coeff=0) # 84.5%, with 0.4% variance - wrong EF
     # optimizer2 = Dion(filter_params, lr=0.45, momentum=0.65, rank=20, momentum_decay=0.9, sgd_coeff=0) # 89.3%, with 0.2% variance - wrong EF
     
-    # optimizer2 = SignSGDMuon(filter_params, lr=1, momentum=0.95, nesterov=True, sgd_coeff=1, sign_lr_mult=0.003) # 91.41 +- 0.33% BASELINE
+    # optimizer2 = SignSGDMuon(filter_params, lr=1, momentum=0.95, nesterov=True, sgd_coeff=1, sign_lr_mult=0.003) # 91.41 +- 0.33% signsgd BASELINE
 
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.005) # 90.94 +- 0.4%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.003, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=1) # 90.94 +- 0.4%
@@ -426,8 +427,49 @@ def main(run, model):
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.009) # 89.66 +- 0.33%
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
     # optimizer2 = MuonOrSign(filter_params, lr=0.42, momentum=0.65, nesterov=True, sign_coeff=0.003) # 94.00% - see airbench_muon.py - no benefit
-    optimizer2 = MuonSignedUpdate(filter_params, lr=0.005, momentum=0.8, nesterov=True) # 93.57 +- 0.11 - AWESOME
+    # optimizer2 = MuonSignedUpdate(filter_params, lr=0.005, momentum=0.8, nesterov=True) # 93.57 +- 0.11 - AWESOME
+    
+    optimizer2 = Freon(filter_params, lr=0.24, momentum=0.6, nesterov=True, a=2, b=3, norm_weight=True) # 93.7 +- 0.05%
+    # optimizer2 = Freon(filter_params, lr=1, momentum=0.6, nesterov=True, a=1, b=4, norm_weight=True)
+    # optimizer2 = FreonSignedUpdate(filter_params, lr=0.005, momentum=0.8, nesterov=True, a=1, b=4, norm_weight=True) # 93.44 +- 0.22%  
+    # optimizer2 = FreonSignedUpdate(filter_params, lr=0.005, momentum=0.8, nesterov=True, a=2, b=3, norm_weight=True) # 93.23 +- 0.12%
+    
+    # optimizer2 = FFreon(filter_params, lr=1, momentum=0.6, nesterov=True, a=2, b=3, norm_weight=True, sgd_coeff=0.5)
+    # optimizer2 = FDynFreon(
+    #     filter_params, 
+    #     lr=0.24, 
+    #     momentum=0.6, 
+    #     nesterov=True, 
+    #     sgd_coeff=0, 
+    #     norm_weight=True,
+    #     total_steps=total_train_steps, # Required for the logistic schedule!
+    #     p_max=0.1,                     # Starts as SGD (p=1)
+    #     p_min=-0.1,                  # Ends as Freon 2/3 (p = 1 - 2*(2/3) = -1/3)
+    #     tau=0.5,                       # Transitions halfway through training
+    #     w=0.1                          # Smoothness of the transition
+    # ) # on par with Muon
 
+    # optimizer2 = FDynFreon(
+    #     filter_params, 
+    #     lr=0.6, 
+    #     momentum=0.6, 
+    #     nesterov=True, 
+    #     sgd_coeff=0.5, 
+    #     norm_weight=True,
+    #     total_steps=total_train_steps, # Required for the logistic schedule!
+    #     p_max=0.1,                     # Starts as SGD (p=1)
+    #     p_min=-0.1,                  # Ends as Freon 2/3 (p = 1 - 2*(2/3) = -1/3)
+    #     tau=0.5,                       # Transitions halfway through training
+    #     w=0.1                          # Smoothness of the transition
+    # )
+
+    # optimizer2 = KaonSignedUpdate(filter_params, lr=0.005, momentum=0.8, nesterov=True) # 93.23 +- 0.13%
+    # optimizer2 = FKaon(filter_params, lr=0.4, momentum=0.65, nesterov=True, sgd_coeff=0.5, norm_weight=True) # 93.45% +-0.25%
+    # optimizer2 = Kaon(filter_params, lr=0.24, momentum=0.6, nesterov=True) # 93.35% +- 0.12%
+    # optimizer2 = FKaon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.5) # 92.45 +- 0.21%
+    # optimizer2 = FKaon(filter_params, lr=0.6, momentum=0.65, nesterov=True, sgd_coeff=0.5, norm_weight=True) # 93.81 +-0.21%
+    # optimizer2 = FKaon(filter_params, lr=0.6, momentum=0.65, nesterov=True, sgd_coeff=0.5, norm_weight=False) # 93.00 +- 0.06%
+    
     # optimizer2 = ErrorFeedbackMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0, error_feedback_decay=0.9) # 89.6%, unfeasible
     
     optimizers = [optimizer1, optimizer2]
