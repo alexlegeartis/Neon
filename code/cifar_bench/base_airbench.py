@@ -18,7 +18,7 @@ from torch import nn
 import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as T
-from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon, NuclearNormalizedMuon, MuonCringeMomentum
+from optimizers import Dion, Muon, Neon, NormalizedMuon, SGDMuon, SignSGDMuon, zeropower_via_newtonschulz5, RandomNormalizedMuon, NuclearNormalizedMuon, MuonCringeMomentum, SignSGDNSGD
 from optimizers import SpectrallyNormalizedNeon, MuonOrNSGD, MuonOrSign, RealFanion, NeonMuon, SingleDeviceNorMuon, MuonSignedUpdate
 from freon_optimizers import Kaon, Freon, KaonSignedUpdate, FKaon, FFreon, FDynFreon, FreonSignedUpdate
 from mlion import MLion, NLion
@@ -425,11 +425,15 @@ def main(run, model):
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.007) # 90.95 +- 0.16%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.002) # 0.005-> 93.93%, 0.002 -> 94.00%, 0.001-> 93.89%
     # optimizer2 = SignSGDMuon(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=1, sign_lr_mult=0.009) # 89.66 +- 0.33%
+    
+    optimizer2 = SignSGDNSGD(filter_params, lr=0.4, momentum=0.6, nesterov=True, sgd_coeff=0.5, sign_lr_mult=0.003) # 89%, benefits from higher momentum
+
     # optimizer2 = SGDMuon(filter_params, lr=0.24, momentum=0.6, nesterov=True, sgd_coeff=0.1) # 87% - does not work well, because it's not an LMO algorithm
     # optimizer2 = MuonOrSign(filter_params, lr=0.42, momentum=0.65, nesterov=True, sign_coeff=0.003) # 94.00% - see airbench_muon.py - no benefit
     # optimizer2 = MuonSignedUpdate(filter_params, lr=0.005, momentum=0.8, nesterov=True) # 93.57 +- 0.11 - AWESOME
     
-    optimizer2 = Freon(filter_params, lr=0.24, momentum=0.6, nesterov=True, a=2, b=3, norm_weight=True) # 93.7 +- 0.05%
+    
+    # optimizer2 = Freon(filter_params, lr=0.24, momentum=0.6, nesterov=True, a=2, b=3, norm_weight=True) # 93.7 +- 0.05%
     # optimizer2 = Freon(filter_params, lr=1, momentum=0.6, nesterov=True, a=1, b=4, norm_weight=True)
     # optimizer2 = FreonSignedUpdate(filter_params, lr=0.005, momentum=0.8, nesterov=True, a=1, b=4, norm_weight=True) # 93.44 +- 0.22%  
     # optimizer2 = FreonSignedUpdate(filter_params, lr=0.005, momentum=0.8, nesterov=True, a=2, b=3, norm_weight=True) # 93.23 +- 0.12%

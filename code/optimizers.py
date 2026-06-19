@@ -1011,3 +1011,58 @@ class SingleDeviceNorMuon(torch.optim.Optimizer):
                 p.add_(update.reshape(p.shape), alpha=-group["lr"])
 
         return loss
+
+
+class SignSGDNSGD(torch.optim.Optimizer):
+    def __init__(self, params, lr=1e-3, momentum=0, nesterov=False, norm_weight=True, sign_lr_mult=1, sgd_coeff=0, signed=False):
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov)
+        super().__init__(params, defaults)
+        self.sgd_coeff = sgd_coeff
+        self.norm_weight = norm_weight
+        self.sign_lr_mult = sign_lr_mult
+        self.signed = signed
+
+    def step(self):
+        for group in self.param_groups:
+            lr = group["lr"]
+            momentum = group["momentum"]
+            for p in group["params"]:
+                g = p.grad
+                if g is None:
+                    continue
+                state = self.state[p]
+
+                if "momentum_buffer" not in state.keys():
+                    state["momentum_buffer"] = torch.zeros_like(g)
+                buf = state["momentum_buffer"]
+                buf.mul_(momentum).add_(g)
+                
+                # Nesterov momentum calculation
+                g = g.add(buf, alpha=momentum) if group["nesterov"] else buf
+
+                # Filter weight normalization
+                if self.norm_weight:
+                    norm = p.data.norm()
+                    if norm < 1e-10:
+                        norm = 1e-10
+                    p.data.mul_(len(p.data)**0.5 / norm) 
+
+                # Compute NSGD update (Normalized SGD)
+                eps = 1e-12
+                g_normalized = g / (g.norm() + eps)
+                
+                # Mix NSGD and SignSGD using sgd_coeff
+                # sgd_coeff = 0   => Pure NSGD
+                # sgd_coeff = 1   => Pure SignSGD
+                if self.sgd_coeff != 1:
+                    update_part = g_normalized
+                    update = (1 - self.sgd_coeff) * update_part + self.sgd_coeff * g.sign() * self.sign_lr_mult
+                else:
+                    update = g.sign() * self.sign_lr_mult
+                
+                # Optional sign-quantization of the final mixed update
+                if self.signed:
+                    update = update.sign()
+                    
+                # Take the gradient step
+                p.data.add_(update, alpha=-lr)
