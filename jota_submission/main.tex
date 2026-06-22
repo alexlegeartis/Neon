@@ -50,7 +50,7 @@
 \newcommand{\tableref}[1]{Table~\ref{#1}}
 \newcommand{\sectionref}[1]{Sect.~\ref{#1}}
 
-\newcommand{\equationref}[1]{Equation~(\ref{#1})}
+%\newcommand{\equationref}[1]{Equation~(\ref{#1})}
 \newcommand{\lemmaref}[1]{Lemma~\ref{#1}}
 \newcommand{\corollaryref}[1]{Corollary~\ref{#1}}
 
@@ -60,38 +60,40 @@
 \begin{document}
 
 % \title{On Modifying Muon with Ky Fan Norms, Dual Norms and Norm Combinations}
-\title{The Ky Fan Norms and Beyond: Dual Norms and Combinations for Matrix Optimization}
+\title{Ky Fan Norms and Beyond: Dual Norms and Combinations for Matrix Optimization}
+\titlerunning{Ky Fan Norms and Beyond for Matrix Optimization}
 
 \author{Alexey Kravatskiy \and Ivan Kozyrev \and Nikolai Kozlov \and Alexander Vinogradov \and Daniil Merkulov \and Ivan Oseledets}
 
 \institute{Alexey Kravatskiy, Corresponding author \at
              MIRIAI \\
+             Russia \\
              \email{kravatskii.a@miriai.org}
            \and
              Ivan Kozyrev \at
              MIPT, INM RAS \\
-             Russia
-             % kozyrev.in@phystech.edu
+             Russia \\
+             \email{kozyrev.in@phystech.edu}
            \and
              Nikolai Kozlov \at
              MIPT \\
-             Russia
-             % kozlov.na@phystech.edu
+             Russia \\
+             \email{kozlov.na@phystech.edu}
            \and
              Alexander Vinogradov \at
              MIPT \\
-             Russia
-             % vinogradov.am@phystech.edu
+             Russia \\
+             \email{vinogradov.am@phystech.edu}
            \and
              Daniil Merkulov \at
              MIPT, Skoltech, HSE, AI4Science \\
-             Russia
-             % daniil.merkulov@phystech.edu
+             Russia \\
+             \email{daniil.merkulov@phystech.edu}
            \and
              Ivan Oseledets \at
              AIRI, Skoltech, INM RAS \\
-             Russia
-             % i.oseledets@skoltech.ru
+             Russia \\
+             \email{i.oseledets@skoltech.ru}
 }
 
 \date{Received: date / Accepted: date}
@@ -163,21 +165,21 @@
  
  We are particularly interested in the case when $\cS$ is a unit ball in some norm $\norm{\cdot}$:
  \[
- \cS = \cB_{\norm{\cdot}} = \{ \mD \in \Rmn \mid \norm{\mD} \leq 1 \}\,.
+ \cS = \cB_{\norm{\cdot}} = \{ \mD \in \Rmn : \norm{\mD} \leq 1 \}\,.
  \]
  In this case,
  \[
- \argmin_{\mD \in \cS} \<\mM^t, \mD> = - \{ \mD \in \cB_{\norm{\cdot}} \mid \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,,
+ \argmin_{\mD \in \cS} \<\mM^t, \mD> = - \{ \mD \in \cB_{\norm{\cdot}} : \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,,
  \]
- and the update for $\mX^{t + 1}$ in \equationref{eq:simple_update} simplifies to
+ and the update for $\mX^{t + 1}$ in (\ref{eq:simple_update}) simplifies to
  \begin{equation}\label{eq:our_update}
-   \mX^{t+1} = \mX^{t} - \gamma_t \{\mD \in \cB_{\norm{\cdot}} \mid \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,.
+   \mX^{t+1} = \mX^{t} - \gamma_t \{\mD \in \cB_{\norm{\cdot}} : \<\mM^t, \mD> = \norm{\mM^t}^\dagger\}\,.
  \end{equation}
  
  Using this formula, it is easy to compute updates for algorithms induced by various norms $\norm{\cdot}$ \citep{bernstein2024oldoptimizernewnorm, pethick2025training}:
  
  \paragraph{Frobenius norm and Normalized SGD}
- When the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, \equationref{eq:our_update} turns into
+ When the norm $\norm{\cdot}$ is the Frobenius norm $\normf{\cdot}$, (\ref{eq:our_update}) turns into
  \begin{equation}\label{eq:nsgd_update}
    \mX^{t+1} = \mX^{t} - \gamma_t \frac{\mM^t}{\normf{\mM^t}}\,,
  \end{equation}
@@ -205,13 +207,13 @@
  Having examined the Frobenius norm (NSGD), spectral norm (Muon), and Chebyshev norm (SignSGD), all of which produce full-rank updates, we turn to the nuclear norm $\normn{\cdot}$.
  
  \begin{lemma}\label{lemma:neon_update}
-   When $\norm{\cdot} = \normn{\cdot}$, \equationref{eq:our_update} becomes
+   When $\norm{\cdot} = \normn{\cdot}$, (\ref{eq:our_update}) becomes
    \begin{equation}\label{eq:neon_update}
      \mX^{t+1} = \mX^{t} - \gamma_t \vu_1 \vv_1^\top\,.
    \end{equation}
  \end{lemma}
  \begin{proof}
- Since $\normn{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\<\mM^t, \mD> = \sigma_1$ in \equationref{eq:our_update}. Note that $\mD = \vu_1 \vv_1^\top$ delivers this value. Indeed, $\normn{\mD}=1$ and by the trace property and orthogonality of the singular vectors,
+ Since $\normn{\cdot}^\dagger = \norms{\cdot}$, the goal is to reach $\<\mM^t, \mD> = \sigma_1$ in (\ref{eq:our_update}). Note that $\mD = \vu_1 \vv_1^\top$ delivers this value. Indeed, $\normn{\mD}=1$ and by the trace property and orthogonality of the singular vectors,
  \[
  \<\mM^t, \mD> =\<\mU \mSigma \mV^\top, \vu_1 \vv_1^\top> = \tr \diag({\sigma_1, 0, \dots, 0}) = \norms{\mM^t}\,,
  \]
@@ -226,7 +228,7 @@
  \]
  which produce the updates
  \[
- \mX^{t+1} = \mX^t - \gamma_t \mU \frac{\diag\left(\sigma_1^{q-1},\dots, \sigma_{\min(m,n)}^{q-1}\right)}{\left(\sum_{i=1}^{\min(m,n)}{\sigma_i^q}\right)^{\frac{q-1}{q}}}\mV^\top
+ \mX^{t+1} = \mX^t - \gamma_t \mU \frac{\diag\left(\sigma_1^{q-1}, \dots, \sigma_{\min(m,n)}^{q-1}\right)}{\left(\sum_{i=1}^{\min(m,n)}{\sigma_i^q}\right)^{\frac{q-1}{q}}}\mV^\top
  \]
  where $p$ and $q$ satisfy $p^{-1} + q^{-1} = 1$. This formula recovers Neon when $p\rightarrow1$ (provided that $\sigma_1 > \sigma_2$, which holds with probability 1 on real data), NSGD when $p=2$, and Muon when $p\rightarrow\infty$.
  
@@ -239,7 +241,7 @@
  \[
      \normkfk{\cdot}^\dagger = \max\left\{\frac{1}{k} \normn{\cdot}, \norms{\cdot}\right\}\,.
  \]
- According to \equationref{eq:our_update}, we need to find $\mD$ such that $\normkfk{\mD} = 1$ and
+ According to (\ref{eq:our_update}), we need to find $\mD$ such that $\normkfk{\mD} = 1$ and
  \[
  \<\mM^t, \mD> = \max\left\{\frac{1}{k}\sum_{i=1}^{\min(m,n)}\sigma_i,\ \sigma_1\right\}\,.
  \]
@@ -254,14 +256,14 @@
  Unlike Schatten norms, which satisfy $\norm{\mM^t}_{S_p}^\dagger = \norm{\mM^t}_{S_q}$ (for $p^{-1} + q^{-1} = 1$) and are thus closed under dualization, Ky Fan norms are generally not. Only two exceptional cases exist: the dual to the Ky Fan $1$-norm $\norm{\cdot}_{\text{KF-}1}$ (the spectral norm) is the Ky Fan $\min(m,n)$-norm $\norm{\cdot}_{\text{KF-}\min(m,n)}$ (the nuclear norm), and vice versa. Thus, working with duals of Ky Fan norms can open up new possibilities:
  
  \begin{lemma}\label{lemma:ky_fan_update}
-   When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, \equationref{eq:our_update} turns into:
+   When $\norm{\cdot} = \normkfk{\mM^t}^\dagger$, (\ref{eq:our_update}) turns into:
    \begin{equation}\label{eq:ky_fan_update}
      \mX^{t+1} = \mX^{t} - \gamma_t \sum_{i=1}^{k}\vu_i \vv_i^\top\,.
    \end{equation}
  \end{lemma}
  
  \begin{proof}
- Since $\norm{\cdot}^\dagger = \normkfk{\cdot}^{\dagger\dagger} = \normkfk{\cdot}$, the goal is to reach $\<\mM^t, \mD> = \normkfk{\mM^t}$ in \equationref{eq:our_update}. Note that $\mD = \sum_{i=1}^{k} \vu_i \vv_i^\top$ attains this value. Indeed,
+ Since $\norm{\cdot}^\dagger = \normkfk{\cdot}^{\dagger\dagger} = \normkfk{\cdot}$, the goal is to reach $\<\mM^t, \mD> = \normkfk{\mM^t}$ in (\ref{eq:our_update}). Note that $\mD = \sum_{i=1}^{k} \vu_i \vv_i^\top$ attains this value. Indeed,
  \[
  \<\mM^t, \mD> =\<\mU \mSigma \mV^\top, \sum_{i=1}^{k} \vu_i \vv_i^\top> = \sum_{i,j=1}^{r, k}\<\vu_i \sigma_i \vv_i^\top, \vu_j \vv_j^\top> = \sum_{i=1}^{k}\sigma_i = \normkfk{\mM^t}\,,
  \]
@@ -280,17 +282,16 @@
  
  In \sectionref{sec:matrix-side}, we discuss how to efficiently compute Fanion updates using the Lanczos algorithm.
  
- \section{Conic Combination of LMO-algorithms is an LMO-algorithm}
+ \section{Conic Combination of LMO-Algorithms Is an LMO-Algorithm}
  \label{sec:conic_combo}
  
- %Simply applying norms dual to Ky Fan $k$-norms, however, does not provide sufficient algorithmic diversity for our purposes.
  The approaches to designing new matrix LMO-algorithms are not limited to applying norms dual to Ky Fan $k$-norms. We now consider linear combinations of LMO-algorithms and show that these combinations are themselves LMO-algorithms.
  
  \subsection{General Case}
  We begin with a known property of a conic combination of norms (see, e.g., \citep[Table 1]{yu2012arithmetic}).
  
  \begin{lemma}\label{lemma:dual_to_conv_comb}
-   Let $\norm{\cdot}_{(1)},\dots,\norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1,\dots,\alpha_n$ be non-negative reals. Define
+   Let $\norm{\cdot}_{(1)}, \dots, \norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1, \dots, \alpha_n$ be non-negative reals. Define
    \[
      \norm{\cdot} := \sum_{i = 1}^n \alpha_i \norm{\cdot}_{(i)}\,.
    \]
@@ -307,11 +308,11 @@
  \begin{lemma}\label{lemma:lin_comb_lmo}
   Let $\norm{\cdot}_{(1)}, \dots, \norm{\cdot}_{(n)}$ be norms on a finite-dimensional Euclidean space, and let $\alpha_1, \dots, \alpha_n$ be non-negative reals. Consider Linear Minimization Oracles $\mathrm{LMO}_{\norm{\cdot}_{(1)}}, \dots, \mathrm{LMO}_{\norm{\cdot}_{(n)}}$, which correspond to the unit balls of these norms. Then, $\sum_{i = 1}^n \alpha_i \mathrm{LMO}_{\norm{\cdot}_{(i)}}$ is the LMO corresponding to the norm $\norm{\cdot}$ dual to the norm given by $\sum_{i = 1}^n \alpha_i \norm{\cdot}_{(i)}^\dagger$.
 \end{lemma}
-
+ 
  \begin{proof}
    Using \lemmaref{lemma:dual_to_conv_comb} and the biduality property $\norm{\cdot}^{\dagger \dagger} = \norm{\cdot}$, we obtain the unit ball representation: $\cB_{\norm{\cdot}} = \sum_{i = 1}^n \alpha_i \cB_{\norm{\cdot}_{(i)}}$. The linear minimization problem over this ball can thus be transformed as follows:
    \[
-   \argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD> = \argmin_{\mD_1 \in \alpha_1 \cB_{\norm{\cdot}_{(1)}},\dots,\mD_n \in \alpha_n\cB_{\norm{\cdot}_{(n)}}}\<\mM, \sum_{i = 1}^n\mD_i> = \sum_{i = 1}^n \argmin_{D_i \in \cB_{\norm{\cdot}_{(i)}}}\<\mM, \mD_i>\,,
+   \argmin_{\mD \in \cB_{\norm{\cdot}}}\<\mM, \mD> = \argmin_{\mD_1 \in \alpha_1 \cB_{\norm{\cdot}_{(1)}}, \dots, \mD_n \in \alpha_n\cB_{\norm{\cdot}_{(n)}}}\<\mM, \sum_{i = 1}^n\mD_i> = \sum_{i = 1}^n \argmin_{D_i \in \cB_{\norm{\cdot}_{(i)}}}\<\mM, \mD_i>\,,
    \]
    where the last summation denotes the Minkowski sum. This immediately implies 
    \[
@@ -347,7 +348,7 @@
  \end{equation}
  We call this family \emph{F-Fanions}.
  
- The extreme members of this family are \emph{F-Neon} (with $k = 1$) and \emph{F-Muon} (with $k = \min\{m, n\}$). Additional information and visualizations for the F-Muon generating $\normfstar{\cdot}^\dagger = \norm{\cdot}_{\mathrm{F-KF-\min\{m, n\}}}^\dagger$ and the F-Neon generating $\normftwo{\cdot}^\dagger = \norm{\cdot}_{\mathrm{F-KF-1}}^\dagger$ norms appear in the appendix (see \equationref{eq:normfstardual}, \equationref{eq:normftwodual}, \figureref{fig:fduals}).
+ The extreme members of this family are \emph{F-Neon} (with $k = 1$) and \emph{F-Muon} (with $k = \min\{m, n\}$). Additional information and visualizations for the F-Muon generating $\normfstar{\cdot}^\dagger = \norm{\cdot}_{\mathrm{F-KF-\min\{m, n\}}}^\dagger$ and the F-Neon generating $\normftwo{\cdot}^\dagger = \norm{\cdot}_{\mathrm{F-KF-1}}^\dagger$ norms appear in the appendix (see (\ref{eq:normfstardual}), (\ref{eq:normftwodual}), \figureref{fig:fduals}).
  
  \subsection{Add SignSGD: S-Muon and S-Neon}
  
@@ -430,7 +431,7 @@
  
  \section{Experiments}\label{sec:experiments}
  
- \subsection{A smooth convex problem}
+ \subsection{A Smooth Convex Problem}
  \label{subsec:lls_exps}
  
  We begin by evaluating F-Fanions and S-Fanions on the following $L$-smooth convex problem:
@@ -439,7 +440,7 @@
  \end{equation}
  where $\mX \in \Rmn$ with $m=500$ and $n=500$, corresponding to the typical dimensions of a neural network weight matrix, while $\mM \in \mathbb{S}^m_{+}$ and $\mN \in \mathbb{S}^n_{+}$ are positive-semidefinite matrices. The spectra of $\mM$ and $\mN$ are uniformly distributed on the interval $(0, 1)$, so $L \le 1$ for the Frobenius norm. We initialize $\mX^0$ with entries drawn independently from $\cN(0, 0.01)$.
  
- We evaluate several algorithms from the Fanion family and their convex combinations, using the update rule from \equationref{eq:simple_update} with approximate Nesterov momentum:
+ We evaluate several algorithms from the Fanion family and their convex combinations, using the update rule from (\ref{eq:simple_update}) with approximate Nesterov momentum:
  \begin{itemize}
    \item \textbf{Fanions:} Neon (Fanion-1), Fanion-2, Fanion-10, Fanion-100, and Muon (Fanion-500).
    \item \textbf{F-Fanions:} F-Neon (F-Fanion-1), F-Fanion-2, F-Fanion-10, F-Fanion-100, and F-Muon (F-Fanion-500) with $\alpha=1/2$.
@@ -460,7 +461,7 @@
  
  \begin{table}[htbp]
  
-\caption{Tuned learning rates and momentum coefficients in the experiments on the smooth convex problem (\equationref{eq:lls}).}\label{tbl:lls_lrs}
+\caption{Tuned learning rates and momentum coefficients in the experiments on the smooth convex problem (\ref{eq:lls}).}\label{tbl:lls_lrs}
 %
      \begin{tabular}{cccc}
        \arrayrulecolor{black}\toprule
@@ -484,21 +485,21 @@
  \begin{figure}[htbp]
  
 %
-     \subfigure[The loss]{\label{fig:lls_loss}
-       \includegraphics[width=0.8\linewidth]{figs/simple_lls/loss_long_run_16_increase.pdf}}%
+     \subfigure[Loss]{\label{fig:lls_loss}
+       \includegraphics[width=0.8\linewidth]{loss_long_run_16_increase.pdf}}%
      \vspace{1em}
-     \subfigure[The Frobenius norm of the full gradient]{\label{fig:lls_fro_grad_norm}%
-       \includegraphics[width=0.8\linewidth]{figs/simple_lls/gradient_frobenius_norm_vs_iteration_long_run.pdf}}
+     \subfigure[Frobenius norm of the full gradient]{\label{fig:lls_fro_grad_norm}%
+       \includegraphics[width=0.8\linewidth]{gradient_frobenius_norm_vs_iteration_long_run.pdf}}
    
-\caption{A smooth convex problem (\equationref{eq:lls}) for a 500x500 matrix.}\label{fig:lls}
+\caption{A smooth convex problem (\ref{eq:lls}) for a 500x500 matrix.}\label{fig:lls}
 
  \end{figure}
  
  Both F-Muon and S-Muon converge faster to lower loss values and achieve lower Frobenius norms of the full gradient than NSGD, Muon, or SignSGD.
  
- \subsection{CIFAR-10 airbench}
+ \subsection{CIFAR-10 Airbench}
  
- We evaluate the algorithms on the CIFAR-10 airbench \citep{cifar2023airbench}. To assess the impact of the mixing parameter $\alpha$ in \equationref{eq:nsgd_muon_update}, we first run F-Muon for different values of $\alpha$ using hyperparameters tuned for vanilla Muon by Keller Jordan: \texttt{lr=0.24(1 - step/total\_steps)}, \texttt{momentum=0.65}, \texttt{nesterov=True} with weight normalization after each weight update. We perform 10 repetitions for each $\alpha$ value and record the accuracy after 8 epochs of training (\figureref{fig:muon_alphas}).
+ We evaluate the algorithms on the CIFAR-10 airbench \citep{cifar2023airbench}. To assess the impact of the mixing parameter $\alpha$ in (\ref{eq:nsgd_muon_update}), we first run F-Muon for different values of $\alpha$ using hyperparameters tuned for vanilla Muon by Keller Jordan: \texttt{lr=0.24(1 - step/total\_steps)}, \texttt{momentum=0.65}, \texttt{nesterov=True} with weight normalization after each weight update. We perform 10 repetitions for each $\alpha$ value and record the accuracy after 8 epochs of training (\figureref{fig:muon_alphas}).
  
  Next, we tune F-Muon specifically with $\alpha = 0.5$, obtaining optimal hyperparameters \texttt{lr=0.4(1 - step/total\_steps)}, \texttt{momentum=0.6}, \texttt{nesterov = True}. Tuned F-Muon achieves $94.02 \pm 0.13\%$ validation accuracy after 8 epochs (averaged over 200 runs), matching Muon's accuracy and variance. We again measure the validation accuracy as a function of $\alpha$ (\figureref{fig:fmuon_alphas}) and observe that even at $\alpha=0.1$, the accuracy substantially exceeds that of vanilla NSGD.
  
@@ -508,10 +509,10 @@
  
 %
      \subfigure[With parameters tuned for Muon]{\label{fig:muon_alphas}%
-       \includegraphics[width=0.48\linewidth]{figs/muon_tuned_diff_alpha.pdf}}%
+       \includegraphics[width=0.48\linewidth]{muon_tuned_diff_alpha.pdf}}%
      \hfill
      \subfigure[With parameters tuned for F-Muon]{\label{fig:fmuon_alphas}%
-       \includegraphics[width=0.48\linewidth]{figs/fmuon_tuned_diff_alpha.pdf}}
+       \includegraphics[width=0.48\linewidth]{fmuon_tuned_diff_alpha.pdf}}
    
 \caption{Mean validation accuracies for F-Muon with different $\alpha$.}\label{fig:diff_alphas}
 
@@ -521,7 +522,7 @@
  
  \begin{figure}[htbp]
  
-\includegraphics[width=0.6\linewidth]{figs/norms/fstardual_cifar.pdf}
+\includegraphics[width=0.6\linewidth]{fstardual_cifar.pdf}
 \caption{The LMO balls of Muon and F-Muon for training a CNN on CIFAR-10.}\label{fig:cifar_ball}
 
  \end{figure}
@@ -536,8 +537,8 @@
  
  \begin{figure}[htbp]
  
-\includegraphics[width=0.7\linewidth]{figs/nanogpt/nano/val_loss_vs_step.pdf}
-\caption{The validation loss for NanoGPT.}\label{fig:nano_gpt_loss}
+\includegraphics[width=0.7\linewidth]{val_loss_vs_step.pdf}
+\caption{Validation loss for NanoGPT.}\label{fig:nano_gpt_loss}
 
  \end{figure}
  
@@ -551,8 +552,8 @@
  
  \begin{figure}[htbp]
    
-\includegraphics[width=0.7\linewidth]{figs/nanogpt/medium/val_loss_vs_step.pdf}
-\caption{The validation loss for GPT-2 Medium.}\label{fig:med_gpt_loss}
+\includegraphics[width=0.7\linewidth]{medium_val_loss_vs_step.pdf}
+\caption{Validation loss for GPT-2 Medium.}\label{fig:med_gpt_loss}
 
    \end{figure}
  
@@ -565,7 +566,7 @@
  
  \begin{figure}[htbp]
  
-\includegraphics[width=0.7\linewidth]{figs/nanogpt/optimizers_comparison.pdf}
+\includegraphics[width=0.7\linewidth]{optimizers_comparison.pdf}
 \caption{Comparison of validation loss for Muon, F-Muon, and S-Muon across a range of learning rates. Stars denote the best learning rates for each optimizer. $\alpha=1/2$ for F-Muon and S-Muon and \texttt{sign\_sgd\_coeff} = 1/3 for S-Muon.}\label{fig:nanogptftexps}
 
  \end{figure}
@@ -574,7 +575,7 @@
  
  \begin{figure}[htbp]
  
-\includegraphics[width=\linewidth]{figs/nanogpt/Nanogpt finetune results.pdf}
+\includegraphics[width=\linewidth]{Nanogpt finetune results.pdf}
 \caption{Train and validation loss at the optimal learning rate for each optimizer.}\label{fig:nanogptftexps2}
 
  \end{figure}
@@ -657,7 +658,7 @@
 
 \noindent\textbf{Competing Interests} The authors have no relevant financial or non-financial interests to disclose.
 
-\noindent\textbf{Data Availability} No datasets were generated or analysed during the current study. All data used in the experiments is publicly available.
+\noindent\textbf{Data Availability} No datasets were generated during the current study. All data used in the experiments is publicly available.
 
 \noindent\textbf{Author Contributions} IO suggested using the nuclear norm in the Bernstein--Newhouse framework~\cite{bernstein2024oldoptimizernewnorm}. DM presented the problem at the MIPT optimization course, supervised the project, and helped to revise the manuscript. IK suggested using composite norms (though not the ones that induce Fanions, F-Fanions, or S-Fanions) and helped to draft and revise the manuscript. NK suggested the Lanczos algorithm as the most precise means to compute Fanions' updates, conducted experiments to prove this, and wrote \sectionref{sec:matrix-side}. AV conducted the finetuning of NanoGPT on TinyStories and wrote \sectionref{subsec:finetune}. All other work was done by AK: constructing Fanions, F-Fanions, and S-Fanions, conducting experiments on the smooth convex problem and on the CIFAR-10 airbench, pretraining NanoGPT and GPT-2 Medium, and writing the manuscript.
 
@@ -759,10 +760,10 @@ We thank Dmitry Kovalev and Egor Shulgin for helpful discussions.
  
 %
      \subfigure[LMO balls for F-Muon for different $\alpha$]{\label{fig:fstardual}%
-       \includegraphics[width=0.48\linewidth]{figs/norms/fstardualball.pdf}}%
+       \includegraphics[width=0.48\linewidth]{fstardualball.pdf}}%
      \hfill
      \subfigure[LMO balls for F-Neon for different $\alpha$]{\label{fig:ftwodual}%
-       \includegraphics[width=0.48\linewidth]{figs/norms/ftwodualball.pdf}}
+       \includegraphics[width=0.48\linewidth]{ftwodualball.pdf}}
    
 \caption{Balls in the duals to F* and F2 norms for different $\alpha$.}\label{fig:fduals}
 
@@ -775,17 +776,17 @@ We thank Dmitry Kovalev and Egor Shulgin for helpful discussions.
  To showcase the complex geometry of the Ky Fan $k$-norm and its dual, we present \figureref{fig:kyfan_combined}, which displays the unit ball in the Ky Fan $2$-norm (\figureref{fig:kyfan}) and its dual (\figureref{fig:kyfandual}). The x-, y-, and z-axes represent the singular values $\sigma_1$, $\sigma_2$, and $\sigma_3$, respectively, of a matrix from $\R^{m\times n}$ with $\min\{m,n\}=3$. In this representation, we do not sort the singular values. We plot unit balls in the Top-$2$ norm $\max\{\abs{x}+\abs{y}, \abs{x}+\abs{z}, \abs{y}+\abs{z}\}$ and its dual norm $\max\{\max(\abs{x},\abs{y},\abs{z}), (\abs{x}+\abs{y}+\abs{z})/2\}$. The resulting balls exhibit significantly greater complexity than those in $l_\infty$, $l_1$, and $l_2$ norms.
  
  \begin{figure}[htbp]
- 
-%
-     \subfigure[The Ky Fan $2$-norm]{\label{fig:kyfan}%
-       \includegraphics[width=0.45\linewidth]{figs/norms/KyFan.pdf}}%
-     \hfill
-     \subfigure[Dual to the Ky Fan $2$-norm]{\label{fig:kyfandual}%
-       \includegraphics[width=0.45\linewidth]{figs/norms/KyFanDual.pdf}}
-   
-\caption{Ky Fan 2-norm and its dual in the space of 3 singular values.}\label{fig:kyfan_combined}
+  \centering
+  %
+  \subfigure[The Ky Fan $2$-norm]{\label{fig:kyfan}%
+      \includegraphics[width=0.45\linewidth]{KyFan.pdf}}%
+  \hfill
+  \subfigure[The dual of the Ky Fan $2$-norm]{\label{fig:kyfandual}%
+      \includegraphics[width=0.45\linewidth]{KyFanDual.pdf}}
 
- \end{figure}
+  \caption{The Ky Fan $2$-norm and its dual in the space of three singular values.}
+  \label{fig:kyfan_combined}
+\end{figure}
  
  These balls can be described more simply using the results from Yu~\cite{yu2012arithmetic}. The Ky Fan $2$-norm ball is an intersection of three $l_1$ balls in $(x,y)$, $(x, z)$, and $(y,z)$ spaces. The unit ball in the dual Ky Fan $2$-norm is an intersection of the unit ball in the $l_\infty$ norm and the $1/2$-ball in the $l_1$ norm.
  
@@ -796,16 +797,16 @@ We thank Dmitry Kovalev and Egor Shulgin for helpful discussions.
  \begin{figure}[htbp]
  
 %
-     \subfigure[The spectral norm of the full gradient]{\label{fig:lls_op_grad_norm}%
-       \includegraphics[width=0.49\linewidth]{figs/simple_lls/gradient_spectral_norm_vs_iteration_long_run.pdf}}%
+     \subfigure[Spectral norm of the full gradient]{\label{fig:lls_op_grad_norm}%
+       \includegraphics[width=0.49\linewidth]{gradient_spectral_norm_vs_iteration_long_run.pdf}}%
      \hfill
-     \subfigure[The nuclear norm of the full gradient]{\label{fig:lls_nuclear_grad_norm}%
-       \includegraphics[width=0.49\linewidth]{figs/simple_lls/gradient_nuclear_norm_vs_iteration_long_run.pdf}}%
+     \subfigure[Nuclear norm of the full gradient]{\label{fig:lls_nuclear_grad_norm}%
+       \includegraphics[width=0.49\linewidth]{gradient_nuclear_norm_vs_iteration_long_run.pdf}}%
      \vspace{1em}
-     \subfigure[The loss over time]{\label{fig:lls_loss_time}%
-       \includegraphics[width=0.49\linewidth]{figs/simple_lls/loss_vs_time_long_run.pdf}}
+     \subfigure[Loss over time]{\label{fig:lls_loss_time}%
+       \includegraphics[width=0.49\linewidth]{loss_vs_time_long_run.pdf}}
    
-\caption{More plots for the smooth convex problem (\equationref{eq:lls}) for a 500x500 matrix.}\label{fig:app_lls}
+\caption{More plots for the smooth convex problem (\ref{eq:lls}) for a 500x500 matrix.}\label{fig:app_lls}
 
  \end{figure}
  
@@ -850,10 +851,10 @@ We thank Dmitry Kovalev and Egor Shulgin for helpful discussions.
  
 %
      \subfigure[Training accuracy]{\label{fig:train_acc_cifar}%
-       \includegraphics[width=0.7\linewidth]{figs/cifar_logger/train_acc.pdf}}%
+       \includegraphics[width=0.7\linewidth]{train_acc.pdf}}%
      \vspace{1em}
      \subfigure[Validation accuracy]{\label{fig:val_acc_cifar}%
-       \includegraphics[width=0.7\linewidth]{figs/cifar_logger/val_acc.pdf}}
+       \includegraphics[width=0.7\linewidth]{val_acc.pdf}}
    
 \caption{Different optimizers on CIFAR-10 airbench without weight normalization.}\label{fig:cifar_accs}
 
@@ -864,22 +865,22 @@ We thank Dmitry Kovalev and Egor Shulgin for helpful discussions.
  
 %
      \subfigure[Frobenius norm of layer2.conv1]{\label{fig:fro_conv1}%
-       \includegraphics[width=0.45\linewidth]{figs/cifar_logger/layers_2_conv1_weight_frobenius.pdf}}%
+       \includegraphics[width=0.45\linewidth]{layers_2_conv1_weight_frobenius.pdf}}%
      \hfill
      \subfigure[Frobenius norm of layer2.conv2]{\label{fig:fro_conv2}%
-       \includegraphics[width=0.45\linewidth]{figs/cifar_logger/layers_2_conv2_weight_frobenius.pdf}}%
+       \includegraphics[width=0.45\linewidth]{layers_2_conv2_weight_frobenius.pdf}}%
      \vspace{1em}
      \subfigure[Spectral norm of layer2.conv1]{\label{fig:spec_conv1}%
-       \includegraphics[width=0.45\linewidth]{figs/cifar_logger/layers_2_conv1_weight_spectral.pdf}}%
+       \includegraphics[width=0.45\linewidth]{layers_2_conv1_weight_spectral.pdf}}%
      \hfill
      \subfigure[Spectral norm of layer2.conv2]{\label{fig:spec_conv2}%
-       \includegraphics[width=0.45\linewidth]{figs/cifar_logger/layers_2_conv2_weight_spectral.pdf}}%
+       \includegraphics[width=0.45\linewidth]{layers_2_conv2_weight_spectral.pdf}}%
      \vspace{1em}
      \subfigure[Nuclear norm of layer2.conv1]{\label{fig:nuc_conv1}%
-       \includegraphics[width=0.45\linewidth]{figs/cifar_logger/layers_2_conv1_weight_nuclear.pdf}}%
+       \includegraphics[width=0.45\linewidth]{layers_2_conv1_weight_nuclear.pdf}}%
      \hfill
      \subfigure[Nuclear norm of layer2.conv2]{\label{fig:nuc_conv2}%
-       \includegraphics[width=0.45\linewidth]{figs/cifar_logger/layers_2_conv2_weight_nuclear.pdf}}
+       \includegraphics[width=0.45\linewidth]{layers_2_conv2_weight_nuclear.pdf}}
    
 \caption{Matrix norms of layer2.conv1 (left) and layer2.conv2 (right) gradients of CIFAR CNN.}\label{fig:norms_conv1_vs_conv2}
 
@@ -889,13 +890,13 @@ We thank Dmitry Kovalev and Egor Shulgin for helpful discussions.
    
 %
        \subfigure[Total Frobenius norm]{\label{fig:total_fro_norm_cifar}%
-         \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_frobenius.pdf}}%
+         \includegraphics[width=0.7\linewidth]{total_frobenius.pdf}}%
        \vspace{1em}
        \subfigure[Total spectral norm]{\label{fig:total_spectral_norm_cifar}%
-         \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_spectral.pdf}}%
+         \includegraphics[width=0.7\linewidth]{total_spectral.pdf}}%
        \vspace{1em}
        \subfigure[Total nuclear norm]{\label{fig:total_nuclear_norm_cifar}%
-         \includegraphics[width=0.7\linewidth]{figs/cifar_logger/total_nuclear.pdf}}
+         \includegraphics[width=0.7\linewidth]{total_nuclear.pdf}}
      
 \caption{Matrix norms of the whole gradient of CIFAR CNN.}\label{fig:total_norms_cifar}
 
