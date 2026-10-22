@@ -1,0 +1,148 @@
+% Candidate discussion/conditional proposition; not a standalone document.
+% Requires amsmath, amssymb and the submission's theorem/proof environments.
+% Labels use tadl:. Full derivations and source audit: deep_learning_model.tex.
+% This fragment does not modify jota_submission. The structural hypothesis
+% below has not been verified by the currently saved neural norm logs.
+
+\section{A theoretical description of the neural experiments}
+\label{tadl:section}
+
+The neural experiments optimize a coupled objective in the hidden matrices
+$W_1,\ldots,W_L$ and auxiliary parameters $z$. Applying an LMO separately
+to each matrix does not make the objective separable. The appropriate
+comparison retains the alignment of the actual joint update with the
+target gradient, its directional curvature, and its effective step size.
+The CIFAR accuracy results and the language-model results require distinct
+geometric descriptions.
+
+\paragraph{Normalized CIFAR training.}
+For the weight-normalized airbench variant, a convolution with $m_l$ output
+channels is normalized to Frobenius radius $R_l=\sqrt{m_l}$. In the current
+implementation normalization precedes the additive update. Write
+$N_l(W)=R_lW/\|W\|_{\mathrm F}$ and $Y_l=N_l(W_l)$. If
+$D_l=D_l^{\mathrm{tan}}+\alpha_lY_l$, with
+$\alpha_l=\langle Y_l,D_l\rangle/R_l^2$, then
+\begin{equation}\label{tadl:normalization}
+ N_l(Y_l-\gamma_lD_l)
+ =N_l\left(Y_l-\frac{\gamma_l}{1-\gamma_l\alpha_l}
+                      D_l^{\mathrm{tan}}\right),
+ \qquad 1-\gamma_l\alpha_l>0.
+\end{equation}
+Thus normalized states follow a tangent step and sphere retraction, with a
+radial-dependent effective learning rate. Under the idealization of zero
+BatchNorm epsilon, positive convolution-weight scalings leave the
+training predictor unchanged, and this is a natural geometric description.
+Nonzero epsilon and frozen evaluation statistics require separate treatment.
+The gradient-norm experiments without weight normalization concern a
+different algorithm and do not verify this tangent model.
+
+An ideal rank-$k$ Fanion has Frobenius size $\sqrt{k}$, giving nominal
+relative step $\gamma_l\sqrt{k/m_l}$ before tangent projection. Hence
+inheriting Muon's learning rate gives Neon an 8--16 times smaller nominal
+relative step in these layers. Rank-dependent tuning and actual tangent
+displacements are needed to distinguish this effect from direction quality.
+For the eight-epoch table, the original per-run normalization flags should
+also be checked: a commented Neon call in the current script differs from
+the manuscript's declared setting.
+
+\paragraph{Language-model training.}
+Use a mean token cross-entropy objective $F_{c_t}(\theta)$, with attention
+context rule $c_t$. Hidden matrices receive shape-scaled Fanion updates;
+embeddings, head, and scalar parameters receive Adam updates. Decoupled
+decay and both hybrid component scalings belong in the actual joint
+displacement. RMS normalization of activations does not impose a common
+sphere constraint on the hidden weights. Packed-token dependence and the
+changing attention window should be represented by noise/bias and objective
+drift, respectively. A QKV tensor may contain several independently filtered
+matrices while sharing a single Frobenius normalization for its F component.
+
+\paragraph{Directional curvature and useful modes.}
+At a fixed state, consider a positive local quadratic model along the
+singular directions $P_i=u_iv_i^\top$ of the actual momentum input; for
+normalized CIFAR use tangent projections and retraction curvature. Let
+$g_i=\langle\operatorname{grad}F,P_i\rangle$ and let $K$ be the modal
+curvature Gram matrix. The optimized scalar-step decrease in direction
+$\sum_i d_iP_i$ is
+\begin{equation}\label{tadl:quality}
+ \frac12\mathcal Q(d),\qquad
+ \mathcal Q(d)=\frac{(g^\top d)^2}{d^\top Kd},\qquad g^\top d>0.
+\end{equation}
+The true gradient can be estimated on independent training probes, avoiding
+the positive self-alignment of the same stochastic input used by the LMO.
+A Gauss--Newton form $J^\top C J$ models curvature in prediction space;
+using it as a bound additionally requires control of nonlinear residuals
+and cross-layer effects. A global Frobenius smoothness replacement may
+discard the structure needed to compare ranks.
+
+\begin{proposition}[Comparable corrections across modes]
+\label{tadl:newton}
+Suppose the modal quadratic has $K\succ0$ and $g=eK\boldsymbol1$ for
+some $e>0$. Then the full ideal Muon direction is a Newton direction in
+this model, and every positive-alignment coefficient vector satisfies
+\begin{equation}\label{tadl:angle}
+ \frac{\mathcal Q(d)}{\mathcal Q(\boldsymbol1)}
+ =\frac{(\boldsymbol1^\top Kd)^2}
+ {(\boldsymbol1^\top K\boldsymbol1)(d^\top Kd)}\leq1.
+\end{equation}
+If $K=\operatorname{diag}(\lambda_i)$, this hypothesis means that the
+modal errors $g_i/\lambda_i$ are equal. For plain Fanion-$k$ with selected
+set $I_k$ it gives
+\begin{equation}\label{tadl:mass}
+ \frac{\mathcal Q_r}{\mathcal Q_k}
+ =\frac{\sum_i\lambda_i}{\sum_{i\in I_k}\lambda_i}
+ \geq\frac{\sum_i\lambda_i}{\sum_{i\leq k}\lambda_i^{\downarrow}}.
+\end{equation}
+The inequality is an equality for the exact-gradient input $H=G$.
+More generally, if those positive modal errors lie in
+$[e_{\min},e_{\max}]$, then the right-hand side of
+\eqref{tadl:mass}, multiplied by $(e_{\min}/e_{\max})^2$, remains a
+lower bound on $\mathcal Q_r/\mathcal Q_k$.
+\end{proposition}
+\begin{proof}
+The quadratic's Newton correction is $K^{-1}g=e\boldsymbol1$.
+Equation~\eqref{tadl:angle} follows by substitution and Cauchy--Schwarz
+in the $K$ inner product. In the diagonal case, for the selected set
+$I_k$, $\mathcal Q_k=(\sum_{i\in I_k}\lambda_ie_i)^2/
+\sum_{i\in I_k}\lambda_i$. Bound the full score below by
+$e_{\min}^2\sum_i\lambda_i$ and the selected score above by
+$e_{\max}^2\sum_{i\leq k}\lambda_i^{\downarrow}$.
+\end{proof}
+
+The assumption concerns a broad curvature-adjusted correction, not a flat
+raw gradient spectrum. Small gradient singular values can reflect small
+curvature. A broad correction can therefore favor Muon even when a
+Frobenius-gradient surrogate favors Neon. The F-family weights are
+$d_i=a\boldsymbol1_{i\leq k}+b\sigma_i(H)/\|H\|_{\mathrm F}$.
+For the S family add the sign direction to the local model, preserving
+its off-modal curvature and cross terms. Full-rank hybrids close to Muon
+in the curvature metric retain a similar score. The condition need not
+hold if weak modes are noise or if only a few corrections remain useful.
+
+Finite Newton--Schulz iterations further replace ideal full-polar weights
+by $d_i=(p_q\circ\cdots\circ p_1)(\sigma_i(H)/\|H\|_{\mathrm F})$.
+The current CIFAR and NanoGPT scripts use three and five repetitions,
+respectively, while the Medium script varies the polynomial by iteration.
+Keeping these gains gives a model encompassing hard-rank Fanions,
+implemented Muon, and both hybrid families. Approximation error and
+stochastic momentum alignment cannot be omitted when turning the local
+model into a training guarantee.
+
+\paragraph{Finite-horizon guarantees and the evaluation target.}
+For a joint step $x_{t+1}=\mathcal R_{x_t}(-\gamma_tV_t)$, suppose
+$F_t(x_{t+1})\leq F_t(x_t)-\gamma_tA_t+\gamma_t^2B_t/2$, with
+$A_t=\langle\operatorname{grad}F_t,V_t\rangle$. Then
+\begin{equation}\label{tadl:finite}
+ \sum_{t<T}\gamma_t A_t
+ \leq F_0(x_0)-F_{\min}+\frac12\sum_{t<T}\gamma_t^2B_t
+       +\sum_{t<T}\big[F_{t+1}(x_{t+1})-F_t(x_{t+1})\big].
+\end{equation}
+This telescoping bound allows the actual schedules and a changing context.
+It does not require that the neural loss be convex or separable.
+For CIFAR's $0.2$ label smoothing, the correct loss baseline is target
+entropy $H(q)=0.86689391$, and a misclassification costs at least
+$\kappa=0.48773025$ above that baseline. Thus for a common predictor and
+distribution, $\Pr(\widehat y\ne y)\leq(F-H(q))/\kappa$.
+Validation accuracy additionally needs generalization and evaluation-state
+control. The saved three gradient norms do not establish these assumptions
+or the curvature condition in Proposition~\ref{tadl:newton}; the proposed
+mechanism requires direct alignment and curvature measurements.

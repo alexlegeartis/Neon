@@ -1,0 +1,117 @@
+% Candidate section, not a standalone document. Requires amsmath, amssymb,
+% and the existing theorem/proof environments. Labels use taf:.
+% Full proofs, the code-specific Nesterov bound, data audit, and limitations:
+% theory_attempts/fanion_followup.tex. This fragment does not edit the article.
+% Audit first: the current F-Fanion-10 benchmark specification uses inv_sqrt_lr,
+% whereas the other Fanion specifications use const_lr.
+
+\section{Rank-dependent guarantees for Fanions and their hybrids}
+\label{taf:section}
+
+Let $r=\min(m,n)$, $d=mn$, and
+$S_k(G)=\sum_{i=1}^k\sigma_i(G)$.
+For $C_k=\{D:\|D\|_{\mathrm{op}}\leq1,\ \|D\|_*\leq k\}$,
+the support function is $S_k$. The exact partial polar factor
+$D_k(H)=\sum_{i=1}^k u_i v_i^\top$ is a maximizer of
+$\langle H,D\rangle$ over $C_k$; zero singular directions may be omitted.
+For $a,b\geq0$, the hybrid directions
+$aD_k(H)+bH/\|H\|_{\mathrm F}$ and
+$aD_k(H)+b\eta\operatorname{sign}(H)$ have support functions
+\[
+ \phi_k^{\mathrm F}(G)=aS_k(G)+b\|G\|_{\mathrm F},\qquad
+ \phi_k^{\mathrm S}(G)=aS_k(G)+b\eta\|G\|_{1,\mathrm{entry}}.
+\]
+These correspond to the Minkowski sums of $aC_k$ with a Frobenius ball
+and an entrywise infinity ball, respectively. All directions are defined
+as zero when $H=0$.
+
+\begin{theorem}[All-rank convergence with imperfect gradient inputs]
+\label{taf:master}
+Suppose $f$ is Frobenius $L$-smooth and bounded below by $f_*$.
+Write $G_t=\nabla f(X_t)$, $\Delta=f(X_0)-f_*$, and let
+$X_{t+1}=X_t-\gamma_t\widetilde D_t$ with $\gamma_t\geq0$.
+For a chosen family, suppose $\widetilde D_t$ is feasible in its oracle
+set and has support deficit
+$\delta_t=\phi_k(H_t)-\langle H_t,\widetilde D_t\rangle\geq0$.
+Let $E_t=H_t-G_t$, where $H_t$ may first be positively rescaled.
+Suppose $\phi_k(G_t)\geq\ell_k\|G_t\|_{\mathrm F}$ with $\ell_k>0$ and
+$\|\widetilde D_t\|_{\mathrm F}\leq R_k$.
+Then, for $\Gamma_T=\sum_{t<T}\gamma_t>0$,
+\begin{equation}\label{taf:bound}
+ \frac{\sum_{t<T}\gamma_t\|G_t\|_{\mathrm F}}{\Gamma_T}
+ \leq\frac{
+ \Delta+\frac L2R_k^2\sum_{t<T}\gamma_t^2
+ +2\sum_{t<T}\gamma_t\phi_k(E_t)
+ +\sum_{t<T}\gamma_t\delta_t}{\ell_k\Gamma_T}.
+\end{equation}
+\end{theorem}
+\begin{proof}
+Feasibility and the triangle inequality for the support norm give
+\[
+ \langle G_t,\widetilde D_t\rangle
+ \geq\phi_k(H_t)-\delta_t-\phi_k(E_t)
+ \geq\phi_k(G_t)-2\phi_k(E_t)-\delta_t.
+\]
+Apply the descent lemma, sum over $t$, and use the lower bound on $f$.
+\end{proof}
+
+For $G_t\ne0$, assume
+\[
+ \frac{\|G_t\|_*}{\sqrt r\|G_t\|_{\mathrm F}}\geq\theta_0>0,
+ \qquad
+ \frac{\|G_t\|_{1,\mathrm{entry}}}{\sqrt d\|G_t\|_{\mathrm F}}
+ \geq c_0>0
+\]
+along the trajectory, with the second condition needed only for S-Fanions.
+The ordering of singular values gives $S_k\geq(k/r)\|G_t\|_*$, so valid
+constants for every rank are
+\begin{align}
+ (\ell_k^{\mathrm P},R_k^{\mathrm P})
+   &=\left(\frac{\theta_0 k}{\sqrt r},\sqrt k\right),\\
+ (\ell_k^{\mathrm F},R_k^{\mathrm F})
+   &=\left(\frac{a\theta_0 k}{\sqrt r}+b,a\sqrt k+b\right),\\
+ (\ell_k^{\mathrm S},R_k^{\mathrm S})
+   &=\left(\frac{a\theta_0 k}{\sqrt r}+b\eta c_0\sqrt d,
+            a\sqrt k+b\eta\sqrt d\right).
+\end{align}
+For exact gradients and oracles, choosing
+$\gamma=\sqrt{2\Delta/(LR_k^2T)}$ yields
+\[
+ \frac1T\sum_{t<T}\|G_t\|_{\mathrm F}
+ \leq\frac{R_k}{\ell_k}\sqrt{\frac{2L\Delta}{T}}.
+\]
+For plain Fanions the squared factor is $r/(\theta_0^2k)$.
+At a common fixed learning rate, their bound is instead
+\[
+ \frac1T\sum_{t<T}\|G_t\|_{\mathrm F}
+ \leq\frac{\sqrt r}{\theta_0}
+ \left(\frac{\Delta}{k\gamma T}+\frac{L\gamma}{2}\right).
+\]
+Thus the rank explicitly changes finite-time guarantees despite a shared
+asymptotic exponent. In the hybrids, the two projection terms become
+comparable near $k=(b/a)\sqrt r/\theta_0$ for F-Fanions and
+$k=(b/a)\eta c_0\sqrt{rd}/\theta_0$ for S-Fanions, when $a>0$.
+The curvature radii change too, so these scales alone do not establish a
+universal ordering of optimally tuned ranks.
+
+\paragraph{A finite-step example attaining the $kT$ scale.}
+For $f(X)=\|X\|_{\mathrm F}^2/2$, $X_0=sI_r$, take
+$\gamma=s/h$ with $h$ a positive integer. A diagonal Fanion-$k$ tie choice
+always serves the $k$ largest positive residuals, stopping at zero.
+Writing $\min(kT,rh)=qr+p$, $0\leq p<r$, gives exactly
+\[
+ f(X_T)=\frac12\left[(r-p)(s-q\gamma)^2
+                         +p(s-(q+1)\gamma)^2\right].
+\]
+Before extinction this equals
+$\frac r2(s-k\gamma T/r)^2+\frac{\gamma^2p}{2}(1-p/r)$;
+the second term is at most $r\gamma^2/8$.
+Hence all ranks share an approximately identical curve under the time
+change $T\mapsto kT$ on this example.
+
+\paragraph{Scope.}
+The bound uses additive updates and feasible oracle directions. Finite
+Newton--Schulz approximations, weight normalization, and the gradient
+tracking error of a particular momentum convention must be accounted for
+before applying it to a practical implementation. Gradient norm convergence
+does not by itself imply a validation-accuracy ordering.

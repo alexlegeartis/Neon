@@ -1,0 +1,181 @@
+{
+  "checks": 3378,
+  "seed": 20261021,
+  "max_retraction_error": 1.1066611489772366e-15,
+  "classification": {
+    "classes": 10,
+    "smoothing": 0.2,
+    "entropy": 0.8668939107306134,
+    "mistake_gap": 0.4877302470098571,
+    "optimal_logit_margin": 3.713572066704308
+  },
+  "curvature_example": {
+    "rank": 128,
+    "exponent": 0.9,
+    "true_muon_neon_ratio": 6.8212721932178795,
+    "fro_muon_neon_ratio": 0.36351370573412095,
+    "family_rows": [
+      {
+        "basis": "rotated",
+        "family": "plain",
+        "rank": 1,
+        "alignment": 1.0,
+        "curvature": 1.0,
+        "score": 1.0,
+        "fraction_loss_removed": 0.1466002193834546,
+        "frobenius_score": 1.0,
+        "optimal_gamma": 1.0,
+        "off_modal_curvature_fraction": 0.0
+      },
+      {
+        "basis": "rotated",
+        "family": "F",
+        "rank": 1,
+        "alignment": 1.1812742338509814,
+        "curvature": 0.7885303148465419,
+        "score": 1.7696324279324473,
+        "fraction_loss_removed": 0.2594285021629722,
+        "frobenius_score": 1.609543397269465,
+        "optimal_gamma": 1.4980707927264312,
+        "off_modal_curvature_fraction": 0.0
+      },
+      {
+        "basis": "rotated",
+        "family": "S",
+        "rank": 1,
+        "alignment": 0.6967550681588449,
+        "curvature": 0.35425516072985,
+        "score": 1.370389704429027,
+        "fraction_loss_removed": 0.20089943131012286,
+        "frobenius_score": 1.284168924966624,
+        "optimal_gamma": 1.9668169878552044,
+        "off_modal_curvature_fraction": 0.0026900256433613906
+      },
+      {
+        "basis": "rotated",
+        "family": "plain",
+        "rank": 5,
+        "alignment": 2.4300261666463108,
+        "curvature": 2.4300261666463108,
+        "score": 2.4300261666463108,
+        "fraction_loss_removed": 0.3562423691378844,
+        "frobenius_score": 1.1810054341171528,
+        "optimal_gamma": 1.0,
+        "off_modal_curvature_fraction": 0.0
+      },
+      {
+        "basis": "rotated",
+        "family": "F",
+        "rank": 5,
+        "alignment": 1.8962873171741363,
+        "curvature": 1.352725859442136,
+        "score": 2.658266317728586,
+        "fraction_loss_removed": 0.38970242535865873,
+        "frobenius_score": 1.5034803758467126,
+        "optimal_gamma": 1.4018267662571076,
+        "off_modal_curvature_fraction": 0.0
+      },
+      {
+        "basis": "rotated",
+        "family": "S",
+        "rank": 5,
+        "alignment": 1.4117681514820002,
+        "curvature": 0.7784904199968874,
+        "score": 2.5601976110982494,
+        "fraction_loss_removed": 0.3753255314519997,
+        "frobenius_score": 1.2845351720243237,
+        "optimal_gamma": 1.813468881849111,
+        "off_modal_curvature_fraction": 0.001224106863974277
+      },
+      {
+        "basis": "rotated",
+        "family": "plain",
+        "rank": 128,
+        "alignment": 6.821272193217881,
+        "curvature": 6.821272193217883,
+        "score": 6.8212721932178795,
+        "fraction_loss_removed": 0.9999999999999996,
+        "frobenius_score": 0.36351370573412095,
+        "optimal_gamma": 0.9999999999999998,
+        "off_modal_curvature_fraction": 0.0
+      },
+      {
+        "basis": "rotated",
+        "family": "F",
+        "rank": 128,
+        "alignment": 4.091910330459923,
+        "curvature": 2.558163173647839,
+        "score": 6.545215850577952,
+        "fraction_loss_removed": 0.9595300796067922,
+        "frobenius_score": 0.4817905638788643,
+        "optimal_gamma": 1.599550166545874,
+        "off_modal_curvature_fraction": 0.0
+      },
+      {
+        "basis": "rotated",
+        "family": "S",
+        "rank": 128,
+        "alignment": 3.6073911647677863,
+        "curvature": 1.9151519621172854,
+        "score": 6.7949025837395896,
+        "fraction_loss_removed": 0.9961342094654263,
+        "frobenius_score": 0.39552755586777444,
+        "optimal_gamma": 1.8836057065569123,
+        "off_modal_curvature_fraction": 0.0004975873901948089
+      },
+      {
+        "basis": "rotated",
+        "family": "NS3",
+        "rank": 128,
+        "alignment": 6.137228555886313,
+        "curvature": 5.899109353801129,
+        "score": 6.384959506288241,
+        "fraction_loss_removed": 0.93603646437633,
+        "frobenius_score": 0.5135099895586734,
+        "optimal_gamma": 1.0403652802150125,
+        "off_modal_curvature_fraction": 0.0
+      },
+      {
+        "basis": "rotated",
+        "family": "NS5",
+        "rank": 128,
+        "alignment": 6.178909290038343,
+        "curvature": 5.762101992193545,
+        "score": 6.625866752488357,
+        "fraction_loss_removed": 0.971353519520331,
+        "frobenius_score": 0.39947917255811694,
+        "optimal_gamma": 1.0723359805865091,
+        "off_modal_curvature_fraction": 0.0
+      },
+      {
+        "basis": "rotated",
+        "family": "NSM",
+        "rank": 128,
+        "alignment": 6.842003276731361,
+        "curvature": 6.864640591417075,
+        "score": 6.819440612423822,
+        "fraction_loss_removed": 0.9997314898537722,
+        "frobenius_score": 0.3613443671115639,
+        "optimal_gamma": 0.9967023306778774,
+        "off_modal_curvature_fraction": 0.0
+      }
+    ]
+  },
+  "input_sha256": {
+    "jota_submission/main.tex": "040532d4b737edafb88b9366526aa8c232c238d1bc794b4048333eb6aff42f4d",
+    "code/optimizers.py": "5b2aefe0bcd4303babf9f9bbc651c0498f026f3f08bf25ef5d56e9f2b9c20c83",
+    "code/cifar_bench/airbench_muon.py": "9e97de888a10534ea9d2d1b010cf7b419166ac801425504415dc1ce74488fca2",
+    "code/cifar_bench/airbench_my_muon.py": "7ba068fe656aa085e278a5684d74d770256496eecdd984d47af7e7b187fbd44d",
+    "code/cifar_bench/norm_logger_airbench.py": "a13b9407a12f2c3ba937af416f34415d0f89da01d26b4c801f238c5d50df6c97",
+    "code/gpt_pretrain/fmuon_pretrain.py": "174d766bb7f5cc2ee8c2908c9e15ab303468875245a06ae11aea8ab747d950cb",
+    "code/gpt_pretrain/smuon_pretrain.py": "183c7d821c3cdc10c117d8eb675a4f3d92353ae0d002a6f48ba0909ecc194cfb",
+    "code/gpt_pretrain/medium_f_s_muon.py": "93286728fc456484212e7f992bccb913ff677c9175ce0b8bf7d05ef7bdae6dac"
+  },
+  "limitations": [
+    "No neural-network training, checkpoint extraction, or fitting to benchmark losses.",
+    "The curvature model is an illustrative exact quadratic, not a measured neural Hessian.",
+    "NS curves use exact arithmetic; BF16/FP8 rounding and the normalization epsilon are omitted.",
+    "Current scripts contain edited alternatives, not immutable manifests for published runs.",
+    "CIFAR relative step scales precede tangent projection; they are not measured angular steps."
+  ]
+}

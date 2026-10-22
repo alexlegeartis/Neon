@@ -1,0 +1,196 @@
+Research summary -- 22 October 2026
+==================================
+
+Question
+--------
+Can convergence theory explain the observed difference between Muon,
+low-rank Fanions, F-Fanions, and S-Fanions, despite their shared worst-case
+convergence exponents?
+
+Conclusion
+----------
+We have rigorous rank-dependent mechanisms and strong supporting evidence
+for the saved quadratic experiments. For CIFAR/LLMs we have a precise,
+conditional curvature explanation and a description of the actual training
+geometry. The required neural-network structure has not yet been measured.
+The general convergence theorem alone does not establish Muon's superiority.
+
+What the families do
+--------------------
+For a matrix oracle input H with singular vectors u_i,v_i, let
+  D_k(H) = sum_{i<=k} u_i v_i^T,   r = min(matrix dimensions).
+Fanion-k uses D_k; Neon is k=1 and ideal Muon is k=r.
+F-Fanion-k uses a D_k + b H/||H||_F.
+S-Fanion-k uses a D_k + b eta sign(H), with coordinatewise sign.
+For convex mixtures a,b >= 0; usually a=b=1/2.
+
+Low-rank Fanions omit singular modes at each step. The normalized-gradient
+and sign components can move directions omitted by the low-rank part.
+Their benefit depends on signal alignment, curvature, component scaling,
+and (for sign) the entry basis. No universal ranking across these families
+or monotone hybrid ranking in k is claimed. Implemented Muon uses a finite
+polynomial spectral filter rather than an exact full polar factor.
+
+1. Why norm-agnostic theorems do not settle the comparison
+--------------------------------------------------------
+The same theorem form or O(epsilon^-4) exponent need not mean identical
+constants: smoothness, noise, and conversion between norms can differ.
+Where a theorem uses the selected dual norm to measure stationarity, the
+same numerical epsilon also represents a different stopping criterion.
+
+After replacing all geometry by worst-case estimates, the resulting bounds
+can genuinely be identical. Such a guarantee remains valid but cannot
+explain an empirical ordering. A common stopping metric and additional
+structure are required for a discriminating specialization.
+
+For example, under a common Frobenius curvature bound, ideal Fanion-k has
+direction quality
+  q_k(G) = (sum_{i<=k} sigma_i(G))^2 / (k ||G||_F^2).
+At a flat full-rank spectrum, q_Neon=1/r and q_Muon=1. At an almost
+rank-one full-rank spectrum, the comparison reverses. Both endpoints have
+worst-case infimum 1/r. Worst-case constants can therefore erase a real
+problem-dependent advantage.
+
+2. Rigorous results across Fanion ranks and hybrids
+--------------------------------------------------
+The reports establish the following with explicit assumptions and proofs.
+
+  * For the manuscript's quadratic f(X)=||sqrt(M)X sqrt(N)||_F^2/2,
+    let E0=sqrt(M)X0 sqrt(N), L=||M||op ||N||op, and Gamma_T=sum gamma_t.
+    Every additive rank-k trajectory with ideal per-step operator norm at
+    most one satisfies
+      f(X_T) >= 1/2 sum_{j>kT} sigma_j(E0)^2,
+      f(X_T) >= [||E0||_* - sqrt(L) k Gamma_T]_+^2 / (2r).
+    These are necessary loss obstructions, independent of momentum. They
+    are not upper convergence guarantees or measured training times.
+    Stronger bounds retain the whole spectrum and simultaneous rank,
+    operator, and nuclear budgets. Hybrid bounds separate dense corrections.
+
+  * A unified common-Frobenius stationarity bound retains each family's
+    support function, update radius, oracle-input error, and approximation
+    deficit. The supports are S_k(G), a S_k(G)+b||G||_F, and
+    a S_k(G)+b eta||G||_1,entry, respectively.
+
+  * Under the trajectory condition ||G||_* >= theta sqrt(r)||G||_F,
+    exact-gradient/exact-oracle plain Fanions admit
+      average ||G_t||_F <= sqrt(r/(theta^2 k)) sqrt(2 L Delta/T)
+    at the stated horizon-tuned constant step. Thus rank changes the
+    finite-time constant even though the deterministic exponent is shared.
+    The stochastic tracking result also retains rank-dependent factors.
+
+  * Exact flat-spectrum trajectories exhibit the kT time scale. A
+    convexified continuous model has extinction time
+    max(initial operator norm, initial nuclear norm/k), distinguishing
+    low-rank speedup from its eventual saturation. The continuous model
+    averages tied modes and is not a literal discrete rank-k trajectory.
+
+  * Hybrid rank profiles can be nonmonotone. Explicit gradients with the
+    same operator, Frobenius, and nuclear norms give opposite Fanion-5
+    versus Muon comparisons. Three norm logs do not identify all ranks.
+
+3. Evidence from the repository, and configuration limitations
+-------------------------------------------------------------
+The saved quadratic file code/long_run contains all 17 compared methods.
+Without a fitted scale, Fanion-2 and Fanion-10 closely match Neon under
+t -> k*t. Maximum discrepancies over their shared recorded horizons are
+0.000252% and 0.01884% of initial loss, respectively.
+
+Current source assigns F-Fanion-10 an inverse-square-root learning-rate
+schedule, versus constant rates for the other methods. Over 5,000 updates
+its cumulative rate is 2.09952 rather than 75. The saved CSV does not carry
+an immutable configuration, so this is a source/trace audit, not a recovered
+run manifest. Intermediate ranks also inherit endpoint hyperparameters.
+
+The manuscript separates normalized CIFAR accuracy runs from unnormalized
+gradient-log runs. A commented Neon call in the current script has a
+normalization flag inconsistent with the table's description; the original
+run configuration is needed. A reference norm CSV has nonfinite losses in
+242 of 250 rows, while all gradient norms used are finite. No loss-rate
+fit uses those entries. Original optimizer/gradient matrices are unavailable.
+
+4. CIFAR and LLM theoretical description
+---------------------------------------
+CIFAR: use a batch-dependent, label-smoothed cross-entropy objective,
+normalized convolution-weight geometry, tangent updates, and auxiliary SGD.
+The code normalizes BEFORE subtracting an update. Its normalized states
+admit an exact sphere-retraction identity with a radial-dependent step.
+For ideal Fanion-k, the nominal relative Frobenius step is gamma sqrt(k/m).
+At the inherited rates, ideal Neon is 8-16 times smaller than ideal Muon
+on the six convolution matrices, before tangent projection. Rank-specific
+tuning is needed to separate direction quality from update scale.
+
+The actual 0.2 smoothing gives target entropy 0.86689391 and a sharp
+misclassification cost of 0.48773025 above it. For a common prediction
+mechanism and distribution,
+  classification error <= (mean smoothed loss - entropy)/0.48773025.
+Validation accuracy additionally requires generalization and control of
+the evaluation-state change, including frozen BatchNorm statistics.
+
+LLMs: use additive, shape-scaled matrix updates plus auxiliary Adam,
+explicit component/decay scaling, and the code's tensor normalization groups.
+The changing attention window makes the natural training objective F_t
+time-dependent. A finite-horizon bound retains objective drift, dependent
+token noise/bias, momentum, and the actual joint step's directional curvature.
+The current LLM results mainly compare Muon with full-rank F/S variants;
+they do not establish an all-rank Neon/Fanion LLM ranking.
+
+5. Strongest candidate explanation for Muon's advantage
+------------------------------------------------------
+Many modes may require comparable corrections after curvature is accounted
+for, even when their gradient singular values differ substantially. Small
+gradients can reflect weak curvature. Truncating such modes can omit useful
+corrections; approximate polar updates address many of them together.
+
+In a positive local quadratic with modal gradient g and curvature K,
+the condition g=e K 1 makes the full polar direction Newton-aligned.
+Every positive-alignment direction d then retains the fraction
+  (1^T K d)^2 / [(1^T K 1)(d^T K d)]
+of the full direction's best scalar-step decrease. This handles every
+Fanion rank, hybrid components (including their cross terms), and finite
+spectral filters. For diagonal K and equal errors, the plain rank-k
+fraction is selected curvature mass divided by total curvature mass.
+
+An exactly embedded matrix example favors Muon over Neon by 6.82127 with
+actual curvature, while a Frobenius surrogate gives 0.363514 and favors
+Neon. This is an illustrative exact calculation, not a neural-data fit.
+Whether this broad-correction condition holds for CIFAR/LLMs is unresolved.
+If weak modes are noise or only a few corrections remain useful, a
+truncated method can be preferable. Upper-bound comparisons alone also
+do not prove an ordering of actual training times or validation accuracy.
+
+Next discriminating measurements
+-------------------------------
+At a few checkpoints, record actual momentum inputs and displacements;
+estimate independent-probe gradient alignment and joint directional
+curvature; retain full/leading spectra and polynomial gains; compare
+inherited, independently tuned, and tangent-size-matched rank schedules.
+Keep normalized and unnormalized CIFAR runs separate and record context
+rules for LLMs. These measurements would test the structural hypothesis.
+
+Files and reproducibility
+-------------------------
+bounds.tex/pdf/html: initial rank/budget, curvature, and saved-norm analysis.
+fanion_followup.tex/pdf/html: all ranks, hybrids, momentum, and saved traces.
+deep_learning_model.tex/pdf/html: CIFAR/LLM description and local mechanism.
+paper_insert*.tex: candidate manuscript fragments; submission remains unedited.
+README.txt: navigation and detailed provenance/reproduction notes.
+results/: complete numerical tables, figures, checks, and input hashes.
+
+From the repository root:
+  python theory_attempts/analyze.py
+  python theory_attempts/fanion_analysis.py
+  python theory_attempts/deep_learning_analysis.py
+
+The three analyses perform 2,720, 4,322, and 3,378 numerical checks
+(10,420 total); these supplement, rather than replace, the written proofs.
+They run on CPU using NumPy and Matplotlib. No neural training, GPU,
+dataset download, or original-seed replication is claimed.
+
+Optional offline HTML/PDF export (requires Pandoc and Edge/Chrome):
+  python theory_attempts/build_report.py
+  python theory_attempts/build_report.py --stem fanion_followup
+  python theory_attempts/build_report.py --stem deep_learning_model
+
+All research writes are confined to theory_attempts. Existing source,
+experiments, and the user's separate bibliography modification are excluded
+from this research change. Browser profiles and build intermediates are ignored.

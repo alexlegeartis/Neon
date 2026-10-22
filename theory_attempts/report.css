@@ -1,0 +1,36 @@
+@page { size: A4; margin: 18mm 17mm; }
+html { color: #18212d; background: white; }
+body { max-width: 900px; margin: 36px auto; padding: 0 25px;
+       font-family: Cambria, Georgia, serif; font-size: 15px; line-height: 1.45; }
+h1, h2, h3 { line-height: 1.2; color: #142c4b; break-after: avoid; }
+h1 { margin-top: 1.6em; font-size: 1.6em; }
+h2 { margin-top: 1.4em; font-size: 1.3em; }
+h3 { font-size: 1.1em; }
+header { text-align: center; margin-bottom: 2em; }
+header h1 { font-size: 1.9em; }
+p { margin: .65em 0; }
+a { color: #174b82; text-decoration: none; overflow-wrap: anywhere; }
+code, pre { font-family: Consolas, monospace; font-size: .85em; overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; background: #f4f6f8; padding: 12px; }
+img { max-width: 90%; height: auto; display: block; margin: 1em auto; }
+figure { break-inside: avoid; }
+table { border-collapse: collapse; margin: 1em auto; font-size: .88em; }
+thead { border-top: 1px solid #60758b; border-bottom: 1px solid #60758b; }
+td, th { padding: 5px 8px; }
+tbody { border-bottom: 1px solid #60758b; }
+tr { break-inside: avoid; }
+.theorem, .proposition, .corollary { border-left: 3px solid #7596b7; padding-left: 14px; }
+.equation { position: relative; margin: 1em 0; padding-right: 35px; }
+.eqno { text-align: right; font-size: .85em; display: block; margin-top: .2em; }
+math { font-family: "Cambria Math", "STIX Two Math", math; }
+math[display="block"] { margin: .7em auto; font-size: .98em; overflow: visible; }
+@media print {
+  body { max-width: none; margin: 0; padding: 0; font-size: 10.5pt; }
+  h1 { font-size: 15pt; } h2 { font-size: 12.5pt; }
+  h3 { font-size: 11pt; }
+  a { color: inherit; }
+  table { font-size: 8.5pt; }
+  td, th { padding: 4px 5px; }
+  .equation, math[display="block"] { break-inside: avoid; }
+  img { max-height: 85mm; }
+}

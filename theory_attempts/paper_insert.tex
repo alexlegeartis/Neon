@@ -1,0 +1,134 @@
+% Candidate article section. This file is a fragment, not a standalone document.
+% Uses amsmath, amssymb, amsthm/the existing theorem and proof environments.
+% All labels are prefixed ta: to avoid collisions with the submission.
+% Read bounds.tex for the full derivations, qualifications, and literature audit.
+
+\section{Finite-iteration bounds distinguishing Fanions}
+\label{ta:section}
+
+Identical worst-case exponents do not imply identical dependence on update
+rank or learning rate. We first give a loss bound for the quadratic objective
+used in our synthetic experiments. It is independent of the choice of
+momentum and of the matrices supplied to the linear minimization oracle.
+
+\begin{theorem}
+\label{ta:obstruction}
+Let $r=\min(m,n)$ and
+\[
+ f(X)=\frac12\|M^{1/2}(X-Z)N^{1/2}\|_{\mathrm F}^2,
+ \qquad M,N\succeq0,
+ \qquad L=\|M\|_{\mathrm{op}}\|N\|_{\mathrm{op}}.
+\]
+Put $E_0=M^{1/2}(X_0-Z)N^{1/2}$. Suppose
+$X_{t+1}=X_t-\gamma_t A_t$, with $\gamma_t\geq0$,
+$\operatorname{rank}(A_t)\leq k$, and $\|A_t\|_*\leq k$.
+Then, for every $T$,
+\begin{align}
+ f(X_T)&\geq\frac12\sum_{j>kT}\sigma_j(E_0)^2,
+ \label{ta:rank}\\
+ f(X_T)&\geq\frac1{2r}
+ \left[\|E_0\|_*-\sqrt L\,k\sum_{t=0}^{T-1}\gamma_t\right]_+^2.
+ \label{ta:budget}
+\end{align}
+In particular, at constant learning rate $\gamma>0$, reaching
+$f(X_T)\leq\epsilon$ requires
+\[
+ T\geq\frac{[\|E_0\|_*-\sqrt{2r\epsilon}]_+}
+ {\sqrt L\,k\gamma}.
+\]
+\end{theorem}
+\begin{proof}
+Write $E_T=E_0-R_T$, where
+$R_T=\sum_{t<T}\gamma_t M^{1/2}A_tN^{1/2}$ has rank at most $kT$.
+The best rank-$kT$ approximation error of $E_0$ in Frobenius norm is
+$\sum_{j>kT}\sigma_j(E_0)^2$, proving~\eqref{ta:rank}.
+Also,
+\[
+ \|E_T\|_*\geq\|E_0\|_*-\sum_{t<T}\gamma_t
+ \|M^{1/2}A_tN^{1/2}\|_*
+ \geq\|E_0\|_*-\sqrt L\,k\sum_{t<T}\gamma_t.
+\]
+Combine this with $\|E_T\|_*\leq\sqrt r\|E_T\|_{\mathrm F}$
+to obtain~\eqref{ta:budget}.
+\end{proof}
+
+An exact Fanion-$k$ update $A_t=\sum_{i=1}^k u_i v_i^\top$ satisfies both
+constraints, regardless of the momentum matrix producing its singular
+vectors. Consequently, at a shared learning rate, its accumulated nuclear
+norm can grow at most $k\gamma$ per iteration. This provides a concrete
+finite-horizon obstruction for low-rank Fanions. Increasing their learning
+rates can reduce the second obstruction but cannot eliminate the first.
+The additive update hypothesis is essential: normalization or decay of
+$X_t$ must be accounted for separately.
+
+The rank bound is sharp on $f(X)=\|X-I_r\|_{\mathrm F}^2/2$, $X_0=0$.
+Every rank-$k$ method has relative loss at least
+$[1-kT/r]_+$. Fanion-$k$ with exact line search and diagonal singular-vector
+choices attains this bound, reaching zero after $\lceil r/k\rceil$
+iterations. Muon solves this instance in one step.
+
+F-Fanion updates have nuclear norm at most
+$\alpha k+(1-\alpha)\sqrt r$; S-Fanion updates have nuclear norm at most
+$\alpha k+(1-\alpha)\eta\sqrt{r mn}$. Thus~\eqref{ta:budget} extends with
+these capacities in place of $k$. Their potentially full-rank updates
+remove the original rank obstruction.
+
+\subsection{Spectrum-dependent descent and its limitations}
+
+For a true gradient $G$, write $S_k(G)=\sum_{i=1}^k\sigma_i(G)$ and
+$D_k(G)=\sum_{i=1}^k u_i v_i^\top$. If $f$ is Frobenius $L$-smooth,
+the step $\gamma=S_k(G)/(Lk)$ gives
+\[
+ f(X-\gamma D_k(G))\leq f(X)
+ -\frac{S_k(G)^2}{2Lk}
+ =f(X)-\frac{q_k(G)}{2L}\|G\|_{\mathrm F}^2,
+ \qquad
+ q_k(G)=\frac{S_k(G)^2}{k\|G\|_{\mathrm F}^2}.
+\]
+This follows directly from $\langle G,D_k\rangle=S_k(G)$ and
+$\|D_k\|_{\mathrm F}^2\leq k$.
+If $q_k(G_t)\geq\underline q_k>0$ along the trajectory, then
+\[
+ \min_{t<T}\|\nabla f(X_t)\|_{\mathrm F}^2
+ \leq\frac{2L(f(X_0)-f_*)}{T\underline q_k}.
+\]
+Under a Frobenius PL inequality with constant $\mu$, the same calculation
+gives loss contraction factor $1-\mu\underline q_k/L$.
+For a flat singular spectrum, $q_k=k/r$, retaining an $r/k$ factor in
+these bounds. At a common full-rank gradient,
+\[
+ \frac{q_r(G)}{q_1(G)}=
+ \frac1r\left(\frac{\|G\|_*}{\|G\|_{\mathrm{op}}}\right)^2.
+\]
+Its value can be above or below one. These are comparisons of descent
+certificates at common points, not ratios of observed training times.
+
+For $a=\alpha$, $b=1-\alpha$, $x=S_k(G)/\|G\|_{\mathrm F}$, and
+$\operatorname{rank}(G)\geq k$, the F-Fanion direction satisfies
+\[
+ q_{F,k}=\frac{(ax+b)^2}{a^2k+b^2+2abx}\geq q_k.
+\]
+Indeed, after multiplying by positive denominators, the difference has
+numerator $(k-x^2)(2abx+b^2)\geq0$. For S-Fanions, Cauchy--Schwarz and
+the triangle inequality give, when $a>0$,
+\[
+ q(G,D_{S,k})\geq
+ \frac{q_k(G)}{\bigl(1+b\eta\sqrt{d_0}/(a\sqrt k)\bigr)^2},
+ \qquad d_0=\#\{G_{ij}\ne0\}.
+\]
+These results quantify stability of full-rank hybrids. They also show why
+Frobenius smoothness alone cannot establish a universal Muon advantage:
+the normalized true gradient has cosine one.
+
+To retain curvature, use a valid model
+\[
+ f(X-\gamma D)\leq f(X)-\gamma\langle G,D\rangle
+ +\frac{\gamma^2}{2}C_X(D).
+\]
+The optimized decrease certificate is
+$[\langle G,D\rangle]_+^2/(2C_X(D))$. For the quadratic,
+$C_X(D)=\langle D,MDN\rangle$, and this certificate is exact.
+Thus the appropriate structural comparison includes the singular spectrum,
+curvature along the selected directions, and the actual oracle input.
+No general norm convergence exponent by itself implies the experimentally
+observed ordering across all tasks.

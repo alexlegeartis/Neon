@@ -1,0 +1,4 @@
+method,k,comparison_snapshots,last_compared_iteration,max_abs_error_divided_by_initial_loss,rms_error_divided_by_initial_loss
+Fanion-2,2,249,2490,2.5188160597293905e-06,1.8130866768714309e-06
+Fanion-10,10,49,490,0.00018835706494656383,0.00014653646514384093
+Fanion-100,100,4,40,0.01858322037282911,0.014930198880854359
